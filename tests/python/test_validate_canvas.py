@@ -2436,6 +2436,36 @@ def test_cross_reference_resolves_a_cycle_by_its_cycle_id(tmp_path, scripts_path
     assert "cycle-999" in out[0], "control: a cycle that does not exist still dangles"
 
 
+def test_cross_reference_resolves_a_folded_key_spelled_as_the_old_key(tmp_path, scripts_path):
+    """v0.333.0, dogfood 2026-11-06: a key in capitals or with its date mid-name folds to a note
+    whose kind is its stem, and the pointer written to the old key still resolves. A note of the
+    same kind on another day does not answer for it."""
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "go-to-market.yml").write_text(textwrap.dedent("""\
+        channel_intelligence:
+          notes:
+          - date: '2026-09-13'
+            kind: disclosure_posture_ruled
+            note: naming is permitted
+          - date: '2026-09-14'
+            kind: positioning_ruled_the_guidance_path
+            note: the guidance path
+    """))
+    (canvas / "human-tasks.yml").write_text(textwrap.dedent("""\
+        tasks:
+          - id: ht-900
+            note: >-
+              go-to-market.yml#disclosure_posture_RULED_2026_09_13
+              go-to-market.yml#positioning_RULED_2026_09_14_the_guidance_path
+              go-to-market.yml#disclosure_posture_RULED_2026_09_15
+    """))
+    out = validator.cross_reference_findings(canvas)
+    assert len(out) == 1, out
+    assert "2026_09_15" in out[0], "control: the same kind on a different date still dangles"
+
+
 def test_opportunity_shape_summary_is_a_coverage_line(tmp_path, scripts_path):
     validator = _import_validator(scripts_path)
     canvas = tmp_path / ".claude" / "canvas"

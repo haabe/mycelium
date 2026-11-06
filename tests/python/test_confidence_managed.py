@@ -185,3 +185,26 @@ def test_last_considered_beats_changed_at(tmp_path, monkeypatch):
     monkeypatch.setattr(m, "evidence_since", fake)
     m.audit(root, today=dt.date(2026, 9, 4))
     assert seen["since"] == dt.date(2026, 9, 4), "staleness must count from last_considered"
+
+
+def _write_diamonds(tmp_path, doc):
+    import yaml
+    (tmp_path / ".claude/diamonds").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".claude/diamonds/active.yml").write_text(yaml.safe_dump(doc), encoding="utf-8")
+    return tmp_path
+
+
+def test_completed_and_retargeted_diamonds_are_not_judged(tmp_path, monkeypatch):
+    """v0.333.0, dogfood 2026-11-06: a diamond completed on 2026-09-02 warned with seven scored
+    tests that cite it as history, and a retargeted one warned too. Neither is live work."""
+    m = _mod()
+    der = {"changed_at": "2026-08-15"}
+    root = _write_diamonds(tmp_path, {
+        "active_diamonds": [{"id": "l2-live", "confidence": 0.4, "confidence_derivation": der},
+                            {"id": "l3-retargeted", "state": "retargeted", "confidence": 0.3,
+                             "confidence_derivation": der}],
+        "completed_diamonds": [{"id": "l2-done", "confidence": 0.9, "confidence_derivation": der}],
+    })
+    monkeypatch.setattr(m, "evidence_since", lambda r, s, i=None: ["a.md"])
+    warned = {x["id"] for x in m.audit(root, today=dt.date(2026, 9, 4)) if x["level"] == "WARN"}
+    assert warned == {"l2-live"}, "control: the live diamond still warns"

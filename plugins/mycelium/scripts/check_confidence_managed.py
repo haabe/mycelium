@@ -134,9 +134,30 @@ def evidence_since(root: Path, since: date, diamond_id: str | None = None) -> li
     return sorted(hits)
 
 
+#: States whose diamond is not live work. v0.333.0 adds `completed` and `retargeted`: the check
+#: still judged them, and on the dogfood repo 2026-11-06 a diamond completed on 2026-09-02 warned
+#: with seven scored tests that all cite it as history, and a retargeted one warned too.
+_NOT_LIVE_STATES = {"archived", "parked", "killed", "discarded", "completed", "retargeted"}
+
+
+def _inactive_ids(root: Path) -> set:
+    """Ids filed under completed_diamonds or archived_diamonds, whatever their `state` says."""
+    try:
+        d = yaml.safe_load((root / ".claude/diamonds/active.yml").read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return set()  # diamonds() already reported the parse failure loudly
+    return {x.get("id") for key in ("completed_diamonds", "archived_diamonds")
+            for x in (d.get(key) or []) if isinstance(x, dict)}
+
+
+def _not_live(dm: dict, inactive: set) -> bool:
+    return str(dm.get("state", "")).lower() in _NOT_LIVE_STATES or dm.get("id") in inactive
+
+
 def audit(root: Path, today: date | None = None) -> list[dict]:
     today = today or datetime.now(UTC).date()
     findings = []
+    inactive = _inactive_ids(root)
     for dm in diamonds(root):
         # ARCHIVED AND PARKED DIAMONDS ARE OUT OF SCOPE, and saying so is not a courtesy.
         # Found 2026-09-04: the check flagged a diamond archived three weeks earlier, whose park
@@ -144,7 +165,7 @@ def audit(root: Path, today: date | None = None) -> list[dict]:
         # should be re-deriving because the work is not live. Demanding a fresh derivation on a
         # parked diamond trains the reader to dismiss the warning, which is how a guard becomes
         # wallpaper. The count of exclusions is reported in the pass line rather than hidden.
-        if str(dm.get("state", "")).lower() in {"archived", "parked", "killed", "discarded"}:
+        if _not_live(dm, inactive):
             continue
         der = dm.get("confidence_derivation")
         if not isinstance(der, dict):
@@ -244,8 +265,8 @@ def main(argv=None) -> int:
         print(json.dumps(f, indent=1))
     else:
         alld = diamonds(root)
-        parked = [d for d in alld if str(d.get("state", "")).lower()
-                  in {"archived", "parked", "killed", "discarded"}]
+        inactive = _inactive_ids(root)
+        parked = [d for d in alld if _not_live(d, inactive)]
         n_d = len(alld) - len(parked)
         n_derived = sum(1 for d in alld
                         if d not in parked and isinstance(d.get("confidence_derivation"), dict))
@@ -253,7 +274,8 @@ def main(argv=None) -> int:
             print(f"OK: {n_derived} of {n_d} diamond(s) carry a derivation and none has unexamined "
                   f"evidence. OUTSIDE THIS COUNT: {n_d - n_derived} diamond(s) with no "
                   f"`confidence_derivation` block — not failed, but their numbers can only be "
-                  f"re-asserted, never re-derived; and {len(parked)} archived/parked diamond(s), "
+                  f"re-asserted, never re-derived; and {len(parked)} archived, parked, completed "
+                  f"or retargeted diamond(s), "
                   f"which are not live work and are not judged.")
         for x in f:
             print(f"  {x['level']:5s} {x['id']}: {x['msg']}")

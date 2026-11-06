@@ -127,11 +127,35 @@ def strip_evidence(node):
     return _strip(node, markers=True)
 
 
-def _strip(node, markers: bool):
+#: A date in a key's NAME (`added_2026_08_28`), the shape check_key_shape.py reports. Such a key
+#: is a dated annotation ABOUT the purpose, and the key-shape guard asks for it to be moved into
+#: `notes: [{date, kind, note}]`. v0.333.0 strips both forms, so that move leaves the hash where
+#: it was. Measured on the dogfood canvas 2026-11-06: folding purpose.yml's 13 dated keys made
+#: this check say every stance was superseded, while no word of why/how/what had changed.
+_DATED_KEY = re.compile(r"\d{4}_\d{2}_\d{2}")
+
+
+def _is_dated_note(entry) -> bool:
+    return isinstance(entry, dict) and "date" in entry and "kind" in entry
+
+
+def _strip(node, markers: bool, dated: bool = False):
     if isinstance(node, dict):
-        return {k: _strip(v, markers) for k, v in node.items() if not _is_evidence_key(k, markers)}
+        out = {}
+        for k, v in node.items():
+            if _is_evidence_key(k, markers):
+                continue
+            if dated and isinstance(k, str) and _DATED_KEY.search(k):
+                continue
+            value = v
+            if dated and k == "notes" and isinstance(v, list) and any(map(_is_dated_note, v)):
+                value = [e for e in v if not _is_dated_note(e)]
+                if not value:
+                    continue
+            out[k] = _strip(value, markers, dated)
+        return out
     if isinstance(node, list):
-        return [_strip(v, markers) for v in node]
+        return [_strip(v, markers, dated) for v in node]
     return node
 
 
@@ -159,12 +183,12 @@ def _governing_absent(purpose: dict) -> bool:
     return True
 
 
-def _hash_fields(purpose: dict, strip: bool, markers: bool = True) -> str:
+def _hash_fields(purpose: dict, strip: bool, markers: bool = True, dated: bool = False) -> str:
     parts = []
     for key in GOVERNING_FIELDS:
         value = purpose.get(key)
         if strip:
-            value = _strip(value, markers)
+            value = _strip(value, markers, dated)
         parts.append(json.dumps(value, sort_keys=True, ensure_ascii=False, default=str))
     return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
 
@@ -174,7 +198,18 @@ def purpose_hash(purpose: dict) -> str:
 
     Normalised so that reformatting (indentation, list order in `how`) does not read as a change of
     intent, while any edit to the words does. Since v0.141.0, evidence-bearing keys are stripped
-    first — see EVIDENCE_KEY_SUFFIXES for the measurement that forced it.
+    first — see EVIDENCE_KEY_SUFFIXES for the measurement that forced it. Since v0.333.0, dated
+    annotations are stripped too, in both their forms (see _DATED_KEY).
+    """
+    return _hash_fields(purpose, strip=True, dated=True)
+
+
+def v0317_purpose_hash(purpose: dict) -> str:
+    """The v0.317.3 to v0.332.0 hash: evidence and review markers stripped, dated keys kept.
+
+    Accepted on the same argument as the two older hashes: a recorded hash matching it proves the
+    intent AND the dated annotations are unchanged, which is strictly stronger, so every project
+    stamped before v0.333.0 upgrades without a false staleness warning.
     """
     return _hash_fields(purpose, strip=True)
 
@@ -411,7 +446,8 @@ def _list_findings(pp: dict, purpose: dict) -> list[str]:
             "re-derive with /mycelium:purpose-properties."
         )
     recorded = pp.get("derived_from_hash")
-    known = (purpose_hash(purpose), v0141_purpose_hash(purpose), legacy_purpose_hash(purpose))
+    known = (purpose_hash(purpose), v0317_purpose_hash(purpose), v0141_purpose_hash(purpose),
+             legacy_purpose_hash(purpose))
     if recorded and not governing_absent and recorded not in known:
         if pp.get("hash_algorithm") == HASH_ALGORITHM:
             out.append(
@@ -655,6 +691,36 @@ def purpose_stance_coverage(canvas_dir: Path,
     return f"{line}. {SCOPE_NOTE}"
 
 
+def current_hash_if_unmoved(purpose: dict):
+    """The current algorithm's hash, or None when the recorded stamp no longer matches.
+
+    v0.333.0. A stamp made by an older algorithm stays valid only while the file is unchanged in
+    that algorithm's terms, so a fold of dated keys (which v0.333.0's hash ignores and v0.317.3's
+    does not) would strand it. Translating the stamp first is exact: a match under any accepted
+    algorithm proves the intent is the derivation's, and the printed value is that same intent
+    under the current algorithm. It is NOT a re-derivation and refuses when the intent moved.
+    """
+    pp = purpose.get("purpose_properties") or {}
+    recorded = pp.get("derived_from_hash")
+    known = (purpose_hash(purpose), v0317_purpose_hash(purpose), v0141_purpose_hash(purpose),
+             legacy_purpose_hash(purpose))
+    if not recorded or recorded not in known:
+        return None
+    return purpose_hash(purpose)
+
+
+def _print_current_hash(canvas_dir: Path) -> int:
+    purpose = _load(canvas_dir / "purpose.yml") or {}
+    h = current_hash_if_unmoved(purpose)
+    if h is None:
+        print("purpose-stance: the recorded derived_from_hash does not match the current purpose "
+              "under any accepted algorithm, so it cannot be translated. Re-derive with "
+              "/mycelium:purpose-properties.")
+        return 1
+    print(h)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--canvas-dir", default=".claude/canvas")
@@ -677,9 +743,19 @@ def main() -> int:
         help="exit 1 on findings. Use at a transition (L2->L3, L3->L4); advisory mode "
         "is for the validator, where a hard failure would break older projects.",
     )
+    ap.add_argument(
+        "--current-hash",
+        action="store_true",
+        help="print the current algorithm's hash of purpose.yml, ONLY if the recorded "
+        "derived_from_hash still matches the purpose under some accepted algorithm (so the "
+        "intent has not moved since derivation); exit 1 otherwise. Record the printed value "
+        "as derived_from_hash BEFORE moving dated keys inside why/how/what into notes.",
+    )
     args = ap.parse_args()
 
     canvas_dir = Path(args.canvas_dir)
+    if args.current_hash:
+        return _print_current_hash(canvas_dir)
     diamonds_file = Path(args.diamonds_file) if args.diamonds_file else None
     findings = purpose_stance_findings(canvas_dir, diamonds_file,
                                        diamond_id=args.diamond_id)

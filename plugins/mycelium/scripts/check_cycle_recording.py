@@ -598,13 +598,18 @@ def _rework_finding(closed, today):
             continue
         if (today - done).days >= REWORK_WINDOW_DAYS:
             eligible.append(c)
-    missing = [c.get("cycle_id", "?") for c in eligible if "rework" not in c]
+    # v0.333.0: `rework: null` is NOT a measurement. The schema types the field nullable so that
+    # "not captured" can be recorded, and its rule for regressions is "Zero recorded is a
+    # measurement; absent is not". Testing for the key alone counted the null as covered: on the
+    # dogfood canvas 2026-11-06 the line read 35 of 51 and missed 19 null rows.
+    missing = [c.get("cycle_id", "?") for c in eligible if c.get("rework") is None]
     if not missing:
         return None
     note = f" ({undated} cycle(s) skipped: unreadable completed_at)" if undated else ""
     return (
         f"{len(missing)} of {len(eligible)} cycles closed more than "
-        f"{REWORK_WINDOW_DAYS} days ago carry no `rework` block{note}. Cycles closed "
+        f"{REWORK_WINDOW_DAYS} days ago carry no measured `rework` block (absent, or null for "
+        f"not captured){note}. Cycles closed "
         f"more recently are excluded — the field is populated on a {REWORK_WINDOW_DAYS}-day "
         f"lag by design, and flagging them would alarm on evidence that cannot exist yet."
     )

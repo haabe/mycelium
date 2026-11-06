@@ -370,3 +370,22 @@ def test_empty_required_field_is_reported_incomplete(tmp_path):
     r = cic.analyse(root, TODAY)
     assert r["incomplete"] == [("a.md", "frozen_before")]
     assert not r["undated"], "an empty frozen_before is not an expiry problem"
+
+
+def test_a_score_folded_into_a_dated_note_counts_as_scored():
+    """Regression, dogfood 2026-11-06: the key-shape guard moves `scored_2026_08_18: held`
+    into `notes: [{date, kind: scored, note}]`, and before v0.333.0 that move made a finished
+    prediction read as closed and never scored."""
+    folded = {"id": "ht-1", "status": "completed", "horizon": "2026-08-17",
+              "notes": [{"date": "2026-08-18", "kind": "scored", "note": "held"}]}
+    assert cic._has_score(folded)
+    res = {"scored": [], "undated": [], "closed_unscored": [], "due": [], "pending": []}
+    cic._classify_canvas_prediction(folded, "human-tasks", TODAY, res)
+    assert res["scored"] == ["human-tasks#ht-1"] and not res["closed_unscored"]
+
+
+def test_a_dated_note_of_another_kind_is_not_a_score():
+    unscored = {"id": "ht-2", "status": "completed", "horizon": "2026-08-17",
+                "notes": [{"date": "2026-08-18", "kind": "score_by_moved", "note": "x"},
+                          {"date": "2026-08-18", "kind": "outcome_classes", "note": "y"}]}
+    assert not cic._has_score(unscored)
