@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-11-06.
 
+## v0.334.0 - Three fields for what the canvas already records
+
+**2026-11-06.** Three things the dogfood canvas held in prose or in undeclared keys, each now declared with a reader.
+
+- **`scenario_gap` on an opportunity.** ost-builder step 5 told a run with no research behind an opportunity to flag
+  the evidence gap instead of inventing a scenario, and nothing could read the flag: the scenario-link WARN named every
+  flagged opportunity on every run, and the only edit that cleared it was an ungrounded story. Step 5 now writes
+  `scenario_gap: {date, missing, would_supply}`, and validate_canvas counts such an opportunity on a COVERAGE line
+  instead of warning. An empty `missing` is not a record and still warns. On the dogfood canvas, 16 opportunities had
+  their gap written in prose.
+- **`review_trigger` on landscape items.** A watched item's reason to look again is often an event ("PR #89 merges or
+  closes"), which a date check cannot raise. Declared on components, climatic predictions and movements; validate_canvas
+  prints every trigger on one COVERAGE line per run. It cannot tell whether the event happened. The `movements` section,
+  which /mycelium:wardley-map has always written, had no schema until now and is declared here.
+- **`killed_reason` on gist ideas**, the name diamond-progress's kill path writes on diamonds, read by a person.
+  It is not entered in harness/field-consumers.yml as human-only: that registry holds names with no reader, and
+  this name already has readers on diamonds, so check_field_wiring's own tests refuse the entry.
+
+- **Alternatives considered.**
+  - *The landscape sweep as `review_trigger`'s reader*, as first proposed: upstream has no sweep skill to read it.
+  - *Matching each trigger against new sources*: a reading of the world, not of the file; the line puts the events in
+    front of the reader instead.
+  - *Declaring `assessed_by` beside `assessed_at`*, the third proposal: dropped on the founder's ruling. No schema
+    declares `assessed_at`, nor the two blocks that carry the pair in the one project that uses it.
+  - *A `scenario_gap` string*: an object can say what is missing and what would supply it, and the check can require the
+    first.
+
 ## v0.333.0 - Six checks stop misreading what the canvas records
 
 **2026-11-06.** The key-shape guard asks for a key like `scored_2026_08_18: held` to be moved into a dated note,

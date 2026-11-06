@@ -4,9 +4,13 @@ Per G-V12 (corrections.md 2026-05-04 — graduated from "validator passes on
 incomplete checks" recurring pattern): every validator ships with a test that
 fails on a known-bad input.
 """
+import json
 import sys
 import textwrap
 from pathlib import Path
+
+import jsonschema
+import pytest
 
 
 def _import_validator(scripts_path):
@@ -2737,3 +2741,79 @@ def test_hand_typed_metric_values_are_reported(tmp_path, scripts_path):
     assert any("#metric.current_value = 0" in w for w in out)
     assert any("input_metrics[adoption].current_value.watchers_total = 1" in w for w in out)
     assert any("nested.deep = 2.5" in w for w in out)
+
+
+def _gap_canvas(tmp_path):
+    (tmp_path / "opportunities.yml").write_text(textwrap.dedent("""\
+        opportunities:
+          - id: opp-001
+            status: open
+            solutions: [{id: sol-001a}]
+            scenario_gap: {date: '2026-11-06', missing: a builder's own account, would_supply: ht-1}
+          - id: opp-002
+            status: open
+            solutions: [{id: sol-002a}]
+          - id: opp-003
+            status: open
+            solutions: [{id: sol-003a}]
+            scenario_gap: {date: '2026-11-06', missing: ''}
+    """))
+    (tmp_path / "scenarios.yml").write_text("scenarios:\n  - id: scn-001\n    addresses_opportunities: []\n")
+
+
+def test_a_recorded_scenario_gap_moves_off_the_warn_onto_coverage(tmp_path, scripts_path):
+    """v0.334.0, dogfood 2026-11-06: 16 opportunities with their gap written in prose warned on
+    every run. A `scenario_gap` saying what is missing is a standing state, counted on COVERAGE;
+    an empty one is not a record and still warns."""
+    validator = _import_validator(scripts_path)
+    _gap_canvas(tmp_path)
+    warn = validator.scenario_link_findings(tmp_path)
+    assert len(warn) == 1 and "2 open opportunities" in warn[0]
+    assert "opp-001" not in warn[0] and "opp-002" in warn[0] and "opp-003" in warn[0]
+    cov = validator.scenario_gap_coverage(tmp_path)
+    assert cov.startswith("1 open opportunity waits") and "opp-001" in cov
+
+
+def test_review_trigger_coverage_lists_every_section(tmp_path, scripts_path):
+    """v0.334.0: components, movements and climatic predictions each carry review_trigger; the
+    line names every one, and an empty trigger is not listed."""
+    validator = _import_validator(scripts_path)
+    (tmp_path / "landscape.yml").write_text(textwrap.dedent("""\
+        components:
+          - id: comp-001
+            review_trigger: they open a public API
+          - id: comp-002
+            review_trigger: '  '
+        movements:
+          - component: comp-075
+            review_trigger: >-
+              PR #89 merges or
+              closes
+        climatic_predictions:
+          - id: climpred-001
+            review_trigger: a second vendor ships a judge
+    """))
+    cov = validator.review_trigger_coverage(tmp_path)
+    assert cov.startswith("3 landscape item(s)")
+    assert "comp-001: they open a public API" in cov
+    assert "comp-075: PR #89 merges or closes" in cov and "climpred-001" in cov
+    assert "comp-002" not in cov
+    assert validator.review_trigger_coverage(tmp_path / "nowhere") is None
+
+
+def test_the_new_fields_validate_against_their_schemas(tmp_path, scripts_path):
+    """v0.334.0: scenario_gap, review_trigger, the movements section and killed_reason are
+    declared, so a canvas using them passes, and a scenario_gap without `missing` does not."""
+    validator = _import_validator(scripts_path)
+    root = Path(scripts_path).parent / "schemas" / "canvas"
+    opp = json.loads((root / "opportunities.schema.json").read_text())
+    gap = opp["properties"]["opportunities"]["items"]["properties"]["scenario_gap"]
+    jsonschema.validate({"date": "2026-11-06", "missing": "x"}, gap)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate({"date": "2026-11-06"}, gap)
+    land = json.loads((root / "landscape.schema.json").read_text())["properties"]
+    assert "review_trigger" in land["movements"]["items"]["properties"]
+    assert "review_trigger" in land["components"]["items"]["properties"]
+    gist = json.loads((root / "gist.schema.json").read_text())
+    assert "killed_reason" in gist["properties"]["ideas"]["items"]["properties"]
+    assert validator is not None

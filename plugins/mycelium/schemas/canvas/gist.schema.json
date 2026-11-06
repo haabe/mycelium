@@ -43,6 +43,10 @@
           },
           "trace": {
             "$ref": "_common.schema.json#/$defs/trace"
+          },
+          "killed_reason": {
+            "type": "string",
+            "description": "Why the idea was killed, in the name diamond-progress's kill path writes on diamonds. Read by a person on a gist idea. Not entered in harness/field-consumers.yml: that registry is for names with no reader, and this name already has readers on diamonds (v0.334.0)."
           }
         },
         "additionalProperties": true

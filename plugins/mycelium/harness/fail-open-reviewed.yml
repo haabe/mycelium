@@ -1166,3 +1166,11 @@ reviewed:
     while the check could not look; the scan caught that and it was changed. A missing file is
     silent on purpose: a project with no diamonds has nothing due (asserted, with that control, by
     test_an_unreadable_diamonds_file_is_said_not_read_as_no_diamonds). Reviewed 2026-10-23, v0.329.0.
+- id: validate_canvas.py@1132725329
+  verdict: ACCEPTED 2026-11-06
+  reason: >-
+    `review_trigger_coverage` (v0.334.0) returns None when landscape.yml cannot be read or parsed.
+    It is a COVERAGE line, not a gate, and the failure does speak: `validate_all_yaml_parses` runs
+    first in main() and reports every canvas file that does not parse, so a broken landscape.yml
+    fails the validation loudly before this line is reached. Printing a second message here would
+    report one fault twice.

@@ -87,6 +87,10 @@
               "null"
             ],
             "description": "Whether this source was scanned for opportunities with ost-builder: `unscanned`, or `scanned YYYY-MM-DD` (v0.209.0). validate_canvas warns on a dated entry with long external text and no value."
+          },
+          "review_trigger": {
+            "type": "string",
+            "description": "The EVENT that should prompt a fresh look at this item, when the reason to look again is an event rather than a date (\"they open a public API\", \"PR #89 merges or closes\"). Read by validate_canvas.review_trigger_coverage, which lists every trigger on each run; whether the event has happened is a reading of the world, not of the file (v0.334.0)."
           }
         },
         "required": [
@@ -159,8 +163,30 @@
           "outcome": {
             "type": "string",
             "description": "What actually happened, and what it cost to be wrong."
+          },
+          "review_trigger": {
+            "type": "string",
+            "description": "The EVENT that should prompt a fresh look at this item, when the reason to look again is an event rather than a date (\"they open a public API\", \"PR #89 merges or closes\"). Read by validate_canvas.review_trigger_coverage, which lists every trigger on each run; whether the event has happened is a reading of the world, not of the file (v0.334.0)."
           }
         }
+      }
+    },
+    "movements": {
+      "type": "array",
+      "description": "Evolution movements of components, written by /mycelium:wardley-map (\"Update .claude/canvas/landscape.yml with components, evolution stages, movements ...\"). Declared in v0.334.0, when review_trigger was given a reader; until then the section the skill writes had no schema.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "component": {
+            "type": "string",
+            "description": "The component id (or ids) the movement is about."
+          },
+          "review_trigger": {
+            "type": "string",
+            "description": "The EVENT that should prompt a fresh look at this item, when the reason to look again is an event rather than a date (\"they open a public API\", \"PR #89 merges or closes\"). Read by validate_canvas.review_trigger_coverage, which lists every trigger on each run; whether the event has happened is a reading of the world, not of the file (v0.334.0)."
+          }
+        },
+        "additionalProperties": true
       }
     }
   },

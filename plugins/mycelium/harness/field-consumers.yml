@@ -133,3 +133,13 @@ reviewed:
       "human-only", it was unfinished. Removed from the schema. Kept in this registry as a
       tombstone so a later agent proposing the same field finds the ruling instead of
       reinventing it, per step (b) of the four-step rule.
+
+  - field: review_trigger
+    canvas: landscape
+    consumer: scripts/validate_canvas.py#review_trigger_coverage
+    verdict: wired
+    note: >-
+      v0.334.0, founder-ruled (dogfood 2026-11-06, "A validator line lists them"). A watched
+      landscape item's reason to look again is often an event, which a date check cannot raise.
+      The consumer lists each trigger on every run; it cannot tell whether the event happened.
+      The candidate proposed the landscape sweep as the reader, and upstream has no sweep skill.

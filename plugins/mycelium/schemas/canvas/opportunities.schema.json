@@ -275,6 +275,29 @@
               "null"
             ],
             "description": "One line naming what the classification rested on \u2014 the evidence, the uncertainty, or the reason a domain was chosen. A domain with no basis cannot be re-argued when the data changes; the next reader can only accept or discard it."
+          },
+          "scenario_gap": {
+            "type": "object",
+            "description": "A recorded evidence gap: no scenario can be grounded for this opportunity yet, because no interview or outside source tells its story. Written by /mycelium:ost-builder step 5 instead of an invented scenario. Read by validate_canvas: an open opportunity with solutions and a scenario_gap is counted on the COVERAGE tier, not warned about (v0.334.0).",
+            "required": [
+              "date",
+              "missing"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "description": "When the gap was recorded (YYYY-MM-DD)."
+              },
+              "missing": {
+                "type": "string",
+                "description": "What evidence is missing: whose story, of what moment."
+              },
+              "would_supply": {
+                "type": "string",
+                "description": "What would supply it: an interview, a thread, a task."
+              }
+            },
+            "additionalProperties": true
           }
         },
         "required": [
