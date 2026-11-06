@@ -1375,6 +1375,10 @@ def print_advisory_warnings(canvas_dir):
         # human, never a verdict (the report's own rule), so it must not share the tier
         # that carries contradictions.
         print(f"  COVERAGE (opportunity shape): {shape}")
+    for label, line in (("scenario gap", scenario_gap_coverage(canvas_dir)),
+                        ("review trigger", review_trigger_coverage(canvas_dir))):
+        if line:
+            print(f"  COVERAGE ({label}): {line}")
 
 
 def sub_opportunity_findings(canvas_dir):
@@ -1455,20 +1459,86 @@ def scenario_link_findings(canvas_dir):
            "exists in opportunities.yml; a scenario linked to nothing illustrates nothing"
            for s in scenarios for ref in s.get("addresses_opportunities") or []
            if isinstance(ref, str) and ref not in ids]
-    covered = {ref for s in scenarios for ref in s.get("addresses_opportunities") or []}
-    closed = {"closed", "discarded", "resolved", "addressed"}
-    bare = [str(o["id"]) for o in opps
-            if o.get("id") and str(o.get("status", "open")).lower() not in closed
-            and o.get("solutions") and o["id"] not in covered]
+    bare = [str(o["id"]) for o in _unscenarioed(scenarios, opps) if not _gap_recorded(o)]
     if bare:
         more = " ..." if len(bare) > _SCENARIO_COVERAGE_NAMED else ""
         named = ", ".join(bare[:_SCENARIO_COVERAGE_NAMED]) + more
         one = len(bare) == 1
         out.append(f"{len(bare)} open opportunit{'y has' if one else 'ies have'} solutions and "
                    f"no scenario naming {'it' if one else 'them'} in `addresses_opportunities` "
-                   f"({named}); ost-builder step 5 extracts one from the research, or flags the "
-                   "evidence gap")
+                   f"({named}); ost-builder step 5 extracts one from the research, or records the "
+                   "evidence gap in `scenario_gap`")
     return out
+
+
+def _unscenarioed(scenarios, opps):
+    covered = {ref for s in scenarios for ref in s.get("addresses_opportunities") or []}
+    closed = {"closed", "discarded", "resolved", "addressed"}
+    return [o for o in opps
+            if o.get("id") and str(o.get("status", "open")).lower() not in closed
+            and o.get("solutions") and o["id"] not in covered]
+
+
+def _gap_recorded(opp) -> bool:
+    """A `scenario_gap` that says what is missing (v0.334.0). An empty one is not a record."""
+    gap = opp.get("scenario_gap")
+    return isinstance(gap, dict) and bool(str(gap.get("missing") or "").strip())
+
+
+def scenario_gap_coverage(canvas_dir):
+    """COVERAGE-tier: open opportunities waiting on a scenario, with the gap recorded (v0.334.0).
+
+    ost-builder step 5 tells a run with no research behind an opportunity to flag the evidence
+    gap rather than invent a story. Until v0.334.0 nothing could read the flag, so the WARN named
+    every flagged opportunity on every run and the only edit that cleared it was an ungrounded
+    scenario (dogfood 2026-11-06: 16 such, each with its gap written in prose). A recorded gap is a
+    standing state, not a defect, so it is counted here and not on the WARN tier.
+    """
+    scenarios, opps, problem = _scenario_link_inputs(canvas_dir)
+    if problem or not scenarios:
+        return None
+    waiting = [str(o["id"]) for o in _unscenarioed(scenarios, opps) if _gap_recorded(o)]
+    if not waiting:
+        return None
+    more = " ..." if len(waiting) > _SCENARIO_COVERAGE_NAMED else ""
+    return (f"{len(waiting)} open opportunit{'y waits' if len(waiting) == 1 else 'ies wait'} on a "
+            f"scenario with the evidence gap recorded in `scenario_gap` "
+            f"({', '.join(waiting[:_SCENARIO_COVERAGE_NAMED])}{more})")
+
+
+#: Sections of landscape.yml whose items can carry `review_trigger` (v0.334.0).
+_REVIEW_TRIGGER_SECTIONS = ("components", "movements", "climatic_predictions")
+
+
+def review_trigger_coverage(canvas_dir):
+    """COVERAGE-tier: landscape items waiting on an event, each with the event (v0.334.0).
+
+    A watched item's reason to look again is often an event ("they open a public API"), not a
+    date, and a date-only check cannot raise it. `review_trigger` names the event; this line puts
+    every one in front of the reader on each run, so a trigger whose event has happened is seen.
+    It cannot tell whether the event happened: that is a reading of the world, not of the file.
+    """
+    path = Path(canvas_dir) / "landscape.yml"
+    if not path.exists():
+        return None
+    try:
+        doc = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return None  # SPEAKS elsewhere: validate_all_yaml_parses reports the parse failure
+    rows = []
+    for section in _REVIEW_TRIGGER_SECTIONS:
+        for item in doc.get(section) or []:
+            trig = item.get("review_trigger") if isinstance(item, dict) else None
+            if isinstance(trig, str) and trig.strip():
+                name = item.get("id") or item.get("component") or section
+                rows.append(f"{name}: {' '.join(trig.split())[:_TRIGGER_SHOWN]}")
+    if not rows:
+        return None
+    return (f"{len(rows)} landscape item(s) wait on an event (`review_trigger`); look again if "
+            "one has happened: " + " | ".join(rows))
+
+
+_TRIGGER_SHOWN = 90
 
 
 def affects_entries_findings(canvas_dir):
