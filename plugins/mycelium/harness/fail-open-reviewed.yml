@@ -1225,3 +1225,19 @@ reviewed:
     return None, and every record line then says "growth unknown: git has no commit that old here,
     or could not be run" in place of a growth figure. The size, which is what the threshold reads,
     comes from the file itself and is unaffected; only the growth half is said to be unknown.
+- id: check_channel_map_read.py@5a63c76987
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `channel_map_read` skips a read-log line that is not JSON. A skipped line can only hide a read
+    of go-to-market.yml, never invent one, so the handler errs toward the advisory being said when
+    the file was in fact opened: the louder outcome, which the agent sees and can check against the
+    file. It cannot silence the note.
+- id: check_concurrent_instrument.py@b4e0a9df95
+  verdict: CONDITIONAL 2026-11-12
+  reason: >-
+    `_header` returns {} when check_instrument_contract cannot be imported, so a `diamond_ref:` in the
+    instrument's header is not read and only `diamonds/active.yml#<id>` anchors name the diamond.
+    Silent, and correct ONLY while check_instrument_contract.py ships beside this script in the same
+    folder (it does: both are in plugins/mycelium/scripts, and its only non-stdlib import, yaml, is
+    one this script needs anyway to read human-tasks.yml). If the two are ever shipped apart, this
+    narrowing must speak.

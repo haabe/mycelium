@@ -78,6 +78,19 @@
   },
   "additionalProperties": true,
   "$defs": {
+    "gate_status": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "pass-with-risk",
+        "fail",
+        "pending",
+        "n/a",
+        "passed",
+        "not-applicable"
+      ],
+      "description": "A theory gate's status. The five documented in engine/diamond-rules.md: `pass`, `pass-with-risk` (passed, with the risk named), `fail`, `pending` (not yet evaluated, or insufficient evidence; what is missing goes in progression_blockers), `n/a` (does not apply; it does not count as passed for Security or Privacy). `passed` and `not-applicable` are accepted because scripts/scale_locks.py has always read them as `pass` and `n/a`; write the documented forms. Lower case: the readers compare lower-cased words and the enum does not."
+    },
     "diamond": {
       "type": "object",
       "properties": {
@@ -341,7 +354,11 @@
           "description": "True ship timestamp, stamped at Deliver->Complete (v0.53.0). Times the outcome->discovery loop (/metrics-pull Step 8b + session-start CHECK 10)."
         },
         "theory_gates_status": {
-          "type": "object"
+          "type": "object",
+          "description": "One status per theory gate, keyed by gate name (engine/theory-gates.md). Values are the gate statuses in $defs/gate_status; anything else is rejected (founder ruling 2026-11-12). Until then this was a bare object and accepted any value, while the readers (scripts/scale_locks.py, scripts/derive_closing_path.py, scripts/render_diamonds.py) understand only those words, so a misspelt pass read as a gate not passed, silently.",
+          "additionalProperties": {
+            "$ref": "#/$defs/gate_status"
+          }
         },
         "theory_gates": {
           "type": "object"

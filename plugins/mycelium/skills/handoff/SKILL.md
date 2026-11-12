@@ -59,6 +59,10 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    retrieved a ledger that already held 18 of 24 standard channels with decisions attached. The
    surface registry (`engine/surface-registry.yml#channel-evidence`) declares this skill as that
    ledger's reader, and `check_surface_registry.py` fails if this step stops naming the file.
+   When a write to `human-tasks.yml` starts an `outreach` task and the read log shows
+   `go-to-market.yml` unopened this session, `scripts/check_channel_map_read.py` (run by the
+   post-write hook) says so at that write. Opening the file quiets it; saying what the record
+   shows is still this step's job.
 
 2. **Determine task type**:
    - `interview` -- structured conversation with a target user/stakeholder

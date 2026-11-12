@@ -88,6 +88,11 @@ Two live defects were found and fixed at v0.83.0. `hooks.cursor.json` carried a 
 - API/server files (*/api/*, */routes/*, */server/*) -> Input validation + OWASP reminder
 - Test files -> Positive reinforcement ("Tests updated. Good.")
 - Other source -> Generic validation suite reminder
+- Canvas files -> the skill that maps to the file (once per session per file)
+- An assumption-test instrument (`.claude/evals/assumption-tests/*.md`) -> `scripts/check_concurrent_instrument.py`: names an unscored `in_progress`/`waiting` human task on the same diamond that the instrument does not mention
+- `human-tasks.yml` -> `scripts/check_channel_map_read.py`: names an `outreach` task this write starts while `go-to-market.yml` is unopened this session (read log)
+
+The last two are the deterministic cases from a blind-scored retrodiction over founder-caught corrections (founder ruling 2026-11-12, scripts only). They are not muted by the once-per-session ledger; each goes quiet when what it asks for is done.
 
 Does NOT block. Nudges the agent toward quality checks by injecting reminders into context.
 

@@ -41,6 +41,8 @@ Diamonds operate at different scales of abstraction:
 
 **Note on L4 sub-diamonds**: Complex features within L4 can spawn their own sub-L4 diamonds (e.g., a large feature broken into independently deliverable slices). These are still L4 scale but nested. Atomic tasks within delivery do NOT need their own diamond -- they are simply tasks within the L4's delivery, after its `commit_to_build`.
 
+**A continuous delivery stream is measured in `dora-metrics.yml`, not on a diamond** (founder ruling 2026-11-12). An L4 is one increment: it is built, released and closed. A project that ships continuously also has a stream (deploy frequency, lead time, change failure rate, time to restore), and the stream has no close. Its home is `.claude/canvas/dora-metrics.yml`, which `/mycelium:dora-check` writes and the session-start reminder reads on its own 30-day cadence (`last_measured`). Do not model the stream as a long-lived L4, and do not give a diamond a Definition of Done `measure` keyed on the stream: a `measure` is read only after its diamond closes (session start's outcome loop, `/mycelium:metrics-pull` Step 8b), a stream never closes, so that measure is read by nothing, ever, and `close` cannot honestly be recorded on it. `scripts/validate_canvas.py` warns (`WARN (stream measure)`) when a diamond that has not closed carries a `measure` whose `source` is `dora-metrics`. Dogfood 2026-09-19: an L4 modelling the delivery stream carried `measure: {source: dora-metrics, field: overall_classification, target: elite}` and sat open 48 days with that block evaluated by nothing.
+
 ## What each level RECURS ON — and why no scale has a catalogue door
 
 **Read this before proposing a catalogue door for any scale.** Added v0.242.3, when L2 and L3 still
@@ -329,7 +331,7 @@ blockers: [list of current blockers]
 definition_of_done: [outcome-based done-criterion, set at birth — see below]
 in_scope_paths: [L4 only: the folders the work may write to; [] is "no hold"; written with `commit_to_build`, put to the person, read by hooks/scope-gate.sh (v0.324.0)]
 theory_gates_status:  # by gate (theory-gates.md); each decision needs the gates the matrix names
-  <gate>: [pass | pass-with-risk | fail | pending | n/a]
+  <gate>: [pass | pass-with-risk | fail | pending | n/a]   # the schema rejects any other word (it also takes `passed`, `not-applicable`, which the gate checks read)
 ```
 
 Update state on every significant action. State is the source of truth for what the agent should do next.
