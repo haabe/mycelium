@@ -827,8 +827,11 @@ Three `WARN (cycle record)` lines from `validate_canvas.py`, computed by `check_
 a threshold whose eligible input count has reached `minimum_n` with `based_on_n` still 0
 (`calibration is due`; run the framework-health calibration step); a threshold that is uncalibrated
 because too few cycles of the right class carry the input, while the total cycle count is past the
-minimum (so a note blaming the count is stale); and a solution leaf in a terminal state with no
-cycle-history row naming it as `leaf_id`. engine/cycle-learning.md line 7: every terminal leaf
+minimum, printed only while `thresholds.yml#_meta.calibration_status` blames the count (rewrite
+that note to name the cycle class; once it does, or when there is no note, the same state is one
+`COVERAGE (calibration)` line for all such thresholds, because no edit ends it, only recording
+cycles of that class with an estimate and an actual); and a solution leaf in a terminal state with
+no cycle-history row naming it as `leaf_id`. engine/cycle-learning.md line 7: every terminal leaf
 generates a cycle record. On the dogfood canvas at shipping, 22 terminal solutions had no cycle and
 4 did, and every product threshold read "0 of 24 cycles are product-leaf cycles carrying
 `calibration.ice_accuracy`". Recording the missing cycles is the remedy; a reconstructed row with

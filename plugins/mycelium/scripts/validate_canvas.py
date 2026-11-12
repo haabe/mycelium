@@ -1376,7 +1376,8 @@ def print_advisory_warnings(canvas_dir):
         # that carries contradictions.
         print(f"  COVERAGE (opportunity shape): {shape}")
     for label, line in (("scenario gap", scenario_gap_coverage(canvas_dir)),
-                        ("review trigger", review_trigger_coverage(canvas_dir))):
+                        ("review trigger", review_trigger_coverage(canvas_dir)),
+                        ("calibration", calibration_coverage(canvas_dir))):
         if line:
             print(f"  COVERAGE ({label}): {line}")
 
@@ -1889,6 +1890,28 @@ def _home_for(status):
     if status in ("abandoned", "cancelled", "stalled"):
         return "`closed_without_evidence`"
     return "`pending_tasks`"
+
+
+def calibration_coverage(canvas_dir):
+    """COVERAGE-tier: thresholds uncalibrated for want of eligible cycles, in one line.
+
+    Delegated to check_cycle_recording.calibration_coverage, as cycle_record_findings below
+    delegates its WARN half. The "uncalibrated because" WARN is printed only when the
+    thresholds file's `_meta.calibration_status` blames the cycle count; otherwise the state is
+    reported here once, because no edit can clear it and a WARN that repeats on every push after
+    its note was corrected teaches the reader to skip the WARN list (dogfood 2026-10-10).
+    """
+    if not (Path(canvas_dir) / "cycle-history.yml").exists():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_ccr", Path(__file__).with_name("check_cycle_recording.py")
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.calibration_coverage(canvas_dir)
+    except Exception:  # noqa: BLE001 — a broken advisory line must never fail a build
+        return None
 
 
 def cycle_record_findings(canvas_dir):
