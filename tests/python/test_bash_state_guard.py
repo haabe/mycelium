@@ -189,3 +189,60 @@ def test_a_script_that_names_the_file_only_inside_itself_is_put_back(tmp_path, c
     kept = said["reason"].split("kept at ")[1].split(". ")[0]
     assert (root / kept).read_text() == was.replace("outcome: old", "outcome: new")
     assert "Edit or Write" in said["reason"]
+
+
+# ---------------------------------------------------------------- canvas files written unread
+
+_SCORES = ".claude/canvas/opportunities.yml"
+
+
+def _read_row(root: Path, rel: str, session: str, when: float) -> None:
+    import datetime as dt
+    ts = dt.datetime.fromtimestamp(when, dt.timezone.utc).isoformat().replace("+00:00", "Z")
+    log = root / ".claude" / "state" / "read-log.jsonl"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with open(log, "a") as fh:
+        fh.write(json.dumps({"ts": ts, "tool": "Read", "file_path": str(root / rel),
+                             "session_id": session}) + "\n")
+
+
+def _shell_write(root: Path, rel: str, text: str) -> dict:
+    payload = {"tool_use_id": "c9", "session_id": "s1",
+               "tool_input": {"command": "python3 bulk_scores.py"}}
+    assert bsg.pre(payload, root) == 0
+    f = root / rel
+    f.write_text(text)
+    _age(f, 5)
+    return payload
+
+
+def test_a_shell_write_to_a_canvas_file_never_read_is_said_and_left(tmp_path, capsys):
+    """RED ON 0.336.0. Founder ruling 2026-11-12, "Tell only": a script rewrote a canvas file the
+    session had not read; nothing was said. Now it is said, pointed at Edit or safe_replace.py,
+    and the command's version stands."""
+    root = _project(tmp_path)
+    (root / _SCORES).write_text("opportunities: []\n")
+    _read_row(root, _SCORES, "another-session", time.time() - 60)  # not this session's read
+    payload = _shell_write(root, _SCORES, "opportunities: [] # rescored\n")
+    assert bsg.post(payload, root) == 0
+    said = json.loads(capsys.readouterr().out)
+    assert "had not read" in said["reason"] and _SCORES in said["reason"]
+    assert "safe_replace.py" in said["reason"] and "Edit tool" in said["reason"]
+    assert "Nothing was undone" in said["systemMessage"]
+    assert (root / _SCORES).read_text() == "opportunities: [] # rescored\n"
+
+
+def test_control_a_canvas_file_read_earlier_in_the_session_is_silent(tmp_path, capsys):
+    root = _project(tmp_path)
+    (root / _SCORES).write_text("opportunities: []\n")
+    _read_row(root, _SCORES, "s1", time.time() - 60)
+    payload = _shell_write(root, _SCORES, "opportunities: [] # rescored\n")
+    assert bsg.post(payload, root) == 0
+    assert "had not read" not in capsys.readouterr().out
+
+
+def test_control_a_canvas_file_the_command_created_is_not_said_unread(tmp_path, capsys):
+    root = _project(tmp_path)
+    payload = _shell_write(root, _SCORES, "opportunities: []\n")
+    assert bsg.post(payload, root) == 0
+    assert "had not read" not in capsys.readouterr().out
