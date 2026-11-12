@@ -261,6 +261,16 @@ For any product delivered as a Claude Code / Codex / Cursor plugin, the SLO set 
 Read it with the same bands as the other four: **meets target = elite; a single cancelled run of the
 contract-delivering hook in the window = low**, because one cancelled start is one session that ran
 with no rules and no advisories, and the harness discards the output rather than degrading it.
+**A cancelled run of a label `check_hook_delivery.py` reports as `retired label` does not count
+toward low** (founder ruling 2026-11-12). Such a label is one no hook in the current hooks
+manifest carries: a hook since renamed or split, whose old cancellations stay in the window for
+up to 30 days after the release that fixed it. Read the band off the line that follows it,
+`hook-delivery current labels of SessionStart ...`: a cancelled run of a current label of the
+contract-delivering hook is still low; with only retired labels cancelled and the current ones
+clean, the SLI is read on the current labels alone. Say in `notes:` which retired labels were
+left out, with their cancelled counts and last-seen dates, so the exclusion is on the record.
+When the script could not read the manifest, it treats every label as current and calls none
+retired; then every cancellation counts, as before.
 `unmeasured` is the honest value on a runtime that keeps no transcripts, and it must render
 distinctly from `elite` in every aggregate (the surfaces rule: a waiver can never improve a score).
 When this SLI reads low, it is the DORA bottleneck regardless of what the four delivery metrics say:

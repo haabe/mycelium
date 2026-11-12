@@ -70,6 +70,37 @@ event could have occurred, and that report is never a finding. Scope: checks, ga
 watchers. A pure input validator has no not-yet state, and a permanently N/A column is the noise
 this rule exists to prevent.
 
+## Price the bypass: complying must be cheaper than going around (2026-11-12)
+
+No one can predict what a person, or an agent, will do at a gate, so no one can be sure the process
+is followed from start to end. What can be read from the framework itself is whether complying with
+a gate, field or step costs less than the cheapest way around it. When the way around is cheaper, it
+is the one taken under time pressure, and the gate's green reading means nothing. Hoskins names the
+user side of this (*The Product-Minded Engineer*, "Optimize Your Path of Least Resistance"): *"Users
+are not perfectly premeditated when exercising products. They often naturally take the path of least
+resistance."* His worked example is a catch-all field added as a fallback: *"Alas, the least helpful
+option was also the most discoverable!"* An exemption field that costs one word is the same shape.
+In a framework an agent operates, the cheapest way around is often the agent's own: a field, a
+sentence or a test written so the gate reads green without the work behind it.
+
+The sources that make this work do not mandate; they price. Team Topologies (Skelton & Pais) describes
+Trade Me's platform, which teams may choose not to use: *"A team can decide not to use TVP, as long as they
+complete a production-readiness checklist."* Opting out costs more than complying. Mycelium's escape
+hatch is priced the same way: a bypass for cause, documented and paid back.
+
+Three consequences for every gate, field and step:
+
+1. **A field nothing writes cannot be complied with at all.** Compliance has to be possible before
+   it can be cheap: every field a gate reads needs a writer, in a skill or a script.
+2. **A gate that passes on absence prices the bypass at zero.** If leaving a block out passes, or
+   an exemption field costs one word, that becomes the default. An exemption has to cost something
+   a reader can check, such as a stated reason.
+3. **The cheapest path has to lead where the work should go.** If most of the easy exits from a step
+   lead away from the step's goal, the step is decorative.
+
+A new gate is reviewed against this before it ships: check 10 of the Mandatory Pre-Ship Protocol
+(G-P-pre) in `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md`.
+
 ## Model variance: convert prose to mechanism, then trim; never trim and hope
 
 A harness serving heterogeneous models cannot shed constraints on the assumption of strong-model

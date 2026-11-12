@@ -143,3 +143,44 @@ reviewed:
       landscape item's reason to look again is often an event, which a date check cannot raise.
       The consumer lists each trigger on every run; it cannot tell whether the event happened.
       The candidate proposed the landscape sweep as the reader, and upstream has no sweep skill.
+
+  - field: gates_basis
+    canvas: active
+    consumer: scripts/scale_locks.py#scoped_service_record
+    verdict: wired
+    note: >-
+      Founder-ruled 2026-11-12 ("On the exposure"). `exposures[].gates_basis.service_quality` as an
+      object is a service check scoped to that exposure: /mycelium:service-check writes the 15
+      principles there with a decision-log line, and services.yml stays the product-wide record.
+      The release gate (`State.service_record_gap`, called from `_record_problems` and
+      `gate_missing`) reads it before services.yml, to the same bar of all 15 judged with
+      evidence. The other keys of `gates_basis`, and a `service_quality` written as text, are
+      notes for a person and no check reads them.
+
+  - field: acting_on
+    canvas: opportunities
+    consumer: scripts/validate_canvas.py#acted_on_coverage
+    verdict: wired
+    note: >-
+      Founder-ruled 2026-11-12 ("Add the field"; candidate
+      l2-evidence-never-asks-whether-anyone-is-acting-on-the-need). Per story behind an
+      opportunity, whether the person was acting on the need (under_way, tried_options) or living
+      with it (lived_with). Written by /mycelium:user-interview's post-interview snapshot. The
+      consumer counts acted-on against voiced-only answers per open opportunity on the COVERAGE
+      tier, and /mycelium:ost-builder carries the same counts into the L2's comparison of sibling
+      opportunities when the target is chosen. An opportunity with no answers is not counted:
+      never asked is not the same as nobody acting.
+
+  - field: triggers
+    canvas: active
+    consumer: scripts/check_scale_occupancy.py#l1_trigger_sets
+    verdict: wired
+    note: >-
+      Founder-ruled 2026-11-12 ("Triggers on L1 only"; candidates
+      design-the-design-rules-is-the-answer-to-what-l1-is and how-to-separate-a-container-from-a-unit).
+      One diamond type; an L1 carries a trigger set: the events that would make the strategy decide
+      again, each with what it then does and what to rule out first. Written by /mycelium:wardley-map
+      step 9. The consumer lists every live L1's triggers on each scale-occupancy run
+      (/mycelium:diamond-assess step 2c), and names an L1 that has none; it cannot tell whether an
+      event happened. Not the same as `review_trigger` (when to look again at one landscape item) or
+      `spawn_trigger` (what opened a diamond): this is what makes the L1 itself decide again.

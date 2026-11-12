@@ -298,6 +298,36 @@
               }
             },
             "additionalProperties": true
+          },
+          "acting_on": {
+            "type": "array",
+            "description": "Per story behind this opportunity: was the person ACTING on the need at the time, or only living with it? Written by /mycelium:user-interview's post-interview snapshot, one entry per story (founder ruling 2026-11-12, candidate l2-evidence-never-asks-whether-anyone-is-acting-on-the-need). A voiced pain and a need someone is working on were recorded alike, so an L2 could choose its target between them without the difference showing. Snyder, The Power of Pull (Basic Venture, 2026), names what separates them: a project under way now, unavoidable, options tried or weighed, and where they fell short. Read by validate_canvas.acted_on_coverage, which counts acted-on against voiced-only answers per opportunity on the COVERAGE tier; /mycelium:ost-builder carries the same counts into the L2's target comparison.",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "answer"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "description": "The story's evidence id, as written in this opportunity's provenance.evidence_sources (e.g. interview-2026-11-12-clinic-receptionist)."
+                },
+                "answer": {
+                  "enum": [
+                    "under_way",
+                    "tried_options",
+                    "lived_with"
+                  ],
+                  "description": "Acting on it now? `under_way`: a project to deal with it was under way, and something made it unavoidable. `tried_options`: they had tried or weighed options and can say where those fell short. `lived_with`: the need is real and they were taking no action; a legitimate answer, not a failure. The first two count as acted on, the third as voiced only. Read for meaning, not for keywords (engine/reading-for-meaning.md)."
+                },
+                "detail": {
+                  "type": "string",
+                  "description": "What showed it, in a line: the project and what made it unavoidable, or the options and where each fell short, or what they did instead of acting."
+                }
+              },
+              "additionalProperties": false
+            }
           }
         },
         "required": [

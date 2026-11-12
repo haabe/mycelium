@@ -1365,6 +1365,7 @@ def print_advisory_warnings(canvas_dir):
         ("opportunity mover", opportunity_mover_findings(canvas_dir)),
         ("unscanned source", unscanned_source_findings(canvas_dir)),
         ("stale blocker", stale_blocker_findings(canvas_dir)),
+        ("stream measure", stream_measure_findings(canvas_dir)),
         ("cross-reference", cross_reference_findings(canvas_dir)),
         ("off-outcome root", off_north_star_root_findings(canvas_dir)),
         ("hand-typed metric", hand_typed_metric_findings(canvas_dir)),
@@ -1379,6 +1380,7 @@ def print_advisory_warnings(canvas_dir):
         print(f"  COVERAGE (opportunity shape): {shape}")
     for label, line in (("scenario gap", scenario_gap_coverage(canvas_dir)),
                         ("review trigger", review_trigger_coverage(canvas_dir)),
+                        ("acted on", acted_on_coverage(canvas_dir)),
                         ("calibration", calibration_coverage(canvas_dir))):
         if line:
             print(f"  COVERAGE ({label}): {line}")
@@ -1542,6 +1544,58 @@ def review_trigger_coverage(canvas_dir):
 
 
 _TRIGGER_SHOWN = 90
+
+#: `acting_on[].answer` values that show the need ACTED ON; `lived_with` is voiced only
+#: (founder ruling 2026-11-12).
+_ACTED_ON = ("under_way", "tried_options")
+#: How many opportunities the acted-on line names before summarising.
+_ACTED_ON_NAMED = 8
+
+
+def acted_on_counts(opp):
+    """(acted on, voiced only) for one opportunity's `acting_on` answers. An answer outside the
+    enum is counted in neither: the schema reports it, and guessing its side would be a reading."""
+    answers = [a.get("answer") for a in opp.get("acting_on") or [] if isinstance(a, dict)]
+    return (sum(1 for a in answers if a in _ACTED_ON),
+            sum(1 for a in answers if a == "lived_with"))
+
+
+def acted_on_coverage(canvas_dir):
+    """COVERAGE-tier: per opportunity, how much of its story evidence shows the need acted on.
+
+    Founder ruling 2026-11-12 (candidate
+    l2-evidence-never-asks-whether-anyone-is-acting-on-the-need): an L2 could clear its interview
+    floor and choose its target on voiced pains alone, because a need someone was working on
+    and a pain they lived with were recorded alike. user-interview's snapshot now records, per
+    story, `acting_on` (under_way / tried_options / lived_with). This line counts them for each
+    open opportunity that has any, so the L2's comparison of siblings
+    (ost-builder, "Choosing the target") can say which rest on action and which on words. Only
+    opportunities with answers are named: one with none was never asked, which is not the same as
+    a need nobody acts on, and a count of those would score silence as a finding.
+    """
+    path = Path(canvas_dir) / "opportunities.yml"
+    if not path.exists():
+        return None
+    try:
+        doc = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return None  # SPEAKS elsewhere: validate_all_yaml_parses reports the parse failure
+    opps = doc.get("opportunities") if isinstance(doc, dict) else None
+    closed = {"closed", "discarded", "resolved", "addressed"}
+    rows = []
+    for o in opps or []:
+        if not isinstance(o, dict) or str(o.get("status", "open")).lower() in closed:
+            continue
+        acted, voiced = acted_on_counts(o)
+        if acted or voiced:
+            name = o.get("id") or o.get("name", "?")
+            rows.append(f"{name}: {acted} acted on, {voiced} voiced only")
+    if not rows:
+        return None
+    more = " ..." if len(rows) > _ACTED_ON_NAMED else ""
+    return (f"{len(rows)} open opportunit{'y records' if len(rows) == 1 else 'ies record'} whether "
+            "people were acting on the need (`acting_on`; under_way or tried_options = acted on, "
+            "lived_with = voiced only): " + " | ".join(rows[:_ACTED_ON_NAMED]) + more)
 
 
 def affects_entries_findings(canvas_dir):
@@ -1732,6 +1786,78 @@ def stale_blocker_findings(canvas_dir):
             out.append(
                 f"diamonds/active.yml: {did} is ruled {ruling} on {ruled_at}, but its confidence "
                 f"derivation changed on {changed} — the ruling predates the evidence it rests on"
+            )
+    return out
+
+
+#: Measure sources that name the delivery stream rather than an outcome a diamond can close on.
+#: The dogfood shape: `measure: {source: dora-metrics, field: overall_classification, ...}`.
+_STREAM_SOURCES = {"dora-metrics", "dora"}
+#: States that end a diamond without a close: a measure nobody reads there is not owed any more.
+_ENDED_STATES = {"killed", "archived", "retargeted", "complete", "completed"}
+
+
+def _stream_source(measure) -> str:
+    """The measure's source when it names the delivery stream, else ''."""
+    if not isinstance(measure, dict):
+        return ""
+    raw = str(measure.get("source") or "").strip()
+    name = raw.lower().rsplit("/", 1)[-1].split("#", 1)[0]
+    name = name.removesuffix(".yml").removesuffix(".yaml")
+    return raw if name in _STREAM_SOURCES else ""
+
+
+def _phase_reader():
+    try:
+        from scale_locks import phase_of  # noqa: PLC0415 -- sibling, loaded on use
+    except ImportError:                     # a partial install still warns on the recorded phase
+        return lambda d: str(d.get("phase") or "")
+    return phase_of
+
+
+def stream_measure_findings(canvas_dir):
+    """WARN-tier: an open diamond carries a measure it can never reach.
+
+    Founder ruling 2026-11-12 (l4s-object-is-one-increment-but-every-shipping-project-also-has-a-
+    stream, "Stream lives in dora-metrics"). A Definition of Done `measure` is read only after its
+    diamond closes: session start's outcome loop and /metrics-pull Step 8b both start from a closed
+    diamond. A continuous delivery stream never closes, so a measure keyed on the stream
+    (`source: dora-metrics`) on a diamond that has not closed is read by nothing, ever, and the
+    `close` it waits for cannot be recorded honestly either: the stream has no moment at which its
+    signal is met. Dogfood 2026-09-19: an L4 carrying `{source: dora-metrics, field:
+    overall_classification, target: elite, check_after: 30d}` sat open 48 days with that block
+    evaluated by nothing. The stream is measured in dora-metrics.yml itself, which the session-start
+    reminder reads on its own 30-day cadence (engine/diamond-rules.md, Scales).
+
+    Report, never rewrite: whether the diamond should drop the measure, take one its close can
+    reach, or close on something else is the owner's call.
+    """
+    path = Path(canvas_dir).parent / "diamonds" / "active.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    diamonds = data.get("active_diamonds") if isinstance(data, dict) else None
+    if not isinstance(diamonds, list):
+        return []
+    phase_of = _phase_reader()
+    out = []
+    for dm in diamonds:
+        if not isinstance(dm, dict):
+            continue
+        if phase_of(dm) == "complete" or str(dm.get("state") or "").lower() in _ENDED_STATES:
+            continue
+        dod = dm.get("definition_of_done")
+        src = _stream_source(dod.get("measure")) if isinstance(dod, dict) else ""
+        if src:
+            out.append(
+                f"diamonds/active.yml: {dm.get('id', '?')} has not closed and its "
+                f"definition_of_done.measure reads `{src}`, the delivery stream. A measure is read "
+                f"only after its diamond closes, and a stream never closes, so nothing will ever "
+                f"read this one. Measure the stream in dora-metrics.yml (engine/diamond-rules.md, "
+                f"Scales) and give this diamond a measure its own close can reach, or none"
             )
     return out
 

@@ -30,6 +30,19 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - For each **recommended** canvas file: does it exist? Flag as gap if missing.
    - Report: `N/M required files present, K recommended files missing`
 
+2b. **Check record size** (founder ruling 2026-11-12, "Size warning only"): run
+   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_record_size.py" --project-dir .` It names every
+   canonical record (`.claude/canvas/*.yml`, `.claude/diamonds/*.yml`, `.claude/memory/*.md`,
+   `.claude/harness/*.md` and `*.yml`: the decision log, corrections, human tasks, cycle history
+   and their siblings) larger than 256 KB, the size past which the Read tool refuses to return a
+   file whole (the script's docstring says where that number comes from), with its size and its
+   growth over the last 30 days from git. Report the line as it is, under Warnings when any file
+   is named. It is report-only: do not move, trim or archive anything because of it; whether a
+   record is split is the person's decision. For every named file, a claim that it holds or lacks
+   something rests on a search of the whole file, never on the slice that was read. A file under
+   the threshold can still be cut by the Read tool's token limit, so a clean line is not proof
+   every record reads whole. Session start relays the same line when a file is past it.
+
 3. **Check `_meta` blocks**:
    - For each existing canvas file, check for `_meta:` block
    - Flag missing `_meta` blocks
@@ -296,7 +309,9 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      streaks at or past the mute threshold and the clear rate of anything that has fired more than
      five times; cite these numbers under Measurement in `/bvssh-check`, which rated that dimension
      amber three assessments running on advisories nobody counted. A muted advisory is a request for a
-     ruling: `advisory_ledger.py rule --id <id> --ruling keep|fix|drop --note "..."`. The ledger is
+     ruling: `advisory_ledger.py rule --id <id> --ruling keep|fix|drop --note "..."`. A `fix`
+     ruling keeps the advisory in front of the person until its condition clears, its line then
+     reading "you ruled fix on DATE; fix owed" instead of asking for a ruling. The ledger is
      `.claude/state/advisory-ledger.jsonl`, append-only. N/A with no ledger is a project that has not
      opened a session on 0.184.0 yet, not a clean bill.
    - **8c(h), added v0.185.0: did the harness deliver our hooks at all.** Run

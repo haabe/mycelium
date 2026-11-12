@@ -41,6 +41,8 @@ Diamonds operate at different scales of abstraction:
 
 **Note on L4 sub-diamonds**: Complex features within L4 can spawn their own sub-L4 diamonds (e.g., a large feature broken into independently deliverable slices). These are still L4 scale but nested. Atomic tasks within delivery do NOT need their own diamond -- they are simply tasks within the L4's delivery, after its `commit_to_build`.
 
+**A continuous delivery stream is measured in `dora-metrics.yml`, not on a diamond** (founder ruling 2026-11-12). An L4 is one increment: it is built, released and closed. A project that ships continuously also has a stream (deploy frequency, lead time, change failure rate, time to restore), and the stream has no close. Its home is `.claude/canvas/dora-metrics.yml`, which `/mycelium:dora-check` writes and the session-start reminder reads on its own 30-day cadence (`last_measured`). Do not model the stream as a long-lived L4, and do not give a diamond a Definition of Done `measure` keyed on the stream: a `measure` is read only after its diamond closes (session start's outcome loop, `/mycelium:metrics-pull` Step 8b), a stream never closes, so that measure is read by nothing, ever, and `close` cannot honestly be recorded on it. `scripts/validate_canvas.py` warns (`WARN (stream measure)`) when a diamond that has not closed carries a `measure` whose `source` is `dora-metrics`. Dogfood 2026-09-19: an L4 modelling the delivery stream carried `measure: {source: dora-metrics, field: overall_classification, target: elite}` and sat open 48 days with that block evaluated by nothing.
+
 ## What each level RECURS ON — and why no scale has a catalogue door
 
 **Read this before proposing a catalogue door for any scale.** Added v0.242.3, when L2 and L3 still
@@ -92,6 +94,43 @@ it has no producer and **must not be given a diamond**, which would invent a mak
 world makes. Gameplay is the one Wardley output that IS a proposal — and he states the gameplay and
 doctrine sets are **open**, so it is a library you choose FROM, not a project backlog you draw DOWN.
 
+**ONE DIAMOND TYPE, AND L1 CARRIES A TRIGGER SET (founder ruling 2026-11-12, "Triggers on L1
+only").** The table above says L1 emits triggers; this is what that means and where they are kept.
+Team Topologies' second edition says the most important thing in designing an organisation is *"not
+the shape of the organization itself but the decision rules and heuristics used to adapt and change
+the organization as new challenges arise; that is, we need to design the design rules, not just the
+organization"* (Skelton & Pais, ch. 8). Wardley's strategy cycle is looped, not finished, and
+reaches the same place. So what an L1 produces is a set of triggers, not a state. Each trigger has
+three parts: the event, stated so someone who was not there can check it (`when`); what the L1 then
+does, the decision it takes again or the child cycle it offers (`then`); and, where one is known,
+what else would produce the same signal and has to be ruled out first (`rule_out`; the book's own
+example is a slower delivery cadence that may be accrued technical debt). State the event as the
+limit that matters, not as a size: the book puts the real limit at *"the limit on cognitive capacity
+to handle changes to the system in an effective way"*, not at headcount. The set is kept on the L1
+diamond as `triggers` (`schemas/diamonds/active.schema.json`), written by `/mycelium:wardley-map`
+step 9 and listed on every run of `scripts/check_scale_occupancy.py` (`/mycelium:diamond-assess`
+step 2c). It is listed mechanically because the authors name the detection problem: *"it's often
+difficult to have the required organizational self-awareness to detect when it's time to evolve."*
+The listing cannot tell whether an event has happened; a person reads that. Trigger sets are on L1
+only: the other scales recur on their parent's decision or on an event a skill already offers (the
+table above). The chapter's support is author assertion and practitioner narrative, not measurement,
+so the triggers it lists (software too large for one team, a slower delivery cadence, many business
+services relying on a large set of underlying services) are examples to adapt, not a shipped default.
+
+**WHY THERE IS NO CONTAINER TYPE.** The candidates behind the ruling argued for two object types:
+a container that carries triggers and never closes (L1), and a unit that closes (every other
+scale). That is the distinction Team Topologies' second edition added after typing its *"platform
+grouping"* as a team type had *"caused some inadvertent confusion"*. The founder ruled for one type,
+with the trigger set on L1. The record behind the ruling shows three things. (1) A container type
+changes four things at once: the noun, the rendering (`/mycelium:diamond-render`), the composition
+rule, and the count ("six scales"). The book shows the cost of doing it by halves: it redrew its
+figure with a dotted line and kept the old count, *"but we'll still refer to them as the four team
+types."* (2) The general container is announced in the source and not developed: *"In a future book,
+we expect to expand this idea further,"* so the source gives no rule for how containers nest or how
+many levels there are. (3) What the container was for, the rules under which the units below open
+and close, is what the trigger set carries, on the one scale that needs it. L1 still recurs on a
+decision, is entered by an event offer, and records its decisions like every other scale.
+
 **L4 SPECIFICALLY.** No canvas schema carries an id-bearing record for a delivery increment:
 `gist.yml#steps[]` and `#current_tasks[]` have no `id`, and GIST belongs to L3 in any case. L4's own
 theories supply no catalogue — DORA measures a continuous stream, OWASP supplies checks, SOLID
@@ -140,7 +179,7 @@ the books, three adversarial rounds and founder correction.*
 - **Mechanical:** the discovery gate's second stage refuses new source files unless an L3/L4/L5 whose chain holds has recorded `commit_to_build` (committed to build or released) with Four Risks and Privacy passed; `hooks/exposure-gate.sh` refuses a deploy, publish or remote pull-and-restart the agent runs unless one is in Deliver with Security, Privacy and Service Quality passed. Gate outcomes are read from `theory_gates_status`; a gate the diamond never recorded is not passed.
 - **Rule, where no hook can see:** a deploy the USER runs. Operating contract rule 14 and `/mycelium:preflight` carry it.
 - **The full gate set, not a sample (v0.247.0).** Committing to build needs every gate the matrix requires on `set_target`, `start_experiment` and `commit_to_build` for that scale; releasing adds `release`'s. 0.246.0 read two, and E2E run 11 wrote a new L3 straight into develop with exactly those two marked passed and four others pending. `n/a` counts for a gate that genuinely does not apply, never for Security or Privacy.
-- **Security and Privacy need their record, not a status word (v0.247.0).** Security counts as passed only with a threat model on the canvas (`threat-model.yml` `threats`; the L3 criterion is "STRIDE threat model completed"), Privacy only with a privacy assessment (`privacy-assessment.yml` `last_assessed`, `data_inventory`, and since v0.331.0 all seven `principles` judged with `evidence`). **Since v0.331.0 a pass on Service Quality and Explainability needs its record too**, while `n/a` stays legal for both: Service Quality all 15 `principles` in `services.yml` judged with `evidence` (`n/a` with a reason counts), Explainability a `services[].xai` block with the tier at an L3 and a verdict for each stage at an L4 or L5, asked only when AI components are detected. Each bar is the one its skill's own text sets (`scripts/_assessment_lib.py`); until 0.331.0 the Privacy gate passed on a date and an inventory with every principle unjudged, and the other two on the status word.
+- **Security and Privacy need their record, not a status word (v0.247.0).** Security counts as passed only with a threat model on the canvas (`threat-model.yml` `threats`; the L3 criterion is "STRIDE threat model completed"), Privacy only with a privacy assessment (`privacy-assessment.yml` `last_assessed`, `data_inventory`, and since v0.331.0 all seven `principles` judged with `evidence`). **Since v0.331.0 a pass on Service Quality and Explainability needs its record too**, while `n/a` stays legal for both: Service Quality all 15 `principles` in `services.yml` judged with `evidence` (`n/a` with a reason counts), Explainability a `services[].xai` block with the tier at an L3 and a verdict for each stage at an L4 or L5, asked only when AI components are detected. Each bar is the one its skill's own text sets (`scripts/_assessment_lib.py`); until 0.331.0 the Privacy gate passed on a date and an inventory with every principle unjudged, and the other two on the status word. A Service Quality check scoped to one exposure is recorded on that exposure's `gates_basis.service_quality` and read before `services.yml`, to the same bar (founder ruling 2026-11-12).
 - **A decision leaves a record and passes its gates (v0.248.0).** The scale-lock gate refuses a write that records a decision unless the matrix's required gates for it are passed; since v0.306.0 the move is the decisions it records, so those entries are its record (`progression_history` is kept for readers and no longer required, v0.307.8); `scripts/scale_locks.py` holds the matrix as one table that the code, exposure and phase-move checks all read. Parking and killing are free. **A recorded decision stays recorded (v0.309.1, DL-1374):** a diamond does not move back; the gate refuses a write that removes a recorded decision or changes its name or date, and a loop iterates by appending (DL-1373).
 - **A diamond is born with no decision recorded (v0.247.0).** The scale-lock gate refuses a new diamond written with decisions; they are recorded through `/mycelium:diamond-progress` and their gates.
 - **The scale-lock override waives the chain, never a decision's gates.** Only `delivery-skip-ack` (the user declares the work untracked) lifts both, and since v0.293.0 only for the paths it `covers`, for releases only when it says `releases: true`, until it `expires` (30 days by default), with every use logged (founder ruling DL-1364).
@@ -292,7 +331,7 @@ blockers: [list of current blockers]
 definition_of_done: [outcome-based done-criterion, set at birth — see below]
 in_scope_paths: [L4 only: the folders the work may write to; [] is "no hold"; written with `commit_to_build`, put to the person, read by hooks/scope-gate.sh (v0.324.0)]
 theory_gates_status:  # by gate (theory-gates.md); each decision needs the gates the matrix names
-  <gate>: [pass | pass-with-risk | fail | pending | n/a]
+  <gate>: [pass | pass-with-risk | fail | pending | n/a]   # the schema rejects any other word (it also takes `passed`, `not-applicable`, which the gate checks read)
 ```
 
 Update state on every significant action. State is the source of truth for what the agent should do next.

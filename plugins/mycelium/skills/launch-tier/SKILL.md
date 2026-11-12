@@ -292,6 +292,8 @@ If `/mycelium:bias-check` reveals significant biases, address them before finali
 
    Why this step exists: until it was written, the only place in the framework that asked who left and why was one row of `${CLAUDE_PLUGIN_ROOT}/harness/cognitive-biases.md` (survivorship bias: "Ask who left and why"), which a builder meets only in a bias check. Cagan names "why are people not using our product?" as the more important why, one that "most teams never ask" (Cagan, "Strong Opinions, loosely held", Lenny and Friends Summit, 2026-09-10).
 
+1c. **Write the drafted messages to a file, and say where (contract rule 13).** The messages from step 1b and their rhythm are sent over days or weeks after this session, and the chat is gone by then. Write them to the brief file `/mycelium:handoff` names (its step 4d), or, when no brief was written, to `.claude/handoffs/<YYYY-MM-DD>-<slug>.md` (the date written; the slug a few words naming the launch, lower case, joined by hyphens), when you draft them, and name that path in the reply. Showing them only in the reply loses them (`${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md`, rule 13).
+
 2. **Validate scenarios against reality** (Hoskins):
    - For each scenario in `.claude/canvas/scenarios.yml` linked to this launch: did the persona's story play out?
    - Update `lifecycle.validated_in_market`: confirmed, partial, or invalidated

@@ -1218,3 +1218,34 @@ reviewed:
     "safe_replace: key-shape check not run on <path> (<error>)", which is printed to stderr with the
     edit's other output. The scan reads the return as a default value; it is the message. The edit
     itself goes ahead, as the Write/Edit hook's advisory does.
+- id: check_record_size.py@723ac558f6
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `_git` returns '' when git cannot be run (not installed, or timed out). '' makes `sizes_then`
+    return None, and every record line then says "growth unknown: git has no commit that old here,
+    or could not be run" in place of a growth figure. The size, which is what the threshold reads,
+    comes from the file itself and is unaffected; only the growth half is said to be unknown.
+- id: check_channel_map_read.py@5a63c76987
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `channel_map_read` skips a read-log line that is not JSON. A skipped line can only hide a read
+    of go-to-market.yml, never invent one, so the handler errs toward the advisory being said when
+    the file was in fact opened: the louder outcome, which the agent sees and can check against the
+    file. It cannot silence the note.
+- id: check_concurrent_instrument.py@b4e0a9df95
+  verdict: CONDITIONAL 2026-11-12
+  reason: >-
+    `_header` returns {} when check_instrument_contract cannot be imported, so a `diamond_ref:` in the
+    instrument's header is not read and only `diamonds/active.yml#<id>` anchors name the diamond.
+    Silent, and correct ONLY while check_instrument_contract.py ships beside this script in the same
+    folder (it does: both are in plugins/mycelium/scripts, and its only non-stdlib import, yaml, is
+    one this script needs anyway to read human-tasks.yml). If the two are ever shipped apart, this
+    narrowing must speak.
+- id: validate_canvas.py@99030fc04d
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `acted_on_coverage` (founder ruling 2026-11-12, the acting_on field) returns None when
+    opportunities.yml cannot be read or parsed. It is a COVERAGE line, not a gate, and the failure
+    does speak: `validate_all_yaml_parses` runs first in main() and reports every canvas file that
+    does not parse, so a broken opportunities.yml fails validation loudly before this line is
+    reached. Same judgement as `validate_canvas.py@1132725329` (review_trigger_coverage).

@@ -102,6 +102,37 @@ case "$FILE_PATH" in
     ;;
 esac
 
+# ============================================================
+# Two retrodiction checks, each at the write that is its moment (founder ruling 2026-11-12)
+# ============================================================
+# A blind-scored retrodiction over the corrections the founder caught by hand found two that a
+# script reading existing files could have caught: an instrument frozen for a diamond while another
+# on the same diamond was in flight, and outreach started without opening the channel map. Both
+# are said here, at the write. Neither rides the once-per-session ledger below: each goes quiet
+# when the thing it asks for is done (the in-flight task named in the instrument; go-to-market.yml
+# opened), not because it was said once. Advisory; a helper that errors prints nothing.
+RETRO=""
+case "$FILE_PATH" in
+  *".claude/evals/assumption-tests/"*.md)
+    RETRO="$(printf '%s' "$INPUT" | python3 "$(dirname "${BASH_SOURCE[0]}")/../scripts/check_concurrent_instrument.py" 2>/dev/null)"
+    ;;
+  *".claude/canvas/human-tasks.yml")
+    RETRO="$(printf '%s' "$INPUT" | python3 "$(dirname "${BASH_SOURCE[0]}")/../scripts/check_channel_map_read.py" 2>/dev/null)"
+    ;;
+esac
+
+_emit() {
+  python3 -c "
+import json, sys
+print(json.dumps({
+    'hookSpecificOutput': {
+        'hookEventName': 'PostToolUse',
+        'additionalContext': sys.argv[1]
+    }
+}))
+" "$1"
+}
+
 # v0.11.1: Canvas schema validation nudge (dogfood G5)
 # Remind to validate canvas files against JSON schemas after edits.
 if [ -n "$NUDGE" ]; then
@@ -136,6 +167,7 @@ fi
 if [ -z "$NUDGE" ]; then
   case "$FILE_PATH" in
     *".claude/"*)
+      [ -n "$RETRO" ] && _emit "$RETRO"
       exit 0
       ;;
   esac
@@ -194,20 +226,13 @@ sid = str(d.get("session_id") or "")
 print(sid + "|" + os.path.basename(sys.argv[1]) if sid else "")
 ' "$FILE_PATH" 2>/dev/null)
   if [ -n "$NUDGE_KEY" ] && [ -f "$SEEN_FILE" ] && grep -qxF "$NUDGE_KEY" "$SEEN_FILE" 2>/dev/null; then
+    [ -n "$RETRO" ] && _emit "$RETRO"
     exit 0
   fi
   if [ -n "$NUDGE_KEY" ]; then
     mkdir -p "$(dirname "$SEEN_FILE")" 2>/dev/null && printf '%s\n' "$NUDGE_KEY" >> "$SEEN_FILE" 2>/dev/null || true
   fi
-  python3 -c "
-import json, sys
-print(json.dumps({
-    'hookSpecificOutput': {
-        'hookEventName': 'PostToolUse',
-        'additionalContext': sys.argv[1]
-    }
-}))
-" "$NUDGE"
+  _emit "${RETRO:+$RETRO }$NUDGE"
 fi
 
 exit 0

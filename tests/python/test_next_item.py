@@ -202,6 +202,39 @@ def test_muted_unclearable_advisory_is_not_offered_as_awaiting_a_ruling(tmp_path
     assert out.startswith("NEXT ITEM: AI-tool metrics are stale.")
 
 
+def _muted_tasks(root, ruling=None):
+    _, al = _mods()
+    _seen(root, "2026-09-01", {"ai-tool-metrics-stale": None, "open-human-tasks": 26})
+    evs = [{"kind": "muted", "id": "open-human-tasks", "date": "2026-09-08", "streak_days": 7,
+            "since": "2026-09-02"}]
+    if ruling:
+        evs.append({"kind": "ruled", "id": "open-human-tasks", "date": "2026-09-09",
+                    "ruling": ruling, "note": ""})
+    al.append_events(al.ledger_path(root), evs)
+
+
+def test_a_fix_ruling_stays_in_front_and_says_fix_owed(tmp_path, capsys, monkeypatch):
+    # Founder ruling 2026-11-12, "Stays, says 'fix owed'": still the next item, saying what was
+    # decided instead of "muted ... with no ruling".
+    (tmp_path / ".claude").mkdir()
+    _muted_tasks(tmp_path, ruling="fix")
+    rc, out = _run(tmp_path, capsys, monkeypatch, METRICS + TASKS)
+    assert out.startswith("NEXT ITEM: Open human tasks are waiting on a read.")
+    assert "You ruled fix on 2026-09-09; fix owed." in out
+    assert "with no ruling" not in out
+    ni, _ = _mods()
+    item = {"id": "open-human-tasks", "text": "t", "command": "c", "shown": 5,
+            "first_shown": "2026-09-01", "fix_owed": "2026-09-09"}
+    assert "unanswered" not in ni.render(item) and "unanswered" not in ni.render_human(item)
+
+
+def test_control_an_unruled_muted_item_still_asks_for_a_ruling(tmp_path, capsys, monkeypatch):
+    (tmp_path / ".claude").mkdir()
+    _muted_tasks(tmp_path)
+    rc, out = _run(tmp_path, capsys, monkeypatch, METRICS + TASKS)
+    assert "muted since 2026-09-02 with no ruling" in out and "fix owed" not in out
+
+
 def test_a_fired_proposal_on_a_closed_diamond_is_not_offered(tmp_path, capsys, monkeypatch):
     """v0.312.2: the dogfood L4, archived in place on 2026-09-29, offered a fired verdict as the
     session's next item ("run /mycelium:diamond-progress") on a diamond already stopped."""

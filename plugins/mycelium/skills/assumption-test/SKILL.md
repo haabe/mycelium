@@ -124,6 +124,15 @@ no answer, set neither and choose a heavier test.
 | **User interviews** | Days | High | Story-based interviews about past behavior (see `/mycelium:user-interview`) |
 | **Field research** | Days | High | Observe users in their natural context |
 
+### Published research: a claim about people, or a claim about this product?
+
+Before a study, a statistic or a book counts as evidence for an assumption, ask what the assumption is about.
+
+- **A claim about people in general** (how people perceive, decide, remember or get confused; a known cognitive bias; a known usability pattern; how a kind of design affects a named group of people) can be answered from published research. A large, well-run study can be a better instrument for it than a handful of interviews. Grade the source by what was measured, on whom, how many, and whether anyone replicated it. Being published is not a grade: a book of case studies the authors ran themselves is weaker evidence than a replicated experiment, though both arrive as a citation.
+- **A claim about this product, its market or its users** (will these people adopt it, where does this flow confuse them, how many people in this segment rate this outcome as important) needs a human: an interview, a test, observed use. No study has measured what this product does to the people who meet it. Research on the general case can say where to look (a known confusion pattern is a candidate to test here); it is not the test.
+
+If one assumption mixes both, split it and route each half: the general half to the literature, the half about this product to a test with people.
+
 ### Tests (controlled artifacts — days to weeks)
 
 | Test Type | Effort | Signal Quality | When to Use |
@@ -222,6 +231,7 @@ frozen_at: 2026-08-16              # when the prediction was fixed
 frozen_before: "any comment is fetched"   # THE EVENT it precedes
 score_by: 2026-08-30               # the date by which it must be scored
 status: live                       # live | scored | void | not-an-instrument
+diamond_ref: l1-strategy           # the diamond this test feeds, when it feeds one (read against human-tasks.yml)
 runs_on: disk                      # disk | network | human — WHO OR WHAT CAN RUN IT (v0.183.0)
 # waits_for: "the 14 days of signups after launch, closing 2026-08-29"   # only when the data it reads does not exist yet (v0.330.1)
 does_not_reproduce: "the enforcement layer: the run is `claude -p` in a scratch folder without the plugin, so no hook fires"   # what this run CANNOT show (v0.209.0)
@@ -243,6 +253,18 @@ the failure it names; it makes the gap visible at design time, where stating it 
 `mocked-persona-interview` has required the equivalent declaration for a simulated PERSON since
 May; nothing asked it of a simulated RUN, and the dogfood record shows the line written
 voluntarily twice in a fortnight and recorded nowhere a check could read.
+
+**`diamond_ref` is the line that finds an instrument already running on the same diamond.**
+Before freezing a test for a diamond, read `.claude/canvas/human-tasks.yml` for an `in_progress`
+or `waiting` task carrying the same `diamond_ref`. If one exists, the default is to wait for its
+horizon; running this one as well needs a reason that survives being written down, so write it
+in this file and name that task's id. When you save the instrument,
+`scripts/check_concurrent_instrument.py` (run by the post-write hook) does that lookup and names
+any such task the file does not mention; a `diamonds/active.yml#<id>` anchor anywhere in the file
+counts as naming the diamond too. An instrument that names no diamond is not checked. Why: on
+2026-08-21 a dogfood session ran a sweep for its L1 while an assumption test on the same L1 was
+in flight with a horizon nine days out, and that test existed because the sweep's design had
+already failed; `human-tasks.yml` was never opened while the sweep was designed.
 
 **`frozen_before` matters more than `frozen_at`.** A date does not establish precedence over the
 DATA; naming the contaminating event does — "before posting", "before launching the subagent",

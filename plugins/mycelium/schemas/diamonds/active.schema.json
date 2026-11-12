@@ -78,6 +78,19 @@
   },
   "additionalProperties": true,
   "$defs": {
+    "gate_status": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "pass-with-risk",
+        "fail",
+        "pending",
+        "n/a",
+        "passed",
+        "not-applicable"
+      ],
+      "description": "A theory gate's status. The five documented in engine/diamond-rules.md: `pass`, `pass-with-risk` (passed, with the risk named), `fail`, `pending` (not yet evaluated, or insufficient evidence; what is missing goes in progression_blockers), `n/a` (does not apply; it does not count as passed for Security or Privacy). `passed` and `not-applicable` are accepted because scripts/scale_locks.py has always read them as `pass` and `n/a`; write the documented forms. Lower case: the readers compare lower-cased words and the enum does not."
+    },
     "diamond": {
       "type": "object",
       "properties": {
@@ -154,6 +167,32 @@
           "items": {"type": "object"},
           "description": "An L2's earlier targets, oldest first, each `{opportunity, chosen_on, compared, why, ended_on}` (v0.300.0)."
         },
+        "triggers": {
+          "type": "array",
+          "description": "An L1's trigger set (founder ruling 2026-11-12, \"Triggers on L1 only\"; engine/diamond-rules.md, \"One diamond type, and L1 carries a trigger set\"). L1 emits triggers, not a state: each entry is an event that would make the strategy decide again, written in the form the person can check, with what it opens or re-decides and, where one is known, what else would produce the same signal and must be ruled out first. L1 only; other scales do not carry one. Written by /mycelium:wardley-map step 9. Read by scripts/check_scale_occupancy.py, which lists every live L1's triggers on each run (/mycelium:diamond-assess step 2c) so a trigger whose event has happened is seen. It cannot tell whether the event happened: that is a reading of the world, not of the file.",
+          "items": {
+            "type": "object",
+            "required": [
+              "when",
+              "then"
+            ],
+            "properties": {
+              "when": {
+                "type": "string",
+                "description": "The event, stated so someone who was not there can check it (\"delivery of a change takes twice as long as it did in the spring\"). State the limit that matters, not a headcount or size."
+              },
+              "then": {
+                "type": "string",
+                "description": "What the L1 does when it fires: the decision it takes again, or the child cycle it offers."
+              },
+              "rule_out": {
+                "type": "string",
+                "description": "Optional: what else would produce the same signal, to check before acting on it (for a slowed delivery cadence, accrued technical debt)."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
         "front_runner": {
           "type": ["string", "null"],
           "description": "The solution an L3 commits to build, out of the set under its target (v0.300.0, DL-1367), named at `commit_to_build`. The L4 delivers it, and the L4 lock reads its evidence and its failed assumptions alone."
@@ -192,7 +231,7 @@
           },
           "audience": {
             "type": "string",
-            "description": "Who meets it, bounded and named where possible."
+            "description": "Who meets it, bounded and named where possible. An audience of the builder or the team alone starts with the token `team-only` (e.g. `team-only: the builder, in their own sessions`; founder ruling 2026-11-12): that exposure is itself the trial, so an L3's Evidence gate at `release` may read `n/a` for it, and for any other audience it may not (scripts/scale_locks.py, `team_only` and `State.release_evidence_missing`)."
           },
           "channel": {
             "type": "string",
@@ -222,6 +261,26 @@
           "gates": {
             "type": "object",
             "description": "security, privacy, service_quality, regulatory (and explainability with AI components), passed for THIS exposure."
+          },
+          "gates_basis": {
+            "type": "object",
+            "description": "The record behind each of `gates` for THIS exposure, keyed by gate. A line of text is a note for a person and is not read by a check. `service_quality` as an object is a service check scoped to this exposure (founder ruling 2026-11-12, \"On the exposure\"): /mycelium:service-check writes it, with a decision-log line, and leaves canvas/services.yml as the product-wide record. The release gate reads it before services.yml, to the same bar: all 15 `principles` judged with `evidence` (`n/a` with a reason counts) (scripts/scale_locks.py, `scoped_service_record`).",
+            "properties": {
+              "service_quality": {
+                "type": ["string", "object"],
+                "properties": {
+                  "on": {"type": "string", "description": "The day the scoped check ran."},
+                  "decision_log": {"type": "string", "description": "The decision-log entry that records it."},
+                  "overall_score": {"type": "string", "description": "The X pass / Y partial / Z fail / W n/a tally."},
+                  "principles": {
+                    "type": "array",
+                    "description": "Downe's 15 principles for this exposure, in the shape canvas/services.yml `principles[]` carries: id, assessment, evidence, issues.",
+                    "items": {"type": "object"}
+                  }
+                }
+              }
+            },
+            "additionalProperties": true
           },
           "harms_check": {
             "type": "object",
@@ -295,7 +354,11 @@
           "description": "True ship timestamp, stamped at Deliver->Complete (v0.53.0). Times the outcome->discovery loop (/metrics-pull Step 8b + session-start CHECK 10)."
         },
         "theory_gates_status": {
-          "type": "object"
+          "type": "object",
+          "description": "One status per theory gate, keyed by gate name (engine/theory-gates.md). Values are the gate statuses in $defs/gate_status; anything else is rejected (founder ruling 2026-11-12). Until then this was a bare object and accepted any value, while the readers (scripts/scale_locks.py, scripts/derive_closing_path.py, scripts/render_diamonds.py) understand only those words, so a misspelt pass read as a gate not passed, silently.",
+          "additionalProperties": {
+            "$ref": "#/$defs/gate_status"
+          }
         },
         "theory_gates": {
           "type": "object"

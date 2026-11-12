@@ -4,6 +4,68 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-11-12.
 
+## v0.337.0 - Twenty of the maintainer's rulings: solo releases, a default second view, and records that say what they are
+
+**2026-11-12.** The maintainer ruled on the design questions the upstream-candidate triage could not settle on its
+own, by interview, one option per question. This release builds the twenty rulings that call for a change.
+
+**Releases and gates**
+- **A team-only exposure is its own trial at L3.** An exposure whose `audience` starts with `team-only` passes the
+  release Evidence gate as n/a with that reason. An exposure to anyone else still needs outside evidence. This
+  tightens one case: until now an L3 Evidence of `n/a` let a release through for any audience.
+- **A service check can be scoped to one exposure.** `/mycelium:service-check` run for one exposure writes the 15
+  principles to that exposure's `gates_basis.service_quality` with a decision-log line, and the release gate reads
+  that record first. services.yml stays the product-wide record and is not touched.
+- **Viability asks "should we build it?"**, pointing at `/mycelium:harms-check`, in theory-gates.md, ice-score and
+  ost-builder. Still four risks, as Cagan has them.
+- **A blind second view runs by default** after `/mycelium:wardley-map` emits a map and before a Four Risks gate is
+  recorded as passed (devils-advocate Technique 7). It can only raise concerns, never pass anything; its result goes
+  on the decision's note; the person may decline it, and the decline is recorded. devils-advocate now says once that
+  a blind pass stands in for judgement, never for stake.
+- **"Make compliance the cheapest option"** is a design principle, and the pre-ship checklist gains a step for every
+  new gate: compare the cost of complying with the cheapest bypass, exemption fields included.
+- **diamond-progress asks the opposite question at an L1 or L2 target**, as define-done does; a prompt, not a block.
+- **A dismissal made from metadata, when the artifact is one call away, needs the artifact opened first** (one new
+  section in the operating contract).
+
+**What the agent is told**
+- **A "fix" ruling says "fix owed"** instead of "muted until you rule", and the item stays in front of the person.
+- **A shell command that writes a canvas file not read this session is reported**, pointing to Edit or
+  `safe_replace.py`. Nothing is undone.
+- **Records past 256 KB, more than one Read call takes, are named** with their 30-day growth, in canvas-health and
+  at session start when one is (`scripts/check_record_size.py`). Nothing moves.
+- **A retired hook label's cancellation no longer counts against the delivery SLO** in dora-check.
+- **Two warnings at write time** (`post-write-nudge.sh`): an instrument saved while an unscored human task on the
+  same diamond is in flight, and an outreach task started while go-to-market.yml is unread this session.
+- **A diamond that is not complete and measures a delivery stream (dora-metrics) gets a WARN**; diamond-rules says a
+  stream lives in dora-metrics.yml, not on a diamond.
+- **Confidence weights are guidance for a judgement**; no code computes confidence from them, and the files now say
+  so. `theory_gates_status` values are an enum in the diamonds schema.
+
+**What gets written down**
+- **Take-away files:** `/mycelium:handoff`, `/mycelium:user-interview` and `/mycelium:launch-tier` write what the
+  person will use later to `.claude/handoffs/<date>-<slug>.md` as a step, and say where.
+- **`acting_on` on an opportunity** records, per story, whether the person was acting on the need (under way, tried
+  options) or living with it; validate_canvas counts them on a COVERAGE line, and ost-builder carries the counts into
+  the L2 target comparison.
+- **`triggers` on an L1** records trigger sets (when, then, rule out); wardley-map writes them, diamond-assess
+  reports them. diamond-rules says why there is no separate container type.
+- **jtbd-map and its schema say they carry part 1 of the job spec only**, naming the four parts left out.
+- **assumption-test:** literature can answer claims about people in general, graded by what was measured on whom;
+  claims about this product need a human.
+- **Install:** in a Claude Code Project, add the plugin under Project settings > Plugins; whether hooks then fire is
+  not yet checked.
+
+- **Alternatives considered.** Each ruling was the maintainer's pick between options shown to him; the options he
+  did not pick are recorded with the rulings in his project. Within them:
+  - *Team-only:* a new boolean on the exposure (a token on the existing `audience` field says the same without a field).
+  - *Default blind pass:* failing the gate when it does not run (the ruling made it a default, not a block).
+  - *The dismissal rule's place:* inside Communication Rules (that contract section was within a few hundred
+    characters of its part's cap, and past the cap no contract is delivered at all).
+  - *Record size:* a threshold set by an environment variable (nothing asked for one; 256 KB is the size the Read tool refuses, which says why the line is there).
+  - *Retrodiction checks:* gate-set entries (they are write-time nudges, so they run where the write happens).
+  - *acting_on:* prose in the interview notes (no reader could count it).
+
 ## v0.336.0 - Checks say what they actually look at, and the theory pages match their sources
 
 **2026-11-12.** The second and third releases' worth from the triage of the maintainer's upstream-candidates list,

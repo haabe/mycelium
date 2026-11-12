@@ -22,6 +22,10 @@ Skills are namespaced (`/mycelium:<name>`) per Anthropic's plugin convention. Us
 
 For a step-by-step first-run walkthrough, see [get-started.md](get-started.md).
 
+### In a Claude Code Project (cloud threads)
+
+In a Claude Code Project, add the plugin under **Project settings > Plugins**. A cloud thread does not load a plugin that a repository enables in its `.claude/settings.json`, so a thread started there runs without Mycelium: no skills, locks, gates or guards, and nothing says so. Claude Code's Projects documentation (public beta, read on 2026-09-25) states this and gives the Project settings route. It also says that with several repositories in one Project, hooks and permission rules come from above the clones, where no repository's settings apply. That is all from Anthropic's documentation, not from running Mycelium in a Project: whether the plugin's hooks fire once it is added under Project settings has not been checked.
+
 ## Legacy install (deprecated as of v0.20.x)
 
 The `npx degit haabe/mycelium` install path is **no longer supported** for new installs. As of v0.20.x, framework reference content (skills, hooks, engine, schemas, scripts) lives in the plugin cache, not in the user's project. A fresh `npx degit` would land an empty `.claude/` with no skills to invoke and no hooks to fire.

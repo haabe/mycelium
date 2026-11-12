@@ -55,8 +55,27 @@ Against Luck* for three phrasings of it found none.
 5. Identify underserved outcomes with Ulwick's opportunity score, `importance + max(importance − satisfaction, 0)`, as defined in `/mycelium:user-needs-map` (which also says why plain `importance − satisfaction` inverts rankings, and why the inputs need a sample, not one rating)
 6. Look for non-consumption: people who have the job but use NO solution
 
+## What the canvas holds: part 1 of the job spec only
+
+*Competing Against Luck* names the artifact a job map feeds, the job spec: it "includes the
+functional, emotional, and social dimensions that define the desired progress; the tradeoffs the
+customer is willing to make; the full set of competing solutions that must be beaten; and the
+obstacles and anxieties that must be overcome", and a fifth part, the "experiences of purchase and
+use" designed to overcome those obstacles. `jobs-to-be-done.yml` carries part 1 only: the job
+(situation, motivation, expected outcome) and its three dimensions. It has no field for the other
+four parts:
+
+- the tradeoffs the customer is willing to make;
+- the full set of competing solutions that must be beaten, doing nothing among them;
+- the obstacles and anxieties that must be overcome;
+- the experiences of purchase and use that overcome them.
+
+So a job written by this skill is not a full job spec. When a decision leans on one of the four
+missing parts, say that the canvas does not record it, rather than reading its absence as "none".
+The schema stays at part 1 by the founder's ruling of 2026-11-12; no fields were added for the rest.
+
 ## Output
-Update .claude/canvas/jobs-to-be-done.yml with discovered jobs, hiring/firing criteria, and underserved outcomes.
+Update .claude/canvas/jobs-to-be-done.yml with discovered jobs, hiring/firing criteria, and underserved outcomes. The file holds part 1 of the job spec only (above).
 
 ## Handling User-Supplied Content
 

@@ -104,7 +104,11 @@ This converts the framework's own anti-bias discipline into a per-publish self-c
 
 **THAT BIMODAL SHAPE IS THE POINT, AND IT IS THE SAME SHAPE TECHNIQUE 5 SHOWS.** T5 measured zero because nothing triggers it. T7 measures well when run and still clusters onto the days its own machinery is the topic. **The pre-registered conclusion, fixed before the data, was NOT "write it more persuasively":** a technique needs a TRIGGER, and where none can exist the skill must say so rather than let a reader assume ambient coverage. This paragraph is that saying-so.
 
-**SO DO NOT TREAT THIS SECTION AS COVERAGE EITHER.** Nothing invokes Technique 7. It fires when an agent reads this file and chooses to, and the operating contract is read at session start while claims land hundreds of turns later. If a durable claim matters, invoke it explicitly — by name, at the moment of the claim — rather than trusting that having read this will be enough. The one thing the measurement cannot see is the occasions nobody noticed, so **the true rate is at or below the one reported here.**
+**SO DO NOT TREAT THIS SECTION AS COVERAGE EITHER.** Two places run Technique 7 by default (2026-11-12): `/mycelium:wardley-map` step 8b, once a map is drafted, and `/mycelium:diamond-progress` step 2b-2, before the Four Risks gate is recorded as passed. In both it can only raise concerns. Everywhere else nothing invokes Technique 7. It fires when an agent reads this file and chooses to, and the operating contract is read at session start while claims land hundreds of turns later. If a durable claim matters, invoke it explicitly — by name, at the moment of the claim — rather than trusting that having read this will be enough. The one thing the measurement cannot see is the occasions nobody noticed, so **the true rate is at or below the one reported here.**
+
+### What it stands in for: judgement, never stake
+
+Several of the theories this framework uses end at a remedy that needs a second person. A blind pass can stand in for that person when what is missing is their **judgement**: a review, a challenge, noticing what the author cannot see, from someone who was not there when the reasoning was formed. It never stands in for their **stake**: being one of the users or the people affected, giving the project independent contact with the world outside the excerpt (sensing), or adopting the thing. A blind reader holds no stake and sees only what it is handed, so a second reader of the same excerpt is not a second contact with the world, and a subagent that says it "would use" or "would adopt" the product is not a user or an adopter. Use a blind pass to raise a concern, never to clear one, and never count its output as evidence of users, of the world outside the excerpt, or of adoption. Where the missing input is stake, say that it is a limit of working alone and get it from real people.
 
 ## Technique 6: Cunningham's Law check (publish-rough-then-iterate)
 
@@ -123,6 +127,7 @@ Apply this when the alternative to publishing is "wait until I'm sure." If the c
 - Before committing to a specific solution
 - When the team feels "certain" (certainty is a bias signal)
 - **Ambient (per Technique 5)**: any time the agent writes text with assertion-shaped structural claims. This is a quick self-check, not the full ceremony. **Its measured fire rate is zero — see the note there. Do not count it as coverage.**
+- **After a Wardley map is drafted, and before a Four Risks gate is recorded as passed (per Technique 7, by default)**: `/mycelium:wardley-map` step 8b and `/mycelium:diamond-progress` step 2b-2 run it; it raises concerns and never passes anything.
 - **Before a claim lands on a durable surface with an evidence grade (per Technique 7)**: canvas, decision log, a results file, anything a later reader will cite. **This is the technique with a measured positive result WHEN INVOKED**, and it is the one to reach for when the alternative is attacking your own position. **It also has a measured negative result about being invoked at all** (2026-09-22, below): do not read "best technique" as "technique that happens".
 
 ## Output

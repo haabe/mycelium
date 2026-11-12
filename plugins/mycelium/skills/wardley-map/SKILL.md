@@ -193,6 +193,29 @@ you have to learn when and where to use them."* Strategic options based on the m
 - Ecosystem: Build platform, commoditize lower layers
 - Tower and moat: Invest in defensibility
 
+### 8b. Blind challenge of the map — runs by default, and can only raise concerns (2026-11-12)
+
+Wardley names one safeguard against a map that is confidently wrong, and it is someone else: *"I
+can create a convincing story with a map unless someone challenges me."* A solo builder often has
+nobody to do it. So once the map, its gameplay and the new dated predictions are drafted (steps
+0-8), and before you report the map, write the Output, or make step 9's offer, run
+`/mycelium:devils-advocate` Technique 7, the blind adversarial pass, as that section describes:
+hand each reader the map (the user, the needs, the components with their evolution stages and
+movements, the gameplay chosen) and the new predictions, plus one line on how the map was made, and
+nothing else; ask for the single most likely way it is wrong; permit "NO OBJECTION".
+
+- **It can only raise concerns.** A "NO OBJECTION" does not make the map right and is never cited
+  as support for it. Verify each concern against the map and the canvas yourself: change the map
+  where a concern holds, and say why where it does not.
+- **Record the result** in the Wardley Map Assessment decision-log entry (below), as one line:
+  `blind pass: <n> reader(s); <each concern and what was done with it>`, or `blind pass: no
+  objection`, or `blind pass: not run: <why>`.
+- **It runs by default; the person can decline it**, and the decline is recorded the same way. If
+  no subagent can be spawned (Technique 7's prerequisite), say so in the output, offer to run it if
+  the person permits one subagent, and record `not run: <why>`.
+- **What it cannot replace:** a reader who knows the domain, and anyone who was there when the map
+  was made (Technique 7's limits). It stands in for a challenger's judgement, never for their stake.
+
 ### 9. Offer the L1 cycle on the strategic decision (v0.243.0)
 A map that surfaces a choice (where to play, which gameplay to adopt, what to build, buy or leave)
 has produced **an L1 event: a strategic decision**. L1 recurs on decisions, not on a pile, so it has
@@ -205,11 +228,23 @@ L0's phase is not the lock; its purpose statement is. Before v0.243.0
 L1 was entered only by a sentence saying L0 would spawn it; no skill did, and across dogfood
 full-ladder runs 6 to 20 no L1 was ever created, including three in which L0 reached define.
 
+**Write the L1's trigger set** (founder ruling 2026-11-12; `engine/diamond-rules.md`, "One diamond
+type, and L1 carries a trigger set"). When the L1 is opened, and again each time this map changes
+what would make the strategy decide again, record on the L1 diamond in
+`.claude/diamonds/active.yml` a `triggers` list. Each entry has `when` (the event, stated so someone
+who was not there can check it, as the limit that matters rather than a size or headcount), `then`
+(the decision the L1 takes again, or the child cycle it offers) and, where one is known, `rule_out`
+(what else would produce the same signal, to check first). Draw them from this map: an inertia
+prediction's triggering event (step 7), a climatic prediction whose outcome would change the
+gameplay chosen in step 8, a component whose movement would change where to play. Ask the person to
+confirm each one before it is written. An L1 with no trigger set is named on every
+`scripts/check_scale_occupancy.py` run, which lists every live L1's triggers so a fired one is seen.
+
 ## Output
 Update .claude/canvas/landscape.yml with components, evolution stages, movements, gameplay options, and `climatic_predictions` (new + scored). Report the coverage of the five climatic patterns explicitly, naming any that produced nothing this pass.
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Wardley Map Assessment` entry to `.claude/harness/decision-log.md` with: components mapped, evolution stages, strategic gameplay identified, recommendations.
+**APPEND** a `### Wardley Map Assessment` entry to `.claude/harness/decision-log.md` with: components mapped, evolution stages, strategic gameplay identified, recommendations, and the blind-pass line from step 8b.
 
 **Then record the run (v0.329.0).** The map is on the review schedule (`engine/review-schedule.yml`, every 30 days), and the schedule does not read decision-log headings, which were measured to undercount. Run:
 

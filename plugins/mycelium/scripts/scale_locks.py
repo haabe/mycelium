@@ -259,7 +259,8 @@ SAFETY_RECORD = {
 #: (`_assessment_lib.py`).
 PASS_RECORD = {
     "service_quality": ("a service check: canvas/services.yml `principles`, all 15 judged with "
-                        "`evidence` (`n/a` with a reason counts) (/mycelium:service-check)"),
+                        "`evidence` (`n/a` with a reason counts), or a check scoped to the "
+                        "exposure in its `gates_basis.service_quality` (/mycelium:service-check)"),
     "explainability": ("an explainability audit: canvas/services.yml `services[].xai` (an L3: the "
                        "tier; an L4 or L5: a verdict for each stage) (/mycelium:xai-check)"),
 }
@@ -1067,6 +1068,9 @@ class State:
                         "carries nothing), or remove `completed_at` if the work goes on")
         if stage == "expose" and _scale(d) == "L3":
             miss += self.learning_delivery_missing(d)
+            why = self.release_evidence_missing(d)
+            if why:
+                miss.append(f"{did}: {why}")
         return miss
 
     def learning_delivery_recorded(self, d: dict) -> str | None:
@@ -1284,7 +1288,7 @@ class State:
             return f"the {gate} gate passed (theory_gates_status.{gate} is `{v}`)"
         if gate in SAFETY_RECORD and not self.records[gate]:
             return f"the {gate} gate says `{v}` with no record behind it: {self.record_text(gate)}"
-        gap = self.pass_record_gap(gate, _scale(d), v)
+        gap = self.pass_record_gap(gate, _scale(d), v, gate_exposures(d))
         if gap:
             return f"the {gate} gate says `{v}` with no record behind it: {gap}"
         return None
@@ -1296,15 +1300,15 @@ class State:
             text += f"; not judged with evidence: {', '.join(self.privacy_unjudged)}"
         return text
 
-    def pass_record_gap(self, gate: str, scale: str, value) -> str | None:
+    def pass_record_gap(self, gate: str, scale: str, value, exposures=None) -> str | None:
         """For a PASS_RECORD gate marked passed, what its record still lacks; None when it holds,
-        when the gate is `n/a`, or when the gate is not one of them (v0.331.0)."""
+        when the gate is `n/a`, or when the gate is not one of them (v0.331.0). `exposures` are
+        the exposure records the pass is for: Service Quality reads each one's own scoped check
+        first, and services.yml for the rest (founder ruling 2026-11-12, "On the exposure")."""
         if gate not in PASS_RECORD or str(value or "").lower() not in PASSED:
             return None
         if gate == "service_quality":
-            lacking = _assess.missing(self.services, _assess.SERVICE_PRINCIPLES_ALL)
-            return (f"{PASS_RECORD[gate]}; not judged with evidence: principle(s) "
-                    f"{', '.join(lacking)}") if lacking else None
+            return self.service_record_gap(exposures)
         blocks = [_as_dict(s).get("xai") for s in _as_list(self.services.get("services"))]
         gaps = [_assess.xai_stages_missing(b, scale) for b in blocks if b]
         if not gaps:
@@ -1313,6 +1317,64 @@ class State:
         if not lacking:
             return None
         return f"{PASS_RECORD[gate]}; it has no verdict for {', '.join(lacking)}"
+
+    def service_record_gap(self, exposures=None) -> str | None:
+        """What the record behind a Service Quality pass still lacks, or None when it holds.
+        A SCOPED CHECK LANDS ON THE EXPOSURE (founder ruling 2026-11-12, "On the exposure"). An
+        L3's exposure is usually one solution shown to a few opted-in people, and until then a
+        check scoped to it had two places to go: over the product-wide reading in services.yml,
+        or into prose the gate never read. /mycelium:service-check run for one exposure now
+        writes the 15 principles to that exposure's `gates_basis.service_quality` (the shape
+        services.yml carries) and a decision-log line; services.yml stays the product-wide
+        record. Each exposure is read by its own scoped record first, the same bar of all 15
+        judged with evidence; an exposure with none, or no exposure at all, is read by
+        services.yml as before."""
+        recs = [e for e in _as_list(exposures) if isinstance(e, dict)]
+        gaps, product_wide = [], not recs
+        for e in recs:
+            scoped = scoped_service_record(e)
+            if scoped is None:
+                product_wide = True
+                continue
+            lacking = _assess.missing(scoped, _assess.SERVICE_PRINCIPLES_ALL)
+            if lacking:
+                gaps.append(f"the service check scoped to exposure "
+                            f"`{str(e.get('audience') or '?')[:40]}` "
+                            "(`gates_basis.service_quality`) has not judged with evidence "
+                            f"principle(s) {', '.join(lacking)}")
+        if product_wide:
+            lacking = _assess.missing(self.services, _assess.SERVICE_PRINCIPLES_ALL)
+            if lacking:
+                gaps.append(f"{PASS_RECORD['service_quality']}; not judged with evidence: "
+                            f"principle(s) {', '.join(lacking)}")
+        return "; ".join(gaps) or None
+
+    def release_evidence_missing(self, d: dict, exposures=None) -> str | None:
+        """A TEAM-ONLY EXPOSURE IS ITS OWN TRIAL (founder ruling 2026-11-12, "Team-only exposure
+        is n/a"). An L3's `release` asks that what reaches people has had one trial outside the
+        team first (engine/theory-gates.md, gate 1). When the exposure's only audience is the
+        builder or the team, there is nobody outside to try it on, and the release is the trial:
+        Evidence at release is `n/a` with that reason. The exposure says so with an `audience`
+        that starts with `team-only` (TEAM_ONLY). For any other audience the outside trial is
+        still required, so `n/a` on the Evidence gate of an L3 does not count while an exposure
+        reaches someone outside the team. None when the rule does not apply or holds."""
+        if _scale(d) != "L3":
+            return None
+        v = str(_as_dict(d.get("theory_gates_status")).get("evidence") or "").strip().lower()
+        if v not in NOT_APPLICABLE:
+            return None
+        recs = gate_exposures(d) if exposures is None else [
+            e for e in _as_list(exposures) if isinstance(e, dict)]
+        outside = [e for e in recs if not team_only(e)]
+        if recs and not outside:
+            return None
+        who = (f"exposure `{str(outside[0].get('audience') or '?')[:40]}` reaches people "
+               "outside the team") if outside else (
+            "no exposure record says its audience is the team alone")
+        return (f"the evidence gate says `{v}`, which at an L3's `release` holds only for an "
+                f'exposure whose audience is the team alone (`audience: "{TEAM_ONLY}: ..."`), '
+                f"and {who}: one trial outside the team first, in the form the product takes, "
+                "with measurable feedback (engine/theory-gates.md, gate 1)")
 
     def move_missing(self, d: dict, before: str | None) -> list[str]:
         """PHASE MOVES LEAVE A RECORD AND PASS THEIR GATES (v0.248.0). A forward move must carry,
@@ -1349,6 +1411,8 @@ class State:
             return None
         if t == "define->develop":
             return self.test_design_missing(d)
+        if t == "develop->deliver":
+            return self.release_evidence_missing(d)
         if t == "deliver->complete":
             return self.learning_delivery_end_missing(d)
         return None
@@ -1506,8 +1570,11 @@ def _record_problems(st: State, d: dict, e: dict, today: str) -> list[str]:
             miss.append(f"the {g} gate passed for this exposure")
         elif g in SAFETY_RECORD and not st.records[g]:
             miss.append(f"a record behind its {g} pass: {st.record_text(g)}")
-        elif gap := st.pass_record_gap(g, _scale(d), passed.get(g)):
+        elif gap := st.pass_record_gap(g, _scale(d), passed.get(g), [e]):
             miss.append(f"a record behind its {g} pass: {gap}")
+    why = st.release_evidence_missing(d, [e])
+    if why:
+        miss.append(why)
     data = str(e.get("data_class") or "").strip().lower()
     if data and data not in DATA_CLASSES:  # v0.307.3 (P5): the class decides who confirms it
         miss.append(f"its data_class as one of {', '.join(DATA_CLASSES)} (it says `{data[:40]}`)")
@@ -2365,9 +2432,40 @@ EXPOSURE_FIELDS = ("recorded_at", "audience", "channel", "data_class", "until", 
 DATA_CLASSES = ("none", "synthetic", "personal", "sensitive")
 _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 EXPOSURE_GATES = ("security", "privacy", "service_quality", "regulatory")
+#: AN AUDIENCE OF THE TEAM ALONE (founder ruling 2026-11-12, "Team-only exposure is n/a"). The
+#: documented token at the start of `exposures[].audience` that says nobody outside the builder or
+#: the team meets the work: `audience: "team-only: the builder, in their own sessions"`. Such an
+#: exposure is itself the trial, so an L3's Evidence gate at `release` may read `n/a` for it
+#: (`State.release_evidence_missing`). A token on the existing free-text field, declared in
+#: schemas/diamonds/active.schema.json, rather than a new field: the audience is already where
+#: "who it reaches" is written, and a second field could disagree with it.
+TEAM_ONLY = "team-only"
+_TEAM_ONLY = re.compile(r"\s*team-only(?![\w-])", re.IGNORECASE)
 #: Data classes whose exposure the person confirms (ruling g): the permission dialog asks.
 PERSON_DATA = ("personal", "sensitive")
 NO_PERSON_DATA = ("none", "synthetic")
+
+
+def team_only(e: dict) -> bool:
+    """Whether an exposure's audience is the team alone: it starts with the TEAM_ONLY token."""
+    return bool(_TEAM_ONLY.match(str(_as_dict(e).get("audience") or "")))
+
+
+def scoped_service_record(e: dict) -> dict | None:
+    """The service check scoped to one exposure, `gates_basis.service_quality`, when it carries
+    `principles` (the shape services.yml carries); None when it is absent or is a line of text,
+    which is a note for a person and not a record the gate can check."""
+    basis = _as_dict(_as_dict(e).get("gates_basis")).get("service_quality")
+    if isinstance(basis, dict) and _assess.items(basis) is not None:
+        return basis
+    return None
+
+
+def gate_exposures(d: dict) -> list[dict]:
+    """The exposure records a diamond's own gates are passed for: the running ones, else (every
+    one has ended, as at an L3's `close`) all of them, the same preference as `delivery_of`."""
+    recs = [e for e in _as_list(d.get("exposures")) if isinstance(e, dict)]
+    return [e for e in recs if not e.get("ended")] or recs
 
 
 def delivery_of(d: dict) -> dict:
@@ -2458,6 +2556,9 @@ def exposure_report(project_dir: str) -> list[str]:
             unpassed = [g for g in gates if not _gate_counts(g, passed.get(g))]
             if unpassed:
                 out.append(f"{label}: gates not passed for this exposure: {', '.join(unpassed)}")
+            why = st.release_evidence_missing(d, [e])
+            if why:
+                out.append(f"{label}: {why}")
             until = str(e.get("until") or "")[:10]
             if until and until < today and not e.get("ended"):
                 out.append(f"{label}: ran past its end date ({until}) with no `ended`")
