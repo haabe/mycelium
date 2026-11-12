@@ -593,7 +593,10 @@ reviewed:
     line ("the background session-start checks could not be delivered (<error>); run
     /mycelium:canvas-health for them") and clears the pending marker, so the undelivered heavy tier
     is named at the very prompt where it would otherwise have silently not arrived. Reviewed
-    2026-09-10, v0.186.0.
+    2026-09-10, v0.186.0. After 0.334.1 the bash keeps the pending marker and counts the failed
+    read in it, so the next prompt reads again; the line is printed once, at the third failed
+    read, and the marker removed then. Until that third read the checks are late, not lost: the
+    file is read again at every prompt. Asserted by tests/python/test_session_checks_delivery.py.
 
 - id: session-start.sh@75b167c29b
   verdict: accepted

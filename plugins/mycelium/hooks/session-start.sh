@@ -1627,13 +1627,26 @@ fi
 if [ "$_SS_MODE" = "async" ]; then
   # Background tier: write the heavy-tier text for preflight.sh to deliver, emit nothing.
   # The contract is NOT cached; it is delivered by the fast tier every start.
+  # WRITTEN WHOLE, IN ONE STEP. The first prompt's preflight.sh can read this file while
+  # this tier is still writing it; written in place, the reader saw half a file, called it
+  # unreadable and the session lost its background checks (dogfood 2026-10-10, "JSONDecodeError:
+  # Extra data"). A temporary file in the same folder, renamed over the old one, means a reader
+  # sees the old file or the new one, never part of either.
   mkdir -p "$PROJECT_DIR/.claude/state" 2>/dev/null || true
   python3 -c '
-import json, sys, time
+import json, os, sys, tempfile, time
 fp, sid, path, reminders = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-json.dump({"fingerprint": fp, "session": sid, "generated_epoch": time.time(),
-           "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-           "reminders": reminders, "delivered_to": None}, open(path, "w"))
+d = {"fingerprint": fp, "session": sid, "generated_epoch": time.time(),
+     "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+     "reminders": reminders, "delivered_to": None}
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".session-checks.", suffix=".tmp")
+try:
+    with os.fdopen(fd, "w") as fh:
+        json.dump(d, fh)
+    os.replace(tmp, path)
+finally:
+    if os.path.exists(tmp):
+        os.unlink(tmp)
 ' "$_SS_FINGERPRINT" "${_SESSION_ID_EARLY:-unknown}" "$_SS_CACHE" "$REMINDERS" 2>/dev/null || true
   exit 0
 fi
