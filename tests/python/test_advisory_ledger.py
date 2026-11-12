@@ -167,6 +167,9 @@ def test_ruling_fix_stays_muted_until_it_clears(tmp_path, capsys, monkeypatch):
     capsys.readouterr()
     rc, out = _settle(tmp_path, capsys, BVSSH, "s-a", "2026-09-09", monkeypatch)
     assert "MUTED ADVISORY bvssh-overdue" in out
+    # Founder ruling 2026-11-12 ("Stays, says 'fix owed'"): the line says what was decided.
+    assert "you ruled fix on 2026-09-08; fix owed" in out
+    assert "muted until you rule" not in out
     _settle(tmp_path, capsys, TASKS, "s-b", "2026-09-10", monkeypatch)  # cleared
     rc, out = _settle(tmp_path, capsys, BVSSH, "s-c", "2026-09-11", monkeypatch)
     assert "MUTED ADVISORY" not in out and "days overdue" in out

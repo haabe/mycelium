@@ -296,7 +296,9 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      streaks at or past the mute threshold and the clear rate of anything that has fired more than
      five times; cite these numbers under Measurement in `/bvssh-check`, which rated that dimension
      amber three assessments running on advisories nobody counted. A muted advisory is a request for a
-     ruling: `advisory_ledger.py rule --id <id> --ruling keep|fix|drop --note "..."`. The ledger is
+     ruling: `advisory_ledger.py rule --id <id> --ruling keep|fix|drop --note "..."`. A `fix`
+     ruling keeps the advisory in front of the person until its condition clears, its line then
+     reading "you ruled fix on DATE; fix owed" instead of asking for a ruling. The ledger is
      `.claude/state/advisory-ledger.jsonl`, append-only. N/A with no ledger is a project that has not
      opened a session on 0.184.0 yet, not a clean bill.
    - **8c(h), added v0.185.0: did the harness deliver our hooks at all.** Run
