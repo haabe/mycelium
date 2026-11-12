@@ -22,7 +22,8 @@ Two halves, one script:
         recorded. What is found goes to the agent in the same turn. This catches the writes the
         first half cannot see, such as a path built in a variable.
 
-It never undoes a change to the canvas, and undoes one to the diamonds file in one case only
+It never undoes a change to the canvas (a write to a canvas file never read is said, below), and
+undoes one to the diamonds file in one case only
 (v0.324.0, below). Stdlib plus the sibling scripts;
 without PyYAML the post half says once that it could not judge (canvas_write_check handles the
 schema side the same way).
@@ -115,9 +116,29 @@ Not caught: what a Monitor command changes after the turn it started in has ende
 the person makes in their own terminal during that turn is put back and said, as it is during any
 running command. A background subagent's command that is still running at the main agent's Stop
 is judged then.
+
+A SHELL WRITE TO A CANVAS FILE THIS SESSION NEVER READ IS SAID, AND LEFT (founder ruling
+2026-11-12, "Tell only"). The Edit and Write tools refuse to change a file that was not read
+first; a shell command steps around that, so a value someone set by hand can be overwritten by a
+script that never looked at it. Putting the change back was weighed and not chosen: the same
+sessions write canvas files by script on purpose, and a put-back would undo ordinary work.
+
+  pre     notes which `.claude/canvas/*.yml` files exist (`canvas.before`, beside the stamp).
+  post    for each of those the command changed, asks the read log (`hooks/read-log.sh`,
+          `.claude/state/read-log.jsonl`) for a row of this session, from before the command
+          started, naming that file: a Read tool call or a shell read. With none, the person and
+          the agent are told the file was written unread, pointed to the Edit tool or
+          `safe_replace.py`. Nothing is undone. A file read earlier in the session is silent, and
+          so is a canvas file the command created (there was nothing to read).
+
+Not said: a write in a payload with no session id (no row can be matched to it), and a read the
+log could not see. The log keeps 90 days (`prune_state_logs.py`); only its last READ_LOG_TAIL
+bytes are read, so a read further back than that in one very long session is not found and the
+write is said.
 """
 from __future__ import annotations
 
+import datetime as _dt
 import difflib
 import hashlib
 import importlib.util
@@ -138,6 +159,12 @@ import settings_switches as ss  # noqa: E402
 
 ACTIVE_REL = ".claude/diamonds/active.yml"
 STATE_REL = Path(".claude") / "state" / "bash-guard"
+CANVAS_REL = Path(".claude") / "canvas"
+#: The canvas files that existed when the command started (written by pre, read by post).
+CANVAS_BEFORE = "canvas.before"
+#: The read log `hooks/read-log.sh` keeps, and how much of its end the unread check reads.
+READ_LOG_REL = Path(".claude") / "state" / "read-log.jsonl"
+READ_LOG_TAIL = 8 * 1024 * 1024
 # Mycelium's own writers of diamond state; migrate_phase.py since v0.303.0 (DL-1368 S3).
 ALLOWED_WRITERS = ("derive_closing_path.py", "migrate_phase.py")
 # v0.307.4 (control audit P7, DL-1370): one of them, run on its own. Until then the check was a
@@ -232,6 +259,8 @@ def pre(payload: dict, project: Path) -> int:
                 (state / "active.yml.before").unlink(missing_ok=True)
             _drop_old_snapshots(state)
             _snapshot_guard_state(project, state, cmd, payload)
+            (state / CANVAS_BEFORE).write_text(json.dumps(sorted(
+                f.name for f in (project / CANVAS_REL).glob("*.yml") if f.is_file())))
             (state / "stamp").write_text(repr(time.time()))
         except OSError:
             return 0  # SPEAKS in post: with no stamp, post says it could not tell what changed
@@ -832,6 +861,55 @@ def _diamond_problems(project: Path, state: Path, session: str) -> list[str]:
     return out
 
 
+def _read_before(project: Path, session: str, since: float) -> set[str]:
+    """Real paths the read log shows this session reading before machine time `since`."""
+    try:
+        with open(project / READ_LOG_REL, "rb") as fh:
+            fh.seek(0, 2)
+            fh.seek(max(0, fh.tell() - READ_LOG_TAIL))
+            lines = fh.read().decode("utf-8", "replace").splitlines()
+    except OSError:
+        return set()  # no log: nothing is on record as read, which is what the line then says
+    seen = set()
+    for line in lines:
+        try:
+            row = json.loads(line)
+            # read-log.sh writes a trailing "Z", which Python 3.9's fromisoformat refuses.
+            ts = _dt.datetime.fromisoformat(str(row.get("ts") or "").replace("Z", "+00:00"))  # noqa: FURB162
+        except (ValueError, AttributeError):
+            continue  # a cut first line, or a row from another writer
+        fp = str(row.get("file_path") or "")
+        if fp and str(row.get("session_id") or "") == session and ts.timestamp() < since:
+            seen.add(os.path.realpath(fp if os.path.isabs(fp) else project / fp))
+    return seen
+
+
+def _unread_canvas_writes(project: Path, state: Path, changed: list[Path], session: str,
+                          since: float) -> list[str]:
+    """Canvas files the command changed that existed before it and that this session had not
+    read before it ran (founder ruling 2026-11-12, "Tell only")."""
+    canvas = [f for f in changed if f.parent == project / CANVAS_REL]
+    if not canvas or not session:
+        return []
+    try:
+        existed = set(json.loads((state / CANVAS_BEFORE).read_text()))
+    except (OSError, ValueError, TypeError):
+        existed = {f.name for f in canvas}  # unknown: taken as existing, so the write is said
+    read = _read_before(project, session, since)
+    return [str(f.relative_to(project)) for f in canvas
+            if f.name in existed and os.path.realpath(f) not in read]
+
+
+def _unread_told(names: list[str]) -> str:
+    return (f"A shell command changed {', '.join(names)}, which this session had not read "
+            "before the command ran (the read log, .claude/state/read-log.jsonl, shows no read "
+            "of it). The Edit and Write tools refuse to change a file that was not read first, "
+            "so that nothing set by hand is overwritten unseen; a shell write steps around that. "
+            "Nothing was undone. Next time, read the file, then change it with the Edit tool, or "
+            f'for a scripted edit across files with python3 "{HERE / "safe_replace.py"}", which '
+            "checks every anchor before it writes anything.")
+
+
 def _say(reasons: list[str], out: dict, told: str, tail: str) -> None:
     """One finding: the person reads `told` (systemMessage), the agent `told` and `tail`."""
     out["systemMessage"] = " ".join(x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
@@ -887,8 +965,14 @@ def post(payload: dict, project: Path) -> int:
         # is left in it to judge.
         changed = [f for f in changed if f != project / ACTIVE_REL]
     problems = _schema_problems(changed) if changed else []
+    session = str(payload.get("session_id") or "")
     if changed and project / ACTIVE_REL in changed:
-        problems += _diamond_problems(project, state, str(payload.get("session_id") or ""))
+        problems += _diamond_problems(project, state, session)
+    unread = _unread_canvas_writes(project, state, changed, session, since)
+    if unread:
+        _say(reasons, out, _unread_told(unread),
+             "Read the file now and check the change is the one intended; if it overwrote "
+             "something the person set, tell them.")
     if committed:
         _say(reasons, out,
              "A commit this command made holds something that looks like a secret: "

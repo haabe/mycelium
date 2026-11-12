@@ -33,8 +33,9 @@ THREE VERBS.
   report  — per advisory: sessions seen, cleared, still firing, clear rate, current firing streak in
             distinct days, muted since, ruling. For canvas-health, so Measurement can cite a number.
   rule    — records a human ruling on a muted advisory: keep (unmute, reset the streak), fix (stay
-            muted until the condition clears on its own), drop (never show again; the report still
-            lists it as dropped so the silence is visible).
+            in front of the person until the condition clears on its own, its line saying "you
+            ruled fix on DATE; fix owed" in place of "muted until you rule"), drop (never show
+            again; the report still lists it as dropped so the silence is visible).
 
 THE MUTE RULE. An advisory still firing on MUTE_DAYS distinct calendar days in a row with no
 clearing between them is muted: the hook shows one line ("fired on N days since DATE, nothing
@@ -153,6 +154,7 @@ SIGNATURES: list[tuple[str, str]] = [
         r"(?P<count>\d+) shipped diamond\(s\) have a measure but no completed_at",
     ),
     ("brownfield-entry", r"BROWNFIELD ENTRY:"),
+    ("records-past-one-read", r"RECORDS PAST ONE READ: (?P<count>\d+) record file"),
 ]
 _COMPILED = [(i, re.compile(p)) for i, p in SIGNATURES]
 
@@ -249,6 +251,7 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
                 "muted_since": None,
                 "snoozed_until": None,
                 "ruling": None,
+                "ruled_on": None,  # the date of the standing `fix` ruling; see _muted_line
                 "first_seen": None,
                 "last_seen": None,
                 "last_count": None,
@@ -282,6 +285,7 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
                     if x["ruling"] == "fix":
                         x["muted_since"] = None
                         x["ruling"] = None
+                        x["ruled_on"] = None
                 else:
                     x["still_firing"] += 1
         elif k == "muted":
@@ -293,23 +297,28 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
             x = s(ev.get("id"))
             x["baseline"] = ev.get("count")
         elif k == "ruled":
-            x = s(ev.get("id"))
-            r = ev.get("ruling")
-            x["ruling"] = r
-            if r in ("drop", "fix", "snooze"):
-                x["baseline"], x["baseline_how"] = x["last_count"], f"ruled {r} on {ev.get('date')}"
-            if r == "snooze":
-                x["snoozed_until"] = ev.get("until")
-                x["snooze_note"] = str(ev.get("note") or "")  # its condition, when "asked"
-                x["snooze_ts"] = ev.get("ts")  # machine time: product work after it wakes a door
-                x["snooze_session"] = ev.get("session")
-                x["ruling"] = None
-            if r == "keep":
-                x["muted_since"] = None
-                x["streak_days"] = []
-                x["ruling"] = None
-                x["baseline"], x["baseline_how"] = None, None
+            _apply_ruling(s(ev.get("id")), ev)
     return st
+
+
+def _apply_ruling(x: dict, ev: dict) -> None:
+    """One `ruled` event applied to an advisory's derived state."""
+    r = ev.get("ruling")
+    x["ruling"] = r
+    x["ruled_on"] = ev.get("date") if r == "fix" else None
+    if r in ("drop", "fix", "snooze"):
+        x["baseline"], x["baseline_how"] = x["last_count"], f"ruled {r} on {ev.get('date')}"
+    if r == "snooze":
+        x["snoozed_until"] = ev.get("until")
+        x["snooze_note"] = str(ev.get("note") or "")  # its condition, when "asked"
+        x["snooze_ts"] = ev.get("ts")  # machine time: product work after it wakes a door
+        x["snooze_session"] = ev.get("session")
+        x["ruling"] = None
+    if r == "keep":
+        x["muted_since"] = None
+        x["streak_days"] = []
+        x["ruling"] = None
+        x["baseline"], x["baseline_how"] = None, None
 
 
 def last_seen_event(events: list[dict]) -> dict | None:
@@ -329,6 +338,13 @@ def _muted_line(aid: str, x: dict) -> str:
         return (f"MUTED ADVISORY {aid}: fired on {n} day(s) since {x['muted_since']}. It is a "
                 "permanent record its own check forbids backfilling, so it needs no ruling; it "
                 "speaks again when its count rises.")
+    if x.get("ruling") == "fix":
+        # A FIX RULING IS AN ANSWER, NOT A SILENCE (founder ruling 2026-11-12, "Stays, says 'fix
+        # owed'"). The item stays in front of the person until the condition clears, and the line
+        # says what was decided, so it no longer asks for a ruling that is already on record.
+        return (f"MUTED ADVISORY {aid}: fired on {n} day(s) since {x['muted_since']}; you ruled "
+                f"fix on {x.get('ruled_on') or 'an unrecorded date'}; fix owed (it leaves when "
+                "the condition clears).")
     return (f"MUTED ADVISORY {aid}: fired on {n} day(s) since {x['muted_since']}, nothing "
             f'followed; muted until you rule (python3 "{Path(__file__).resolve()}" rule '
             f"--id {aid} --ruling keep|fix|drop).")

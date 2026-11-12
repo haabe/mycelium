@@ -13,7 +13,8 @@ happening", so the item carries the exact command, not a hint.
 WHAT IT DOES. Given the assembled advisory text and the project, picks ONE item and prints it as
 JSON: an id, one sentence, the command that does it, and the fixed verb set. Priority, in order:
   1. a parked CLOSING PATH FIRED proposal (a named input landed; the ruling is on the human's desk)
-  2. a muted advisory awaiting a ruling (the ledger asked; nothing answered)
+  2. a muted advisory awaiting a ruling (the ledger asked; nothing answered), or one ruled `fix`
+     whose condition has not cleared (it stays, saying "you ruled fix on DATE; fix owed")
   3. an advisory with a mapped command, OLDEST FIRING STREAK FIRST (the ledger's streak start)
 Items ruled `drop`, or `snooze` with a date still ahead, are skipped. Nothing qualifying prints
 nothing, and the hook says nothing; silence is the correct output for a clean canvas.
@@ -297,6 +298,34 @@ def _blocked(x: dict, today: str) -> bool:
     su = x.get("snoozed_until")
     # "asked" (v0.251.0): snoozed until the human rules again. The ledger report still lists it.
     return bool(su) and (su == SNOOZE_ASKED or str(su) >= today)
+
+
+def _muted_item(aid: str, since: str, x: dict) -> dict:
+    """A muted advisory as the next item. One ruled `fix` stays in front of the person until its
+    condition clears (founder ruling 2026-11-12, "Stays, says 'fix owed'"); its line says what was
+    decided instead of asking for a ruling already on record, and it is never escalated as
+    unanswered, since the ruling answered it (the ladder stops on acknowledgement)."""
+    if x.get("ruling") == "fix":
+        ruled = str(x.get("ruled_on") or "an unrecorded date")
+        text, cmd = COMMANDS.get(aid, (f"Advisory {aid} still fires.", "/mycelium:canvas-health"))
+        return {
+            "id": aid,
+            "since": since,
+            "text": f"{text} You ruled fix on {ruled}; fix owed.",
+            "command": cmd,
+            "fix_owed": ruled,
+            "why": f"you ruled fix on {ruled}; fix owed (the condition has not cleared)",
+        }
+    text, cmd = COMMANDS.get(
+        aid, (f"Advisory {aid} is muted and awaits a ruling.", "/mycelium:canvas-health")
+    )
+    return {
+        "id": aid,
+        "since": since,
+        "text": f"{text} It has been muted since {since} with no ruling.",
+        "command": cmd,
+        "why": "muted; the ledger asked for a ruling and none was recorded",
+    }
 
 
 def _fired_proposals(root: Path) -> tuple[list[dict], str]:
@@ -1355,16 +1384,7 @@ def _pick_from(root: Path, reminders: str, today: str, st: dict,
         if x.get("muted_since") and not _blocked(x, today) and aid not in unclearable
     ]
     for since, aid in sorted(muted):
-        text, cmd = COMMANDS.get(
-            aid, (f"Advisory {aid} is muted and awaits a ruling.", "/mycelium:canvas-health")
-        )
-        return {
-            "id": aid,
-            "since": since,
-            "text": f"{text} It has been muted since {since} with no ruling.",
-            "command": cmd,
-            "why": "muted; the ledger asked for a ruling and none was recorded",
-        }, note
+        return _muted_item(aid, since, st[aid]), note
     # 4. present advisories with a command, oldest streak first
     cands = []
     for aid in ids:
@@ -1446,6 +1466,8 @@ def render_human(item: dict, limit: int = 240) -> str:
 
 
 def _escalated(item: dict) -> bool:
+    if item.get("fix_owed"):
+        return False  # ruled fix: answered, so never "unanswered for N sessions"
     return int(item.get("shown") or 1) >= ESCALATE_AT
 
 

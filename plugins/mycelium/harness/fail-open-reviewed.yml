@@ -1218,3 +1218,10 @@ reviewed:
     "safe_replace: key-shape check not run on <path> (<error>)", which is printed to stderr with the
     edit's other output. The scan reads the return as a default value; it is the message. The edit
     itself goes ahead, as the Write/Edit hook's advisory does.
+- id: check_record_size.py@723ac558f6
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `_git` returns '' when git cannot be run (not installed, or timed out). '' makes `sizes_then`
+    return None, and every record line then says "growth unknown: git has no commit that old here,
+    or could not be run" in place of a growth figure. The size, which is what the threshold reads,
+    comes from the file itself and is unaffected; only the growth half is said to be unknown.
