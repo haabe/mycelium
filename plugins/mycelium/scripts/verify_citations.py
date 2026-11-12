@@ -42,6 +42,8 @@ Exit codes:
 Python stdlib only.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os

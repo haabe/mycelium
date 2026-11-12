@@ -99,6 +99,8 @@ Exit codes:
     2 — argument/input error
 """
 
+from __future__ import annotations
+
 import argparse
 import importlib.util
 import json

@@ -378,7 +378,8 @@ _RULE_IDS = [f"absence-{i:02d}" for i in range(len(_ABSENCE))]
 
 def rules_hit(sentence: str) -> list[str]:
     """Ids of every `_ABSENCE` pattern matching one sentence, in table order."""
-    return [rid for rid, p in zip(_RULE_IDS, _ABSENCE, strict=True) if p.search(sentence)]
+    # _RULE_IDS is built from len(_ABSENCE), so the two are the same length by construction.
+    return [rid for rid, p in zip(_RULE_IDS, _ABSENCE) if p.search(sentence)]
 
 
 def findings(text: str) -> list[str]:

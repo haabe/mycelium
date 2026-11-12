@@ -41,6 +41,8 @@ Exit codes:
     2 = missing CI dependencies (PyYAML, jsonschema, or referencing)
 """
 
+from __future__ import annotations
+
 import datetime
 import importlib.util
 import json
@@ -1646,7 +1648,7 @@ def _unscanned_in(node, name: str, label: str, out: list, depth: int = 0) -> Non
                 f"ost-builder over it"
             )
         for k, val in node.items():
-            if isinstance(val, dict | list):
+            if isinstance(val, (dict, list)):
                 _unscanned_in(val, name, f"{label}.{k}", out, depth + 1)
     elif isinstance(node, list):
         for i, val in enumerate(node):
@@ -2297,7 +2299,7 @@ def _hand_typed(node, label, out, depth=0):
     elif isinstance(node, list):
         for i, v in enumerate(node):
             _hand_typed(v, f"{label}[{i}]", out, depth + 1)
-    elif isinstance(node, int | float) and not isinstance(node, bool):
+    elif isinstance(node, (int, float)) and not isinstance(node, bool):
         out.append((label, node))
 
 

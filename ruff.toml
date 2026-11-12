@@ -85,6 +85,12 @@ ignore = [
                 # such as the 3.9 that macOS ships". target-version stays py311 because
                 # lowering it changes lint for the whole repo (39 new findings, measured).
                 # tests/python/test_no_py311_only_names.py keeps the name out of the plugin.
+    "B905",     # wants `zip(..., strict=True)`. The `strict` argument exists from Python 3.10;
+                # under 3.9 the call raises TypeError. Where the lengths could differ, the code
+                # checks them by hand instead.
+    "RUF007",   # wants `itertools.pairwise`, which exists from Python 3.10 only.
+                # tests/python/test_hooks_run_on_python_3_9.py keeps both out of the code the
+                # hooks run, and imports that code under a 3.9 interpreter when one is present.
 ]
 
 [lint.per-file-ignores]

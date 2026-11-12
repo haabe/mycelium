@@ -88,7 +88,6 @@ import os
 import re
 import sys
 from datetime import datetime, timezone
-from itertools import pairwise
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -423,7 +422,7 @@ def _status_reads_a_pipeline(base: str, scan: str) -> bool:
         return False
     bounds = [0] + [m.start() for m in re.finditer(r"[;\n]", scan)] + [len(base)]
     prev_piped = False
-    for lo, hi in pairwise(bounds):
+    for lo, hi in zip(bounds, bounds[1:]):  # itertools.pairwise is 3.10+; macOS ships 3.9
         if _DOLLAR_STATUS.search(base[lo:hi]) and prev_piped:
             return True
         if base[lo:hi].strip():
