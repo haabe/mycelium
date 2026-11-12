@@ -185,6 +185,21 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    person, who confirms it (founder ruling g). An exposure already live before this was recorded
    gets `reconstructed: true` (ruling h). `scale_locks.py --exposures` reports what is missing, and
    the release gate refuses a release no current exposure record covers.
+   **A team-only exposure is its own trial** (founder ruling 2026-11-12). An L3's Evidence gate at
+   `release` asks that what reaches people has had one trial outside the team first
+   (`engine/theory-gates.md`, gate 1). When the exposure's only audience is the builder or the
+   team, write its `audience` starting with the token `team-only` (`team-only: the builder, in
+   their own sessions`): the release is then the trial, and record the Evidence gate at `release`
+   as `n/a` with the reason "team-only exposure: the release is the trial". Do not use the token
+   for anyone outside the team, however close (a friend, a pilot client, one tester). Before the
+   work reaches anyone outside the team, the outside trial is still required: the release gate
+   reads the audience from each exposure record, and an L3's Evidence `n/a` does not count while
+   any of them names an audience outside the team. Widening a team-only exposure to outsiders is
+   a `widened` change, and it needs the Evidence gate passed by a trial outside the team.
+   **A service check scoped to one exposure lands on the exposure** (founder ruling 2026-11-12).
+   When `/mycelium:service-check` is run for one exposure, its 15 principles go in that
+   exposure's `gates_basis.service_quality` with a decision-log line, and `services.yml` stays the
+   product-wide record. The release gate reads the exposure's own record first.
    **Something already live with no record** (v0.322.0). When the repository shows the project
    deploys and no diamond carries an exposure record, the next item `already-live` asks the
    person whether something from it is already in front of real people, and names this skill

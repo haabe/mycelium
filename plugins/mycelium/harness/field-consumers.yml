@@ -143,3 +143,16 @@ reviewed:
       landscape item's reason to look again is often an event, which a date check cannot raise.
       The consumer lists each trigger on every run; it cannot tell whether the event happened.
       The candidate proposed the landscape sweep as the reader, and upstream has no sweep skill.
+
+  - field: gates_basis
+    canvas: active
+    consumer: scripts/scale_locks.py#scoped_service_record
+    verdict: wired
+    note: >-
+      Founder-ruled 2026-11-12 ("On the exposure"). `exposures[].gates_basis.service_quality` as an
+      object is a service check scoped to that exposure: /mycelium:service-check writes the 15
+      principles there with a decision-log line, and services.yml stays the product-wide record.
+      The release gate (`State.service_record_gap`, called from `_record_problems` and
+      `gate_missing`) reads it before services.yml, to the same bar of all 15 judged with
+      evidence. The other keys of `gates_basis`, and a `service_quality` written as text, are
+      notes for a person and no check reads them.

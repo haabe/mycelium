@@ -81,6 +81,7 @@ For each principle, assess: Pass / Partial / Fail / N/A
 
 - **An L3, before `commit_to_build`** (solution design): Run a lightweight check focusing on principles 1-4, 8, 10, 11. These inform the Four Risks viability dimension — a solution that violates core service principles has viability risk. Feed results into `/mycelium:ice-score`.
 - **An L3's `release`** (its learning delivery to a named audience, v0.331.0): Run the full 15-principle check, because the Service Quality gate reads all 15 for any release. A principle the test's audience never meets is judged `n/a` with a line saying why, which keeps a small pilot's check small.
+- **One exposure** (a check scoped to one exposure record in a diamond's `exposures[]`, usually an L3's learning delivery: one solution shown to a few opted-in people; founder ruling 2026-11-12): Run the full 15-principle check for what that audience meets, with `n/a` and a reason for the principles they never meet. The result goes on the exposure, not in `services.yml`: see "A check scoped to one exposure" below. The release gate reads that exposure's own record first.
 - **An L4's `release`**: Run the full 15-principle check. Required REVIEW gate (G-V2).
 - **An L4's `close`**: Final validation. Required REVIEW gate.
 
@@ -102,7 +103,8 @@ Priority fixes: [top 3 items to address]
 
 ## Canvas (MANDATORY — the source of truth, do this FIRST)
 
-`.claude/canvas/services.yml` is the canonical record. The decision log is provenance; the canvas is
+`.claude/canvas/services.yml` is the canonical product-wide record. A check scoped to one exposure
+is recorded on that exposure instead (see "A check scoped to one exposure" below). The decision log is provenance; the canvas is
 what the framework READS. Write the canvas before the decision log — if only one of the two lands, it
 must be this one.
 
@@ -140,6 +142,40 @@ from "nobody looked", and only one of those is true after a run. If a principle 
 why in `evidence`. A principle whose own fail criterion is "not tested" (P11 accessibility) is a
 **fail**, not a `not-assessed`: the criterion is about the testing, not about the product.
 
+## A check scoped to one exposure (founder ruling 2026-11-12)
+
+`services.yml` is the product-wide record. A check scoped to one exposure must not overwrite it with
+a reading of one solution, and must not live only in prose the gate never reads. It goes on the
+exposure record it was run for, in `.claude/diamonds/active.yml`, under that exposure's
+`gates_basis.service_quality`, in the same shape `principles[]` takes above:
+
+```yaml
+  exposures:
+  - audience: ...
+    gates:
+      service_quality: pass|pass-with-risk|n/a
+    gates_basis:
+      service_quality:
+        on: "YYYY-MM-DD"
+        decision_log: "<the decision-log entry for this check>"
+        overall_score: "<X pass / Y partial / Z fail / W n/a>"
+        principles:
+          - id: <1-15>
+            assessment: pass|partial|fail|n/a|not-assessed
+            evidence: "<what was observed for this audience, and where>"
+            issues: ["<specific, actionable>"]
+```
+
+Then append the decision-log entry (below) and name the exposure in it. Leave `services.yml` as it
+is. The release gate (`scripts/scale_locks.py`, the exposure check and the diamond's release
+decision) reads each exposure's `gates_basis.service_quality` first, to the same bar as the
+product-wide record: all 15 principles judged with `evidence`, `n/a` with a reason counting. An
+exposure with no scoped record is read by `services.yml`, as before. A scoped record that misses a
+principle is named by the gate even when `services.yml` is complete, because it is the reading of
+what this audience meets. A `gates_basis.service_quality` written as a line of text is a note for a
+person and is not read as a record. The rules above for `not-assessed` and P11 apply here too, and
+so does the Postflight: read the exposure back and confirm the principles landed.
+
 ## Postflight: Verify-After-Write (write-narration-verification discipline)
 
 **Hard rule** (per the operating contract's Communication Rules, anti-pattern #7 Stage 2 graduation). Before any
@@ -150,7 +186,7 @@ file reads fresh and holds nothing. Preflight protects what gets written; Postfl
 gets claimed about what was written.
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Service Check` entry to `.claude/harness/decision-log.md` with: principles assessed, scores, priority fixes, overall service quality rating.
+**APPEND** a `### Service Check` entry to `.claude/harness/decision-log.md` with: principles assessed, scores, priority fixes, overall service quality rating. For a check scoped to one exposure, also name the diamond and the exposure (its audience) the check was for, and that the record is on the exposure's `gates_basis.service_quality`.
 
 ## Theory Citations
 - Downe: Good Services (15 principles)

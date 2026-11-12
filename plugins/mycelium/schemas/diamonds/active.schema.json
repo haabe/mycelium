@@ -192,7 +192,7 @@
           },
           "audience": {
             "type": "string",
-            "description": "Who meets it, bounded and named where possible."
+            "description": "Who meets it, bounded and named where possible. An audience of the builder or the team alone starts with the token `team-only` (e.g. `team-only: the builder, in their own sessions`; founder ruling 2026-11-12): that exposure is itself the trial, so an L3's Evidence gate at `release` may read `n/a` for it, and for any other audience it may not (scripts/scale_locks.py, `team_only` and `State.release_evidence_missing`)."
           },
           "channel": {
             "type": "string",
@@ -222,6 +222,26 @@
           "gates": {
             "type": "object",
             "description": "security, privacy, service_quality, regulatory (and explainability with AI components), passed for THIS exposure."
+          },
+          "gates_basis": {
+            "type": "object",
+            "description": "The record behind each of `gates` for THIS exposure, keyed by gate. A line of text is a note for a person and is not read by a check. `service_quality` as an object is a service check scoped to this exposure (founder ruling 2026-11-12, \"On the exposure\"): /mycelium:service-check writes it, with a decision-log line, and leaves canvas/services.yml as the product-wide record. The release gate reads it before services.yml, to the same bar: all 15 `principles` judged with `evidence` (`n/a` with a reason counts) (scripts/scale_locks.py, `scoped_service_record`).",
+            "properties": {
+              "service_quality": {
+                "type": ["string", "object"],
+                "properties": {
+                  "on": {"type": "string", "description": "The day the scoped check ran."},
+                  "decision_log": {"type": "string", "description": "The decision-log entry that records it."},
+                  "overall_score": {"type": "string", "description": "The X pass / Y partial / Z fail / W n/a tally."},
+                  "principles": {
+                    "type": "array",
+                    "description": "Downe's 15 principles for this exposure, in the shape canvas/services.yml `principles[]` carries: id, assessment, evidence, issues.",
+                    "items": {"type": "object"}
+                  }
+                }
+              }
+            },
+            "additionalProperties": true
           },
           "harms_check": {
             "type": "object",
