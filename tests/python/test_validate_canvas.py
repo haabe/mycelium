@@ -2907,3 +2907,96 @@ def test_the_new_fields_validate_against_their_schemas(tmp_path, scripts_path):
     gist = json.loads((root / "gist.schema.json").read_text())
     assert "killed_reason" in gist["properties"]["ideas"]["items"]["properties"]
     assert validator is not None
+
+
+_ACTING_ON_CANVAS = textwrap.dedent("""\
+    opportunities:
+      - id: opp-001
+        name: Receptionists need double bookings caught before the patient arrives
+        provenance:
+          evidence_type: anecdotal
+          evidence_sources: [interview-a, interview-b, interview-c]
+        acting_on:
+          - source: interview-a
+            answer: under_way
+            detail: the clinic had a project to replace the paper diary after a lost patient
+          - source: interview-b
+            answer: tried_options
+            detail: tried a shared calendar, gave up when it did not sync
+          - source: interview-c
+            answer: lived_with
+      - id: opp-002
+        name: Receptionists need reminders to go out without phoning
+        provenance:
+          evidence_type: anecdotal
+          evidence_sources: [interview-a]
+        acting_on:
+          - source: interview-a
+            answer: lived_with
+      - id: opp-003
+        name: Nobody was asked about this one
+        provenance:
+          evidence_type: anecdotal
+          evidence_sources: [interview-d]
+      - id: opp-004
+        name: Closed, so not compared
+        status: addressed
+        provenance:
+          evidence_type: anecdotal
+          evidence_sources: [interview-a]
+        acting_on:
+          - source: interview-a
+            answer: under_way
+""")
+
+
+def _opps_file(tmp_path, body):
+    path = tmp_path / "opportunities.yml"
+    path.write_text(body)
+    return path
+
+
+def test_acting_on_validates_against_the_opportunities_schema(tmp_path, scripts_path, monkeypatch):
+    """Founder ruling 2026-11-12 (l2-evidence-never-asks-whether-anyone-is-acting-on-the-need):
+    the per-story `acting_on` answer is declared, so a canvas using it passes; an answer outside
+    the three values, or an entry with no source, does not."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    registry = validator.build_registry()
+    canvas = _opps_file(tmp_path, _ACTING_ON_CANVAS)
+    assert validator.validate_canvas_against_schema(canvas, registry) == []
+    canvas = _opps_file(tmp_path, _ACTING_ON_CANVAS.replace(
+        "answer: lived_with\n  - id: opp-002", "answer: complained\n  - id: opp-002"))
+    errors = validator.validate_canvas_against_schema(canvas, registry)
+    assert len(errors) == 1 and "acting_on" in errors[0] and "complained" in errors[0]
+    canvas = _opps_file(tmp_path, _ACTING_ON_CANVAS.replace("      - source: interview-c\n", "      - "))
+    errors = validator.validate_canvas_against_schema(canvas, registry)
+    assert len(errors) == 1 and "'source' is a required property" in errors[0]
+
+
+def test_acted_on_coverage_counts_acted_against_voiced_per_open_opportunity(tmp_path, scripts_path):
+    """The reader: under_way and tried_options are acted on, lived_with is voiced only. An
+    opportunity with no answers is not named (never asked is not "nobody acts"), and a closed one
+    is not compared."""
+    validator = _import_validator(scripts_path)
+    _opps_file(tmp_path, _ACTING_ON_CANVAS)
+    cov = validator.acted_on_coverage(tmp_path)
+    assert cov.startswith("2 open opportunities record whether people were acting on the need")
+    assert "opp-001: 2 acted on, 1 voiced only" in cov
+    assert "opp-002: 0 acted on, 1 voiced only" in cov
+    assert "opp-003" not in cov and "opp-004" not in cov
+    assert validator.acted_on_counts({"acting_on": [{"answer": "x"}, "junk"]}) == (0, 0)
+    assert validator.acted_on_coverage(tmp_path / "nowhere") is None
+
+
+def test_acted_on_coverage_is_silent_without_answers_and_prints_on_the_coverage_tier(
+        tmp_path, scripts_path, capsys):
+    validator = _import_validator(scripts_path)
+    _opps_file(tmp_path, "opportunities:\n  - id: opp-001\n    name: n\n    provenance: "
+                         "{evidence_type: anecdotal, evidence_sources: [i]}\n")
+    assert validator.acted_on_coverage(tmp_path) is None
+    _opps_file(tmp_path, _ACTING_ON_CANVAS)
+    validator.print_advisory_warnings(tmp_path)
+    assert "  COVERAGE (acted on): 2 open opportunities" in capsys.readouterr().out
+    _opps_file(tmp_path, "opportunities: [unclosed\n")
+    assert validator.acted_on_coverage(tmp_path) is None

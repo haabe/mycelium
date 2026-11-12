@@ -1379,6 +1379,7 @@ def print_advisory_warnings(canvas_dir):
         print(f"  COVERAGE (opportunity shape): {shape}")
     for label, line in (("scenario gap", scenario_gap_coverage(canvas_dir)),
                         ("review trigger", review_trigger_coverage(canvas_dir)),
+                        ("acted on", acted_on_coverage(canvas_dir)),
                         ("calibration", calibration_coverage(canvas_dir))):
         if line:
             print(f"  COVERAGE ({label}): {line}")
@@ -1542,6 +1543,58 @@ def review_trigger_coverage(canvas_dir):
 
 
 _TRIGGER_SHOWN = 90
+
+#: `acting_on[].answer` values that show the need ACTED ON; `lived_with` is voiced only
+#: (founder ruling 2026-11-12).
+_ACTED_ON = ("under_way", "tried_options")
+#: How many opportunities the acted-on line names before summarising.
+_ACTED_ON_NAMED = 8
+
+
+def acted_on_counts(opp):
+    """(acted on, voiced only) for one opportunity's `acting_on` answers. An answer outside the
+    enum is counted in neither: the schema reports it, and guessing its side would be a reading."""
+    answers = [a.get("answer") for a in opp.get("acting_on") or [] if isinstance(a, dict)]
+    return (sum(1 for a in answers if a in _ACTED_ON),
+            sum(1 for a in answers if a == "lived_with"))
+
+
+def acted_on_coverage(canvas_dir):
+    """COVERAGE-tier: per opportunity, how much of its story evidence shows the need acted on.
+
+    Founder ruling 2026-11-12 (candidate
+    l2-evidence-never-asks-whether-anyone-is-acting-on-the-need): an L2 could clear its interview
+    floor and choose its target on voiced pains alone, because a need someone was working on
+    and a pain they lived with were recorded alike. user-interview's snapshot now records, per
+    story, `acting_on` (under_way / tried_options / lived_with). This line counts them for each
+    open opportunity that has any, so the L2's comparison of siblings
+    (ost-builder, "Choosing the target") can say which rest on action and which on words. Only
+    opportunities with answers are named: one with none was never asked, which is not the same as
+    a need nobody acts on, and a count of those would score silence as a finding.
+    """
+    path = Path(canvas_dir) / "opportunities.yml"
+    if not path.exists():
+        return None
+    try:
+        doc = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return None  # SPEAKS elsewhere: validate_all_yaml_parses reports the parse failure
+    opps = doc.get("opportunities") if isinstance(doc, dict) else None
+    closed = {"closed", "discarded", "resolved", "addressed"}
+    rows = []
+    for o in opps or []:
+        if not isinstance(o, dict) or str(o.get("status", "open")).lower() in closed:
+            continue
+        acted, voiced = acted_on_counts(o)
+        if acted or voiced:
+            name = o.get("id") or o.get("name", "?")
+            rows.append(f"{name}: {acted} acted on, {voiced} voiced only")
+    if not rows:
+        return None
+    more = " ..." if len(rows) > _ACTED_ON_NAMED else ""
+    return (f"{len(rows)} open opportunit{'y records' if len(rows) == 1 else 'ies record'} whether "
+            "people were acting on the need (`acting_on`; under_way or tried_options = acted on, "
+            "lived_with = voiced only): " + " | ".join(rows[:_ACTED_ON_NAMED]) + more)
 
 
 def affects_entries_findings(canvas_dir):

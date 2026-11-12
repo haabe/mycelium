@@ -143,3 +143,17 @@ reviewed:
       landscape item's reason to look again is often an event, which a date check cannot raise.
       The consumer lists each trigger on every run; it cannot tell whether the event happened.
       The candidate proposed the landscape sweep as the reader, and upstream has no sweep skill.
+
+  - field: acting_on
+    canvas: opportunities
+    consumer: scripts/validate_canvas.py#acted_on_coverage
+    verdict: wired
+    note: >-
+      Founder-ruled 2026-11-12 ("Add the field"; candidate
+      l2-evidence-never-asks-whether-anyone-is-acting-on-the-need). Per story behind an
+      opportunity, whether the person was acting on the need (under_way, tried_options) or living
+      with it (lived_with). Written by /mycelium:user-interview's post-interview snapshot. The
+      consumer counts acted-on against voiced-only answers per open opportunity on the COVERAGE
+      tier, and /mycelium:ost-builder carries the same counts into the L2's comparison of sibling
+      opportunities when the target is chosen. An opportunity with no answers is not counted:
+      never asked is not the same as nobody acting.

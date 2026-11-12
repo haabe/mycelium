@@ -69,11 +69,15 @@ def test_a_wired_verdict_is_backed_by_an_actual_consumer():
     m = _mod()
     rows, registry = m.scan(ROOT)
     consumers = {n: kinds for n, _, kinds in rows}
+    corpora = m._corpora(ROOT)
     for name, entry in registry.items():
         if entry.get("verdict") != "wired":
             continue
-        assert consumers.get(name), (
-            f"{name} is recorded as wired, but the scan finds no consumer for it")
+        # A field whose name is not promise-shaped is not a scan row, but the four-step rule
+        # still declares its consumer here (`acting_on`, 2026-11-12), so look it up directly:
+        # the claim is checked the same way, not skipped.
+        found = consumers.get(name) or m.consumers_of(name, corpora)
+        assert found, f"{name} is recorded as wired, but the scan finds no consumer for it"
 
 
 def test_a_renderer_counts_as_a_consumer():
