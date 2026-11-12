@@ -1365,6 +1365,7 @@ def print_advisory_warnings(canvas_dir):
         ("opportunity mover", opportunity_mover_findings(canvas_dir)),
         ("unscanned source", unscanned_source_findings(canvas_dir)),
         ("stale blocker", stale_blocker_findings(canvas_dir)),
+        ("stream measure", stream_measure_findings(canvas_dir)),
         ("cross-reference", cross_reference_findings(canvas_dir)),
         ("off-outcome root", off_north_star_root_findings(canvas_dir)),
         ("hand-typed metric", hand_typed_metric_findings(canvas_dir)),
@@ -1732,6 +1733,78 @@ def stale_blocker_findings(canvas_dir):
             out.append(
                 f"diamonds/active.yml: {did} is ruled {ruling} on {ruled_at}, but its confidence "
                 f"derivation changed on {changed} — the ruling predates the evidence it rests on"
+            )
+    return out
+
+
+#: Measure sources that name the delivery stream rather than an outcome a diamond can close on.
+#: The dogfood shape: `measure: {source: dora-metrics, field: overall_classification, ...}`.
+_STREAM_SOURCES = {"dora-metrics", "dora"}
+#: States that end a diamond without a close: a measure nobody reads there is not owed any more.
+_ENDED_STATES = {"killed", "archived", "retargeted", "complete", "completed"}
+
+
+def _stream_source(measure) -> str:
+    """The measure's source when it names the delivery stream, else ''."""
+    if not isinstance(measure, dict):
+        return ""
+    raw = str(measure.get("source") or "").strip()
+    name = raw.lower().rsplit("/", 1)[-1].split("#", 1)[0]
+    name = name.removesuffix(".yml").removesuffix(".yaml")
+    return raw if name in _STREAM_SOURCES else ""
+
+
+def _phase_reader():
+    try:
+        from scale_locks import phase_of  # noqa: PLC0415 -- sibling, loaded on use
+    except ImportError:                     # a partial install still warns on the recorded phase
+        return lambda d: str(d.get("phase") or "")
+    return phase_of
+
+
+def stream_measure_findings(canvas_dir):
+    """WARN-tier: an open diamond carries a measure it can never reach.
+
+    Founder ruling 2026-11-12 (l4s-object-is-one-increment-but-every-shipping-project-also-has-a-
+    stream, "Stream lives in dora-metrics"). A Definition of Done `measure` is read only after its
+    diamond closes: session start's outcome loop and /metrics-pull Step 8b both start from a closed
+    diamond. A continuous delivery stream never closes, so a measure keyed on the stream
+    (`source: dora-metrics`) on a diamond that has not closed is read by nothing, ever, and the
+    `close` it waits for cannot be recorded honestly either: the stream has no moment at which its
+    signal is met. Dogfood 2026-09-19: an L4 carrying `{source: dora-metrics, field:
+    overall_classification, target: elite, check_after: 30d}` sat open 48 days with that block
+    evaluated by nothing. The stream is measured in dora-metrics.yml itself, which the session-start
+    reminder reads on its own 30-day cadence (engine/diamond-rules.md, Scales).
+
+    Report, never rewrite: whether the diamond should drop the measure, take one its close can
+    reach, or close on something else is the owner's call.
+    """
+    path = Path(canvas_dir).parent / "diamonds" / "active.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    diamonds = data.get("active_diamonds") if isinstance(data, dict) else None
+    if not isinstance(diamonds, list):
+        return []
+    phase_of = _phase_reader()
+    out = []
+    for dm in diamonds:
+        if not isinstance(dm, dict):
+            continue
+        if phase_of(dm) == "complete" or str(dm.get("state") or "").lower() in _ENDED_STATES:
+            continue
+        dod = dm.get("definition_of_done")
+        src = _stream_source(dod.get("measure")) if isinstance(dod, dict) else ""
+        if src:
+            out.append(
+                f"diamonds/active.yml: {dm.get('id', '?')} has not closed and its "
+                f"definition_of_done.measure reads `{src}`, the delivery stream. A measure is read "
+                f"only after its diamond closes, and a stream never closes, so nothing will ever "
+                f"read this one. Measure the stream in dora-metrics.yml (engine/diamond-rules.md, "
+                f"Scales) and give this diamond a measure its own close can reach, or none"
             )
     return out
 
