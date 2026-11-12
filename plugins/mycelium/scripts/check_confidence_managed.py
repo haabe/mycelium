@@ -39,7 +39,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -128,7 +128,7 @@ def evidence_since(root: Path, since: date, diamond_id: str | None = None) -> li
             # has not committed yet, a test fixture) `git log` returns nothing and the guard would
             # find no evidence and report a silent pass — the blindness this whole check exists to
             # prevent, reproduced inside the check itself.
-            d = datetime.fromtimestamp(f.stat().st_mtime, tz=UTC).date()
+            d = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).date()
         if d and d > since:
             hits.append(f.name)
     return sorted(hits)
@@ -155,7 +155,7 @@ def _not_live(dm: dict, inactive: set) -> bool:
 
 
 def audit(root: Path, today: date | None = None) -> list[dict]:
-    today = today or datetime.now(UTC).date()
+    today = today or datetime.now(timezone.utc).date()
     findings = []
     inactive = _inactive_ids(root)
     for dm in diamonds(root):

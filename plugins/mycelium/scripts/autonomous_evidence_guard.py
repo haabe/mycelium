@@ -205,7 +205,7 @@ def _log_fire(outcome: str, detail: str = "") -> None:
     try:
         d = os.path.join(root, ".claude/state")
         os.makedirs(d, exist_ok=True)
-        ts = datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+        ts = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
         row = {"ts": ts, "hook": "autonomous-evidence-guard.sh", "outcome": outcome}
         if detail:
             row["detail"] = detail

@@ -178,7 +178,7 @@ def main(argv=None) -> int:
         return 0
     try:
         today = (_dt.date.fromisoformat(args.today) if args.today
-                 else _dt.datetime.now(tz=_dt.UTC).date())
+                 else _dt.datetime.now(tz=_dt.timezone.utc).date())
     except ValueError:
         print("idle-opportunities: --today is not an ISO date", file=sys.stderr)
         return 2

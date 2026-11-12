@@ -636,7 +636,7 @@ def cycle_field_coverage(cycle_file, today=None):
         return []
 
     if today is None:
-        today = datetime.datetime.now(datetime.UTC).date()
+        today = datetime.datetime.now(datetime.timezone.utc).date()
 
     # Observational fields are measured only on records where someone was actually watching.
     observed = _observed_only(closed)
@@ -874,6 +874,11 @@ def calibration_due_findings(canvas_dir):
     0.320.0: `bakeoff_delta` joins the retired thresholds. It was the last threshold calibrated
     from `ice_accuracy`, so a canvas carrying it gets the retired line and never "calibration
     is due" or "uncalibrated because" for it.
+
+    Since dogfood 2026-10-10, finding (2) is printed only when `_meta.calibration_status`
+    blames the cycle count (`_note_blames_count`); otherwise the standing state is one COVERAGE
+    line from calibration_coverage, because a WARN that no edit can clear was repeating on
+    every push after its note had been corrected.
     """
     canvas = Path(canvas_dir)
     thresholds = _load_yaml(canvas / "thresholds.yml")
@@ -898,9 +903,61 @@ def calibration_due_findings(canvas_dir):
                 "mis-indented `thresholds:` key reads exactly like this"
             )]
         return []
+    out = retired
+    note = _calibration_note(thresholds)
+    for row in _calibration_rows(table, cycle_file):
+        name, have, total, minimum, scope, field = row[1:]
+        if row[0] == "due":
+            out.append(f"thresholds.yml#{name}: calibration is due — {have} {scope} carry "
+                       f"`calibration.{field}` against minimum_n {minimum}, and based_on_n is "
+                       f"still 0. Run the framework-health calibration step; the value is not "
+                       f"computed here")
+        elif _note_blames_count(note, scope, field):
+            out.append(f"thresholds.yml#{name}: uncalibrated because {have} of {total} cycles "
+                       f"are {scope} carrying `calibration.{field}` (minimum_n {minimum}), not "
+                       f"because the cycle count is low; the `_meta.calibration_status` note "
+                       f"blames the count and is stale: rewrite it to name the cycle class")
+    return out
+
+
+#: Words in `_meta.calibration_status` that put the reason on the number of cycles.
+_BLAMES_COUNT = re.compile(
+    r"minimum_n|minimum n\b|below (the )?minimum|(too )?few(er)? cycles|not enough cycles|"
+    r"insufficient cycles|cycle count", re.IGNORECASE)
+
+
+def _calibration_note(thresholds) -> str:
+    meta = thresholds.get("_meta") if isinstance(thresholds, dict) else None
+    note = meta.get("calibration_status") if isinstance(meta, dict) else None
+    return note if isinstance(note, str) else ""
+
+
+def _note_blames_count(note: str, scope: str, field: str) -> bool:
+    """True when the note puts the reason on the cycle count and names neither the cycle class
+    nor the calibration field: the note the "uncalibrated because" WARN calls stale.
+
+    Dogfood 2026-10-10: the WARN used to print from the counts alone, so a note
+    corrected on 2026-09-15 to the very reason the WARN gives was still called stale on every
+    push, and the act that ends the state (product-leaf cycles recorded with an estimate and an
+    actual) is not one an edit can supply. A note that names the class or the field is the
+    corrected note; no note at all blames nothing.
+    """
+    if not note or not _BLAMES_COUNT.search(note):
+        return False
+    flat = re.sub(r"[-_]", " ", note.lower())
+    klass = re.sub(r"[-_]", " ", scope.lower())
+    klass = klass[: -len(" cycles")] if klass.endswith(" cycles") else ""  # "cycles": no class
+    names_class = bool(klass) and klass in flat
+    return not names_class and field.lower() not in note.lower()
+
+
+def _calibration_rows(table: dict, cycle_file: Path) -> list[tuple]:
+    """("due" | "uncalibrated", name, have, total, minimum_n, scope, field) for every threshold
+    calibrated from cycle data whose based_on_n is still 0: due when the eligible count has
+    reached minimum_n, uncalibrated when it has not but the total cycle count has."""
     counts = calibration_input_counts(cycle_file)
     total = len(_load_yaml(cycle_file).get("cycles") or [])
-    out = retired
+    rows = []
     for name, entry in table.items():
         if not isinstance(entry, dict) or name not in _CALIBRATION_INPUT:
             continue
@@ -908,19 +965,41 @@ def calibration_due_findings(canvas_dir):
         if not isinstance(minimum, int) or based_on not in (0, None):
             continue
         klass, field = _CALIBRATION_INPUT[name]
-        have = counts[name]
         scope = f"{klass} cycles" if klass else "cycles"
-        if have >= minimum:
-            out.append(f"thresholds.yml#{name}: calibration is due — {have} {scope} carry "
-                       f"`calibration.{field}` against minimum_n {minimum}, and based_on_n is "
-                       f"still 0. Run the framework-health calibration step; the value is not "
-                       f"computed here")
+        if counts[name] >= minimum:
+            rows.append(("due", name, counts[name], total, minimum, scope, field))
         elif total >= minimum:
-            out.append(f"thresholds.yml#{name}: uncalibrated because {have} of {total} cycles "
-                       f"are {scope} carrying `calibration.{field}` (minimum_n {minimum}), not "
-                       f"because the cycle count is low; a calibration_status note blaming the "
-                       f"count is stale")
-    return out
+            rows.append(("uncalibrated", name, counts[name], total, minimum, scope, field))
+    return rows
+
+
+def calibration_coverage(canvas_dir):
+    """COVERAGE-tier: one line for every threshold uncalibrated for want of eligible cycles,
+    when the `_meta.calibration_status` note does not blame the cycle count (that case is the
+    WARN in calibration_due_findings). None when there is nothing to say.
+
+    A standing state, not a defect: what ends it is cycles of the named class recorded with the
+    input, which no edit to thresholds.yml supplies. Printed as a WARN, it repeated on every
+    push after the note was corrected (dogfood 2026-10-10) and taught the reader to scroll past
+    the WARN list.
+    """
+    canvas = Path(canvas_dir)
+    cycle_file = canvas / "cycle-history.yml"
+    thresholds = _load_yaml(canvas / "thresholds.yml")
+    table = thresholds.get("thresholds") if isinstance(thresholds, dict) else None
+    if not cycle_file.exists() or not isinstance(table, dict):
+        return None
+    note = _calibration_note(thresholds)
+    parts = [f"{name}: {have} of {total} cycles are {scope} carrying `calibration.{field}` "
+             f"(minimum_n {minimum})"
+             for state, name, have, total, minimum, scope, field
+             in _calibration_rows(table, cycle_file)
+             if state == "uncalibrated" and not _note_blames_count(note, scope, field)]
+    if not parts:
+        return None
+    return (f"{len(parts)} threshold(s) uncalibrated, and the cycle count is not why: "
+            + "; ".join(parts) + ". Recording such cycles with an estimate before the work and "
+            "an actual after it is what ends this; no edit to thresholds.yml does")
 
 
 def terminal_leaf_without_cycle_findings(canvas_dir):

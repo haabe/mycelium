@@ -101,11 +101,19 @@ EOF
 # their text to session-checks.json. UserPromptSubmit stdout is added to context, so this
 # is the documented place to deliver it. Delivered once per pending session; the advisory
 # ledger settles here, on the full block, never on the partial one the fast tier emitted.
+#
+# AN UNREADABLE FILE IS TRIED AGAIN. Until 0.334.1 one failed read printed the could-not-be-
+# delivered line and removed the pending marker, so a file caught mid-write (dogfood 2026-10-10:
+# valid and complete minutes later) cost the session its background checks. Both writers now
+# replace the file in one step, and a failed read keeps the marker: the pending file's first line
+# is the session id, its second the number of failed reads so far. The next prompt reads again;
+# after _PF_MAX_TRIES failed reads the line is printed, once, and the marker removed.
 # ------------------------------------------------------------
 _PF_CACHE="$PROJECT_DIR/.claude/state/session-checks.json"
 _PF_PENDING="$PROJECT_DIR/.claude/state/session-checks.pending"
+_PF_MAX_TRIES=3
 if [ -f "$_PF_PENDING" ] && [ -f "$_PF_CACHE" ]; then
-  _PF_SID="$(cat "$_PF_PENDING" 2>/dev/null || echo "")"
+  _PF_SID="$(head -n 1 "$_PF_PENDING" 2>/dev/null || echo "")"
   _PF_BLOCK="$(python3 -c '
 import json, sys
 sid, path = sys.argv[1], sys.argv[2]
@@ -119,8 +127,15 @@ if d.get("session") == sid and d.get("delivered_to") != sid and d.get("reminders
 ' "$_PF_SID" "$_PF_CACHE" 2>/dev/null || true)"
   case "$_PF_BLOCK" in
     __UNREADABLE__*)
-      echo "MYCELIUM: the background session-start checks could not be delivered (${_PF_BLOCK#__UNREADABLE__ }); run /mycelium:canvas-health for them."
-      rm -f "$_PF_PENDING"
+      _PF_TRIES="$(sed -n 2p "$_PF_PENDING" 2>/dev/null)"
+      case "$_PF_TRIES" in ''|*[!0-9]*) _PF_TRIES=0 ;; esac
+      _PF_TRIES=$(( _PF_TRIES + 1 ))
+      if [ "$_PF_TRIES" -ge "$_PF_MAX_TRIES" ]; then
+        echo "MYCELIUM: the background session-start checks could not be delivered (${_PF_BLOCK#__UNREADABLE__ }; tried at ${_PF_TRIES} prompts); run /mycelium:canvas-health for them."
+        rm -f "$_PF_PENDING"
+      else
+        ( umask 077; printf '%s\n%s\n' "$_PF_SID" "$_PF_TRIES" > "$_PF_PENDING" 2>/dev/null ) || true
+      fi
       _PF_BLOCK=""
       ;;
   esac
@@ -134,10 +149,21 @@ if d.get("session") == sid and d.get("delivered_to") != sid and d.get("reminders
       [ -n "$_PF_SETTLED" ] && _PF_BLOCK="$_PF_SETTLED"
     fi
     echo "MYCELIUM FEEDBACK LOOPS (background run, delivered now): ${_PF_BLOCK}"
+    # Replaced in one step, like the writer in session-start.sh, so no reader sees half a file.
     python3 -c '
-import json, sys
+import json, os, sys, tempfile
 sid, path = sys.argv[1], sys.argv[2]
-d = json.load(open(path)); d["delivered_to"] = sid; json.dump(d, open(path, "w"))
+with open(path) as fh:
+    d = json.load(fh)
+d["delivered_to"] = sid
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".session-checks.", suffix=".tmp")
+try:
+    with os.fdopen(fd, "w") as fh:
+        json.dump(d, fh)
+    os.replace(tmp, path)
+finally:
+    if os.path.exists(tmp):
+        os.unlink(tmp)
 ' "$_PF_SID" "$_PF_CACHE" 2>/dev/null || true
     rm -f "$_PF_PENDING"
   fi

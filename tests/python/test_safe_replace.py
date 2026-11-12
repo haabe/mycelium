@@ -304,3 +304,75 @@ def test_main_returns_1_on_parse_error_and_writes_nothing(scripts_path, tmp_path
     assert mod.main([]) == 1
     assert a.read_text() == "items:\n  - one\n"
     assert "NOTHING was written" in capsys.readouterr().err
+
+
+# ------------------------------------------------- key shape on canvas targets
+# key-shape-guard.sh runs on Write/Edit only, so a canvas edit made through this script
+# never reached it (dogfood 2026-10-02: tested_2026_09_22 and four more dated keys reached
+# the canvas after the guard shipped). safe_replace runs the same check, and like the hook it
+# warns and writes.
+
+
+def _canvas(tmp_path, text, name="opportunities.yml"):
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / name
+    f.write_text(text)
+    return f
+
+
+def test_spec_adding_a_dated_key_to_the_canvas_warns_and_still_writes(scripts_path, tmp_path,
+                                                                    monkeypatch, capsys):
+    import io
+    mod = _import(scripts_path)
+    f = _canvas(tmp_path, "sol-001:\n  status: open\n")
+    spec = json.dumps([{"path": str(f), "old": "  status: open\n",
+                        "new": "  status: open\n  tested_2026_09_22: held\n"}])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(spec))
+    assert mod.main([]) == 0
+    assert f.read_text() == "sol-001:\n  status: open\n  tested_2026_09_22: held\n"
+    err = capsys.readouterr().err
+    assert "MYCELIUM KEY-SHAPE GUARD (advisory)" in err
+    assert "`tested_2026_09_22:` carries a date or an entity id; the plain key is `tested`" in err
+    assert str(f) in err and "The write goes ahead." in err
+
+
+def test_dated_key_already_in_the_file_is_not_reported(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    f = _canvas(tmp_path, "sol-001:\n  tested_2026_09_22: held\n  status: open\n")
+    mod.apply_edits([{"path": str(f), "old": "status: open", "new": "status: closed"}])
+    assert "status: closed" in f.read_text()
+    assert capsys.readouterr().err == ""
+
+
+def test_new_spelling_of_an_existing_stem_in_the_diamonds_file_warns(scripts_path, tmp_path,
+                                                                    capsys):
+    mod = _import(scripts_path)
+    d = tmp_path / ".claude" / "diamonds"
+    d.mkdir(parents=True)
+    f = d / "active.yml"
+    f.write_text("d1:\n  reply_sent: true\n")
+    mod.apply_edits([{"path": str(f), "old": "  reply_sent: true\n",
+                      "new": "  reply_sent: true\n  reply-sent: false\n"}], dry_run=True)
+    assert f.read_text() == "d1:\n  reply_sent: true\n"  # dry run still writes nothing
+    assert ("`reply-sent:` is a new spelling of a stem this file already writes as "
+            "`reply_sent`") in capsys.readouterr().err
+
+
+def test_dated_key_outside_canvas_and_diamonds_is_not_checked(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    f = tmp_path / "notes.yml"
+    f.write_text("a: 1\n")
+    mod.apply_edits([{"path": str(f), "old": "a: 1\n", "new": "a: 1\nseen_2026_09_22: x\n"}])
+    assert "seen_2026_09_22" in f.read_text()
+    assert capsys.readouterr().err == ""
+
+
+def test_guard_that_cannot_load_says_so_and_the_edit_is_written(scripts_path, tmp_path,
+                                                               monkeypatch, capsys):
+    mod = _import(scripts_path)
+    monkeypatch.setitem(sys.modules, "key_shape_guard", None)  # import raises ImportError
+    f = _canvas(tmp_path, "a: 1\n")
+    mod.apply_edits([{"path": str(f), "old": "a: 1\n", "new": "a: 1\nseen_2026_09_22: x\n"}])
+    assert "seen_2026_09_22" in f.read_text()
+    assert "key-shape check not run" in capsys.readouterr().err

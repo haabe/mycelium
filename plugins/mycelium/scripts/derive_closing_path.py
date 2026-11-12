@@ -312,7 +312,7 @@ def _open_tasks_for(
     out = []
     if not isinstance(tasks_doc, dict):
         return out
-    today = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
+    today = today or _dt.datetime.now(tz=_dt.timezone.utc).date().isoformat()
     for key, lst in tasks_doc.items():
         if not isinstance(lst, list) or key == "completed_tasks":
             continue
@@ -365,7 +365,7 @@ def derive(root: Path, did: str, today: str | None = None) -> dict | None:
     gates.update(_unrecorded_gates(d, ai=sl.ai_detected(str(root))))
     total, reviewed = _leaf_totals(opps)
     stale = [g for g in gates if g == "four_risks" and total and reviewed == total and not dod]
-    today_s = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
+    today_s = today or _dt.datetime.now(tz=_dt.timezone.utc).date().isoformat()
     return {
         "diamond": d,
         "gates": gates,
@@ -1113,7 +1113,7 @@ def main(argv=None) -> int:
         action="store_true",
         help="store the derivation as closes_on on the diamond; stamp reader/on_close on inputs",
     )
-    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.UTC).date().isoformat())
+    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.timezone.utc).date().isoformat())
     args = ap.parse_args(argv)
     root = args.project_dir.resolve()
     if args.all or (args.write and args.diamond_id):

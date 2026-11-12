@@ -114,8 +114,9 @@ def test_the_patterns_use_no_backslash_escape_inside_a_bracket():
 def _path_with(tmp_path, grep_script: str | None) -> str:
     """A PATH in front of the system one whose `grep` is `grep_script`; with None, a PATH holding
     every system tool EXCEPT grep, so the name resolves to nothing. This interpreter's folder
-    comes before the system folders: the ledger writer needs Python 3.11 (`datetime.UTC`), and
-    /usr/bin/python3 on a Mac is 3.9, under which it writes no row and says nothing."""
+    comes before the system folders. Until the plugin dropped `datetime.UTC` the ledger writer
+    needed Python 3.11, and /usr/bin/python3 on a Mac is 3.9, under which it wrote no row and said
+    nothing (tests/python/test_no_py311_only_names.py now keeps that name out)."""
     fake = tmp_path / "fakebin"
     fake.mkdir(exist_ok=True)
     python_dir = str(Path(sys.executable).parent)

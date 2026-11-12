@@ -194,7 +194,8 @@ def _evaluate_block(node: dict, filename: str, ident, out: tuple[list, list]) ->
             "reviewed_reason": reviewed.get("reason", "") if isinstance(reviewed, dict) else "",
         })
         return
-    for i, (src, cls) in enumerate(zip(sources, classes, strict=True)):
+    # The lengths are equal here: a mismatch returned above.
+    for i, (src, cls) in enumerate(zip(sources, classes)):
         if not isinstance(src, str) or cls != GUARDED_CLASS or i in label_ok:
             continue
         hit = classify(src)

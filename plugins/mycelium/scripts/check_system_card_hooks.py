@@ -153,7 +153,7 @@ def write_review(root: Path, today: datetime.date | None = None) -> str:
     All anchors are checked before anything is written, so a failure leaves no document
     half-stamped."""
     digest = surface_digest(root)
-    stamp = (today or datetime.datetime.now(datetime.UTC).date()).isoformat()
+    stamp = (today or datetime.datetime.now(datetime.timezone.utc).date()).isoformat()
     for doc in DOCS:
         path = root / doc["rel"]
         if not path.is_file():

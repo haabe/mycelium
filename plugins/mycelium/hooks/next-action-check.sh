@@ -167,7 +167,7 @@ try:
     _d = os.path.join(os.environ.get("PROJECT_DIR")
                       or os.environ.get("CLAUDE_PROJECT_DIR") or ".", ".claude/state")
     os.makedirs(_d, exist_ok=True)
-    _ts = datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+    _ts = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
     with open(os.path.join(_d, "next-action-check-fires.jsonl"), "a", encoding="utf-8") as _fh:
         _fh.write(json.dumps({"ts": _ts, "hook": "next-action-check.sh",
                               "outcome": outcome, "detail": ran_skill}) + "\n")

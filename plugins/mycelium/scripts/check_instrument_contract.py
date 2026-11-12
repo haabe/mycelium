@@ -771,7 +771,7 @@ def main(argv=None) -> int:
 
     # tz-aware: a due-date check on local time disagrees with itself across
     # machines, and the disagreement shows up as overdue-here-not-there.
-    today = _parse_date(args.today) if args.today else _dt.datetime.now(tz=_dt.UTC).date()
+    today = _parse_date(args.today) if args.today else _dt.datetime.now(tz=_dt.timezone.utc).date()
     if today is None:
         print("UNKNOWN: --today is not an ISO date", file=sys.stderr)
         return 2

@@ -593,7 +593,10 @@ reviewed:
     line ("the background session-start checks could not be delivered (<error>); run
     /mycelium:canvas-health for them") and clears the pending marker, so the undelivered heavy tier
     is named at the very prompt where it would otherwise have silently not arrived. Reviewed
-    2026-09-10, v0.186.0.
+    2026-09-10, v0.186.0. After 0.334.1 the bash keeps the pending marker and counts the failed
+    read in it, so the next prompt reads again; the line is printed once, at the third failed
+    read, and the marker removed then. Until that third read the checks are late, not lost: the
+    file is read again at every prompt. Asserted by tests/python/test_session_checks_delivery.py.
 
 - id: session-start.sh@75b167c29b
   verdict: accepted
@@ -781,13 +784,14 @@ reviewed:
     the failure degrades to the old behaviour rather than to silence about a diamond. A missing file
     is also the normal state before the first diamonds write. Reviewed 2026-09-24, v0.250.0.
 
-- id: diamond_rulings.py@4a1d668fd2
+- id: diamond_rulings.py@cb5e18425d
   verdict: accepted
   reason: >-
     `record` returns {} when diamonds/active.yml cannot be parsed. Silent here and correct: the same
     write runs canvas-schema-check.sh, which names the YAML parse error to the agent in that turn;
     reporting it twice would be two messages about one fault. The previous record is left in place.
-    Reviewed 2026-09-24, v0.250.0.
+    Reviewed 2026-09-24, v0.250.0. Id re-keyed (was @4a1d668fd2) when the 3.11-only UTC name in
+    the line below the handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
 
 - id: next_item.py@4e0f24035a
   verdict: accepted
@@ -998,13 +1002,14 @@ reviewed:
     so no log can land there either and nothing is exposed; the shell half (_hook_prelude.sh) tries
     again at every hook exit. Asserted by test_an_existing_ignore_file_is_never_rewritten and
     test_write_ignore_does_not_create_the_folder. Reviewed 2026-10-10, v0.318.0.
-- id: prune_state_logs.py@b471eb751c
+- id: prune_state_logs.py@e0ae281b3f
   verdict: accepted
   reason: >-
     A `ts`/`at` that does not parse leaves the line's age unknown, and the line is KEPT, not
     dropped. That fails toward keeping data, and PRIVACY.md says so ("A line with no readable date
     stays"). Asserted by test_old_activity_lines_go_and_recent_and_undated_ones_stay. Reviewed
-    2026-10-10, v0.318.0.
+    2026-10-10, v0.318.0. Id re-keyed (was @b471eb751c) when the 3.11-only UTC name in the line
+    below the handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
 - id: prune_state_logs.py@626212ff45
   verdict: accepted
   reason: >-
@@ -1174,3 +1179,25 @@ reviewed:
     first in main() and reports every canvas file that does not parse, so a broken landscape.yml
     fails the validation loudly before this line is reached. Printing a second message here would
     report one fault twice.
+- id: check_hook_delivery.py@d9131384ac
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `current_labels` (candidate batch 1) returns None when hooks.json cannot be read. None turns the
+    retired-label softening off, so every cancelled label is reported as it was before that change:
+    a cancelled SessionStart contract label still prints FAIL. The failure therefore errs toward the
+    louder report, never toward hiding a cancellation; `is_retired` documents that it is never True
+    without a manifest.
+- id: next_item.py@37268ef7ce
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `_prompt_of` returns '' for a UserPromptSubmit payload that is not JSON. '' means "no answer was
+    typed", so nothing is recorded and the open item is put to the person again on the next prompt.
+    The cost of the handler firing is one repeated question, which the person sees; it cannot record
+    a ruling nobody gave.
+- id: safe_replace.py@0635f0768c
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    The handler does speak: when key_shape_guard cannot be imported it returns the line
+    "safe_replace: key-shape check not run on <path> (<error>)", which is printed to stderr with the
+    edit's other output. The scan reads the return as a default value; it is the message. The edit
+    itself goes ahead, as the Write/Edit hook's advisory does.

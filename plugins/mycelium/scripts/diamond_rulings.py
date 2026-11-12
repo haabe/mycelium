@@ -99,7 +99,7 @@ def record(root: Path, session: str, now: str | None = None) -> dict:
         doc = yaml.safe_load(active.read_text(encoding="utf-8")) or {}
     except (yaml.YAMLError, OSError):
         return {}  # an unparseable file is the schema check's finding, reported at the same write
-    now = now or _dt.datetime.now(tz=_dt.UTC).isoformat()
+    now = now or _dt.datetime.now(tz=_dt.timezone.utc).isoformat()
     old = load(root)
     evidence = evidence_count(root)
     new = {}

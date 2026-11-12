@@ -3,7 +3,8 @@
 # Mycelium shell-safety-guard hook (PreToolUse on Bash)
 #
 # Warns on shell constructs whose exit status or quoting silently misleads:
-# `$?` after a pipeline, backticks, and grep gating an && chain. Full rationale,
+# `$?` after a pipeline, backticks, grep gating an && chain, and (when SHELL is zsh)
+# an unquoted glob in an option value or a word starting with `=`. Full rationale,
 # the documented contract behind each check, and what it deliberately does NOT
 # cover are in scripts/shell_safety_guard.py.
 #

@@ -157,7 +157,7 @@ def _divergence(node: dict, key: str, val, canvas: str, here: str) -> str | None
     if plain == key or plain not in node:
         return None
     other = node[plain]
-    if isinstance(other, dict | list) or isinstance(val, dict | list) or other == val:
+    if isinstance(other, (dict, list)) or isinstance(val, (dict, list)) or other == val:
         return None
     return (f"{canvas}: {here} carries `{plain}: {other}` and `{key}: {val}` — the twin "
             f"disagrees with the field it copies")

@@ -191,7 +191,8 @@ def run_all(hooks: list[dict], payload: dict, cwd: str) -> list[tuple[str, str]]
     text = json.dumps(payload)
     with ThreadPoolExecutor(max_workers=max(1, min(8, len(hooks)))) as pool:
         results = list(pool.map(lambda h: run_hook(h, text, cwd), hooks))
-    return [read_answer(h, r) for h, r in zip(hooks, results, strict=True)]
+    # pool.map returns exactly one result per hook, so the two lists are the same length.
+    return [read_answer(h, r) for h, r in zip(hooks, results)]
 
 
 def _stash(call_id: str) -> Path:

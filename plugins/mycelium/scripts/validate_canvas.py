@@ -41,6 +41,8 @@ Exit codes:
     2 = missing CI dependencies (PyYAML, jsonschema, or referencing)
 """
 
+from __future__ import annotations
+
 import datetime
 import importlib.util
 import json
@@ -1376,7 +1378,8 @@ def print_advisory_warnings(canvas_dir):
         # that carries contradictions.
         print(f"  COVERAGE (opportunity shape): {shape}")
     for label, line in (("scenario gap", scenario_gap_coverage(canvas_dir)),
-                        ("review trigger", review_trigger_coverage(canvas_dir))):
+                        ("review trigger", review_trigger_coverage(canvas_dir)),
+                        ("calibration", calibration_coverage(canvas_dir))):
         if line:
             print(f"  COVERAGE ({label}): {line}")
 
@@ -1645,7 +1648,7 @@ def _unscanned_in(node, name: str, label: str, out: list, depth: int = 0) -> Non
                 f"ost-builder over it"
             )
         for k, val in node.items():
-            if isinstance(val, dict | list):
+            if isinstance(val, (dict, list)):
                 _unscanned_in(val, name, f"{label}.{k}", out, depth + 1)
     elif isinstance(node, list):
         for i, val in enumerate(node):
@@ -1889,6 +1892,30 @@ def _home_for(status):
     if status in ("abandoned", "cancelled", "stalled"):
         return "`closed_without_evidence`"
     return "`pending_tasks`"
+
+
+def calibration_coverage(canvas_dir):
+    """COVERAGE-tier: thresholds uncalibrated for want of eligible cycles, in one line.
+
+    Delegated to check_cycle_recording.calibration_coverage, as cycle_record_findings below
+    delegates its WARN half. The "uncalibrated because" WARN is printed only when the
+    thresholds file's `_meta.calibration_status` blames the cycle count; otherwise the state is
+    reported here once, because no edit can clear it and a WARN that repeats on every push after
+    its note was corrected teaches the reader to skip the WARN list (dogfood 2026-10-10).
+    """
+    if not (Path(canvas_dir) / "cycle-history.yml").exists():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_ccr", Path(__file__).with_name("check_cycle_recording.py")
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.calibration_coverage(canvas_dir)
+    except Exception as exc:  # noqa: BLE001 — a broken advisory line must never fail a build
+        # Say the line could not be computed rather than print nothing: silence here reads
+        # as "nothing to report about calibration" while the check never looked.
+        return f"not computed: check_cycle_recording.py could not run ({type(exc).__name__}: {exc})"
 
 
 def cycle_record_findings(canvas_dir):
@@ -2274,7 +2301,7 @@ def _hand_typed(node, label, out, depth=0):
     elif isinstance(node, list):
         for i, v in enumerate(node):
             _hand_typed(v, f"{label}[{i}]", out, depth + 1)
-    elif isinstance(node, int | float) and not isinstance(node, bool):
+    elif isinstance(node, (int, float)) and not isinstance(node, bool):
         out.append((label, node))
 
 

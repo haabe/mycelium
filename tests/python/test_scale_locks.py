@@ -924,6 +924,18 @@ def test_at_most_twice_a_sitting_first_prompt_and_first_go_live_prompt(tmp_path)
     assert sl.exposure_line(p, {"session_id": "s1", "prompt": "hi"}, today="2026-10-29")
 
 
+def test_a_subagent_report_about_a_deploy_is_not_a_go_live_prompt(tmp_path):
+    """2026-11-12: a hand-back arrives as a prompt; only the builder's words are read."""
+    p = _project(tmp_path, PURPOSE, _full_opps(), [_l3(phase="develop", gates=BUILD_PASSED)])
+    day = "2026-10-28"
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "morning"}, today=day)
+    report = ('Another Claude session sent a message:\n<agent-message from="a1">\n'
+              "[Subagent hand-back] The report follows:\n  Next: give Tom the link.\n"
+              "</agent-message>")
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": report}, today=day) == ""
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "give Tom the link"}, today=day)
+
+
 def test_go_live_means_an_act_of_exposure_not_a_topic_word():
     for prompt in ("the developer deployed 7c3e1a9", "is it ready to go live?",
                    "Tom posted the link to staff", "roll it out to Harbour", "real users next week"):

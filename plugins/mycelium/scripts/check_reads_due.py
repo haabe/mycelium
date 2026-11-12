@@ -48,7 +48,7 @@ def due_reads(tasks_doc, today: str) -> tuple[list[tuple[str, dict]], int]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--project-dir", default=".")
-    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.UTC).date().isoformat())
+    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.timezone.utc).date().isoformat())
     args = ap.parse_args(argv)
     path = Path(args.project_dir) / ".claude" / "canvas" / "human-tasks.yml"
     if not path.exists():

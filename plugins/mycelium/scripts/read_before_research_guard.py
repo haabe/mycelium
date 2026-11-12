@@ -56,7 +56,7 @@ from __future__ import annotations
 import json
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -154,7 +154,7 @@ def _log(project_dir: Path, tool: str, terms, hits):
         state = project_dir / ".claude" / "state"
         _state_dir.prepare_dir(state)
         rec = {
-            "at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "hook": "read-before-research-guard",
             "tool": tool,
             "terms": terms[:6],

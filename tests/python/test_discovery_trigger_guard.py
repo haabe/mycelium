@@ -281,3 +281,32 @@ def test_the_log_never_carries_the_prompt(tmp_path):
     assert rows and "first_match" not in rows[-1]
     assert len(rows[-1]["match_sha"]) == 12 and rows[-1]["match_len"] > 0
     assert "single dashboard" not in text and "separate views" not in text
+
+
+# --- machine turns are not the builder speaking (2026-11-12) ------------------------------
+# Dogfood 2026-10-02: seven fires in one round, each on a subagent's hand-back quoting a
+# sourced sentence from the page under test. A hand-back arrives as a prompt.
+
+_HANDBACK = (
+    "Another Claude session sent a message:\n"
+    '<agent-message from="aeb586554232d128e">\n'
+    "[Subagent hand-back] The text below is the final report of a subagent. The report "
+    "follows:\n"
+    "  The page's strongest line: users want to get started faster.\n"
+    "</agent-message>\n\n"
+    'That "other Claude session" is an agent working inside this same session.'
+)
+
+
+@pytest.mark.parametrize("prompt", [
+    _HANDBACK,
+    ("<task-notification>\n<summary>People won't bother reading it</summary>\n"
+     "</task-notification>"),
+    "[SYSTEM NOTIFICATION - NOT USER INPUT]\nusers want to get started faster.",
+])
+def test_a_machine_turn_is_not_read_as_a_claim(prompt):
+    assert not advises(prompt)
+
+
+def test_typed_text_sent_with_a_hand_back_is_still_read():
+    assert advises("Users want to get started faster, so cut the tour.\n\n" + _HANDBACK)

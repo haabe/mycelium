@@ -40,6 +40,8 @@ Called by hooks/session-start.sh: python3 scope_check.py --notices <project_dir>
 Input (stdin): the PreToolUse hook JSON. Output: a hook decision as JSON on stdout, or nothing.
 """
 
+from __future__ import annotations
+
 import functools
 import json
 import os
@@ -57,7 +59,7 @@ _GLOB = re.compile(r"[*?]")
 
 
 @functools.lru_cache(maxsize=256)
-def _compile_glob(pattern: str) -> "re.Pattern[str]":
+def _compile_glob(pattern: str) -> re.Pattern[str]:
     """Compile a path glob to a regex with path-segment semantics.
 
     Unlike fnmatch (where ``*`` matches ``/`` too — letting ``src/xyz/*`` leak

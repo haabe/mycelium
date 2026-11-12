@@ -187,7 +187,7 @@ def main() -> int:
     today = (
         _parse_date(args.today)
         if args.today
-        else _dt.datetime.now(tz=_dt.UTC).date()
+        else _dt.datetime.now(tz=_dt.timezone.utc).date()
     )
     if today is None:
         print("UNKNOWN: --today is not an ISO date", file=sys.stderr)

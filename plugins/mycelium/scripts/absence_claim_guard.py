@@ -54,7 +54,7 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -378,7 +378,8 @@ _RULE_IDS = [f"absence-{i:02d}" for i in range(len(_ABSENCE))]
 
 def rules_hit(sentence: str) -> list[str]:
     """Ids of every `_ABSENCE` pattern matching one sentence, in table order."""
-    return [rid for rid, p in zip(_RULE_IDS, _ABSENCE, strict=True) if p.search(sentence)]
+    # _RULE_IDS is built from len(_ABSENCE), so the two are the same length by construction.
+    return [rid for rid, p in zip(_RULE_IDS, _ABSENCE) if p.search(sentence)]
 
 
 def findings(text: str) -> list[str]:
@@ -534,7 +535,7 @@ def _log(hook: str, fires: int, first_match: str, signature: str,
         changed = bool(prior and prior.get("first_match")
                        and prior["first_match"] not in text)
         row = {
-            "at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "hook": hook,
             "fires": fires,
             "signature": signature,

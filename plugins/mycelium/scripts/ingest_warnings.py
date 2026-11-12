@@ -26,7 +26,7 @@ import argparse
 import os
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -262,7 +262,7 @@ def main():
 
     current = aggregate(records)
     existing = parse_existing_log(args.log_path)
-    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     merged = merge(existing, current, today)
     rendered = render(merged)
 

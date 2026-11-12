@@ -64,7 +64,7 @@ def _when(row: dict) -> _dt.datetime | None:
             when = _dt.datetime.fromisoformat(raw)
         except ValueError:
             continue
-        return when if when.tzinfo else when.replace(tzinfo=_dt.UTC)
+        return when if when.tzinfo else when.replace(tzinfo=_dt.timezone.utc)
     return None
 
 
@@ -109,14 +109,14 @@ def _credit_pruned_reflexions(state_dir: Path, n: int) -> None:
 
 def _due(state_dir: Path, now: _dt.datetime) -> bool:
     try:
-        last = _dt.datetime.fromtimestamp((state_dir / STAMP).stat().st_mtime, tz=_dt.UTC)
+        last = _dt.datetime.fromtimestamp((state_dir / STAMP).stat().st_mtime, tz=_dt.timezone.utc)
     except OSError:
         return True
     return now - last >= _dt.timedelta(days=1)
 
 
 def prune(state_dir: Path, days: int, now: _dt.datetime | None = None, force: bool = False) -> dict:
-    now = now or _dt.datetime.now(tz=_dt.UTC)
+    now = now or _dt.datetime.now(tz=_dt.timezone.utc)
     if days <= 0 or not state_dir.is_dir() or not (force or _due(state_dir, now)):
         return {}
     cutoff = now - _dt.timedelta(days=days)

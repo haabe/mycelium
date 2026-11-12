@@ -28,6 +28,10 @@ verified method-routing yet (opp-051 sol-051c/g are candidates, not built).
 
 It does NOT block, ever. It fails open on every error path.
 
+It does NOT read turns the harness wrote: a subagent's hand-back, a task notification
+or a local command's echo arrives as a prompt too, and only the text the builder typed
+is read (_hook_input.builder_text, 2026-11-12).
+
 It does NOT fire on the author's own experience ("I want", "I keep forgetting"),
 on reported evidence ("the support lead said users want X"), or on claims typed as
 assumptions. Those are, respectively, legitimate internal_stakeholder evidence,
@@ -52,10 +56,11 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _hook_input
 import _state_dir
 
 # --- Who the claim is about -------------------------------------------------
@@ -165,7 +170,7 @@ def _log(hits: list[str]) -> None:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
         _state_dir.prepare_dir(root)
         row = {
-            "at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "hook": "discovery-trigger-guard",
             "fires": len(hits),
             # The sentence itself is the user's prompt, and a state log is not the place
@@ -186,11 +191,14 @@ def main() -> int:
     except Exception:  # noqa: BLE001 — must never break a prompt
         return 0
 
-    text = payload.get("prompt") or ""
+    text = (payload.get("prompt") or "") if isinstance(payload, dict) else ""
     if not isinstance(text, str):
         return 0
 
-    hits = _claim_sentences(text)
+    # Only what the builder typed. A subagent's hand-back or a task notification arrives as a
+    # prompt too, and a sourced sentence quoted in a report is nobody in the session making a
+    # claim (seven fires in one round, dogfood 2026-10-02). See _hook_input.builder_text.
+    hits = _claim_sentences(_hook_input.builder_text(text))
     if not hits:
         return 0
 
