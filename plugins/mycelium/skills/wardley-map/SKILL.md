@@ -205,6 +205,18 @@ L0's phase is not the lock; its purpose statement is. Before v0.243.0
 L1 was entered only by a sentence saying L0 would spawn it; no skill did, and across dogfood
 full-ladder runs 6 to 20 no L1 was ever created, including three in which L0 reached define.
 
+**Write the L1's trigger set** (founder ruling 2026-11-12; `engine/diamond-rules.md`, "One diamond
+type, and L1 carries a trigger set"). When the L1 is opened, and again each time this map changes
+what would make the strategy decide again, record on the L1 diamond in
+`.claude/diamonds/active.yml` a `triggers` list. Each entry has `when` (the event, stated so someone
+who was not there can check it, as the limit that matters rather than a size or headcount), `then`
+(the decision the L1 takes again, or the child cycle it offers) and, where one is known, `rule_out`
+(what else would produce the same signal, to check first). Draw them from this map: an inertia
+prediction's triggering event (step 7), a climatic prediction whose outcome would change the
+gameplay chosen in step 8, a component whose movement would change where to play. Ask the person to
+confirm each one before it is written. An L1 with no trigger set is named on every
+`scripts/check_scale_occupancy.py` run, which lists every live L1's triggers so a fired one is seen.
+
 ## Output
 Update .claude/canvas/landscape.yml with components, evolution stages, movements, gameplay options, and `climatic_predictions` (new + scored). Report the coverage of the five climatic patterns explicitly, naming any that produced nothing this pass.
 

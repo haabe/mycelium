@@ -92,6 +92,43 @@ it has no producer and **must not be given a diamond**, which would invent a mak
 world makes. Gameplay is the one Wardley output that IS a proposal — and he states the gameplay and
 doctrine sets are **open**, so it is a library you choose FROM, not a project backlog you draw DOWN.
 
+**ONE DIAMOND TYPE, AND L1 CARRIES A TRIGGER SET (founder ruling 2026-11-12, "Triggers on L1
+only").** The table above says L1 emits triggers; this is what that means and where they are kept.
+Team Topologies' second edition says the most important thing in designing an organisation is *"not
+the shape of the organization itself but the decision rules and heuristics used to adapt and change
+the organization as new challenges arise; that is, we need to design the design rules, not just the
+organization"* (Skelton & Pais, ch. 8). Wardley's strategy cycle is looped, not finished, and
+reaches the same place. So what an L1 produces is a set of triggers, not a state. Each trigger has
+three parts: the event, stated so someone who was not there can check it (`when`); what the L1 then
+does, the decision it takes again or the child cycle it offers (`then`); and, where one is known,
+what else would produce the same signal and has to be ruled out first (`rule_out`; the book's own
+example is a slower delivery cadence that may be accrued technical debt). State the event as the
+limit that matters, not as a size: the book puts the real limit at *"the limit on cognitive capacity
+to handle changes to the system in an effective way"*, not at headcount. The set is kept on the L1
+diamond as `triggers` (`schemas/diamonds/active.schema.json`), written by `/mycelium:wardley-map`
+step 9 and listed on every run of `scripts/check_scale_occupancy.py` (`/mycelium:diamond-assess`
+step 2c). It is listed mechanically because the authors name the detection problem: *"it's often
+difficult to have the required organizational self-awareness to detect when it's time to evolve."*
+The listing cannot tell whether an event has happened; a person reads that. Trigger sets are on L1
+only: the other scales recur on their parent's decision or on an event a skill already offers (the
+table above). The chapter's support is author assertion and practitioner narrative, not measurement,
+so the triggers it lists (software too large for one team, a slower delivery cadence, many business
+services relying on a large set of underlying services) are examples to adapt, not a shipped default.
+
+**WHY THERE IS NO CONTAINER TYPE.** The candidates behind the ruling argued for two object types:
+a container that carries triggers and never closes (L1), and a unit that closes (every other
+scale). That is the distinction Team Topologies' second edition added after typing its *"platform
+grouping"* as a team type had *"caused some inadvertent confusion"*. The founder ruled for one type,
+with the trigger set on L1. The record behind the ruling shows three things. (1) A container type
+changes four things at once: the noun, the rendering (`/mycelium:diamond-render`), the composition
+rule, and the count ("six scales"). The book shows the cost of doing it by halves: it redrew its
+figure with a dotted line and kept the old count, *"but we'll still refer to them as the four team
+types."* (2) The general container is announced in the source and not developed: *"In a future book,
+we expect to expand this idea further,"* so the source gives no rule for how containers nest or how
+many levels there are. (3) What the container was for, the rules under which the units below open
+and close, is what the trigger set carries, on the one scale that needs it. L1 still recurs on a
+decision, is entered by an event offer, and records its decisions like every other scale.
+
 **L4 SPECIFICALLY.** No canvas schema carries an id-bearing record for a delivery increment:
 `gist.yml#steps[]` and `#current_tasks[]` have no `id`, and GIST belongs to L3 in any case. L4's own
 theories supply no catalogue — DORA measures a continuous stream, OWASP supplies checks, SOLID

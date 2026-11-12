@@ -106,6 +106,61 @@ def cycles(canvas_dir: Path) -> dict[str, dict[str, int]]:
     return out
 
 
+#: How much of each trigger's text the report shows.
+_TRIGGER_SHOWN = 90
+
+
+def _clip(text) -> str:
+    return " ".join(str(text or "").split())[:_TRIGGER_SHOWN]
+
+
+def l1_trigger_sets(canvas_dir: Path) -> list[tuple[str, list[str]]]:
+    """(L1 id, its triggers as one line each) for every live L1 (founder ruling 2026-11-12).
+
+    One diamond type, and L1 carries a trigger set (`triggers`): the events that would make the
+    strategy decide again, each with what it then does and, optionally, what to rule out first.
+    Team Topologies' authors name why this is read mechanically rather than left to notice: "it's
+    often difficult to have the required organizational self-awareness to detect when it's time to
+    evolve." This puts every trigger in front of the reader on each run. It cannot tell whether an
+    event happened. An L1 with no trigger set is listed with an empty list, so the report says so.
+    """
+    data = _load(canvas_dir.parent / "diamonds" / "active.yml")
+    out = []
+    for key in ("active_diamonds", "parked_diamonds"):
+        for d in (data.get(key) if isinstance(data, dict) else None) or []:
+            if not isinstance(d, dict) or str(d.get("scale", "")).upper() != "L1":
+                continue
+            if str(d.get("state") or "").lower() in _CLOSED_STATES - {"parked"} or any(
+                    isinstance(x, dict) and x.get("decision") == "close"
+                    for x in d.get("decisions") or []):
+                continue
+            rows = []
+            for trig in d.get("triggers") or []:
+                if not isinstance(trig, dict) or not str(trig.get("when") or "").strip():
+                    continue
+                row = f"when {_clip(trig.get('when'))} -> {_clip(trig.get('then')) or '?'}"
+                if str(trig.get("rule_out") or "").strip():
+                    row += f" (rule out first: {_clip(trig.get('rule_out'))})"
+                rows.append(row)
+            out.append((str(d.get("id") or "<unnamed L1>"), rows))
+    return out
+
+
+def _print_trigger_sets(canvas_dir: Path) -> None:
+    sets = l1_trigger_sets(canvas_dir)
+    if not sets:
+        return
+    print()
+    for l1, rows in sets:
+        if not rows:
+            print(f"  L1 {l1}: no trigger set recorded (`triggers`); /mycelium:wardley-map "
+                  "step 9 writes one")
+            continue
+        print(f"  L1 {l1} trigger set ({len(rows)}); look again if one has happened:")
+        for row in rows:
+            print(f"    - {row}")
+
+
 def findings(canvas_dir: Path) -> list[str]:
     rec, cyc = records(canvas_dir), cycles(canvas_dir)
     out = []
@@ -150,6 +205,7 @@ def report(canvas_dir: Path) -> int:
         else:
             recs = "records not counted at this scale"
         print(f"  {scale}: {recs}; {row['active']} active diamond(s), {row['ever']} ever")
+    _print_trigger_sets(canvas_dir)
     hits = findings(canvas_dir)
     print()
     for h in hits:

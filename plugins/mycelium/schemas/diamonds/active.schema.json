@@ -154,6 +154,32 @@
           "items": {"type": "object"},
           "description": "An L2's earlier targets, oldest first, each `{opportunity, chosen_on, compared, why, ended_on}` (v0.300.0)."
         },
+        "triggers": {
+          "type": "array",
+          "description": "An L1's trigger set (founder ruling 2026-11-12, \"Triggers on L1 only\"; engine/diamond-rules.md, \"One diamond type, and L1 carries a trigger set\"). L1 emits triggers, not a state: each entry is an event that would make the strategy decide again, written in the form the person can check, with what it opens or re-decides and, where one is known, what else would produce the same signal and must be ruled out first. L1 only; other scales do not carry one. Written by /mycelium:wardley-map step 9. Read by scripts/check_scale_occupancy.py, which lists every live L1's triggers on each run (/mycelium:diamond-assess step 2c) so a trigger whose event has happened is seen. It cannot tell whether the event happened: that is a reading of the world, not of the file.",
+          "items": {
+            "type": "object",
+            "required": [
+              "when",
+              "then"
+            ],
+            "properties": {
+              "when": {
+                "type": "string",
+                "description": "The event, stated so someone who was not there can check it (\"delivery of a change takes twice as long as it did in the spring\"). State the limit that matters, not a headcount or size."
+              },
+              "then": {
+                "type": "string",
+                "description": "What the L1 does when it fires: the decision it takes again, or the child cycle it offers."
+              },
+              "rule_out": {
+                "type": "string",
+                "description": "Optional: what else would produce the same signal, to check before acting on it (for a slowed delivery cadence, accrued technical debt)."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
         "front_runner": {
           "type": ["string", "null"],
           "description": "The solution an L3 commits to build, out of the set under its target (v0.300.0, DL-1367), named at `commit_to_build`. The L4 delivers it, and the L4 lock reads its evidence and its failed assumptions alone."
