@@ -2540,10 +2540,81 @@ def test_calibration_due_fires_when_the_input_count_reaches_the_minimum(tmp_path
     assert "confidence_calibration: calibration is due" in out[0]
     assert "3 product-leaf cycles" in out[0]
     # The same nine cycles carrying a field nothing calibrates from: not due, and not "too few".
+    # Since dogfood 2026-10-10 the WARN needs a note that blames the count (see the tests that follow).
     canvas = _cycle_canvas(tmp_path / "unfed", cycles_carrying("ice_accuracy"), thresholds=thresholds)
+    _calibration_note(canvas, thresholds, "Uncalibrated: cycle-history below minimum_n.")
     out = m.calibration_due_findings(canvas)
     assert len(out) == 1
     assert "confidence_calibration: uncalibrated because 0 of 9" in out[0]
+    assert "blames the count and is stale" in out[0]
+    assert m.calibration_coverage(canvas) is None, "the WARN case is not repeated as coverage"
+
+
+def _calibration_note(canvas, thresholds, note):
+    import yaml as _y
+    doc = {"thresholds": thresholds}
+    if note is not None:
+        doc["_meta"] = {"calibration_status": note}
+    (canvas / "thresholds.yml").write_text(_y.safe_dump(doc))
+
+
+def _unfed_canvas(tmp_path, note):
+    """49 cycles, four reconstructed product-leaf rows: confidence_calibration has 0 eligible
+    inputs against minimum_n 10, the dogfood state on 2026-10-10."""
+    rows = [{"cycle_class": "meta-dogfood"}] * 45
+    rows += [{"cycle_class": "product-leaf", "reconstructed_post_hoc": True,
+              "calibration": {"risk_accuracy": None}}] * 4
+    thresholds = {"confidence_calibration": {"based_on_n": 0, "minimum_n": 10}}
+    canvas = _cycle_canvas(tmp_path, rows, thresholds=thresholds)
+    _calibration_note(canvas, thresholds, note)
+    return canvas
+
+
+def test_a_corrected_calibration_note_ends_the_warn_and_leaves_one_coverage_line(
+        tmp_path, scripts_path, capsys):
+    """Dogfood 2026-10-10: the note was corrected on 2026-09-15 to the reason the check gives,
+    and the "a calibration_status note blaming the count is stale" WARN still printed on every
+    push. A note that names the cycle class is the corrected note: no WARN, one COVERAGE line."""
+    m = _ccr(scripts_path)
+    canvas = _unfed_canvas(tmp_path, (
+        "The cycle count passed every minimum_n long ago. confidence_calibration is uncalibrated "
+        "because 0 of 49 cycles are product-leaf cycles carrying a non-null risk_accuracy."))
+    assert m.calibration_due_findings(canvas) == []
+    line = m.calibration_coverage(canvas)
+    assert line.startswith("1 threshold(s) uncalibrated, and the cycle count is not why: "
+                           "confidence_calibration: 0 of 49 cycles are product-leaf cycles "
+                           "carrying `calibration.risk_accuracy` (minimum_n 10)")
+    assert "no edit to thresholds.yml does" in line
+    # The validator's advisory pass carries it on the COVERAGE tier, not as a WARN.
+    _import_validator(scripts_path).print_advisory_warnings(canvas)
+    out = capsys.readouterr().out
+    assert "COVERAGE (calibration): 1 threshold(s) uncalibrated" in out
+    assert "uncalibrated because" not in out
+
+
+def test_a_note_naming_only_the_field_or_no_note_is_not_called_stale(tmp_path, scripts_path):
+    m = _ccr(scripts_path)
+    for i, note in enumerate((None, "", "Below minimum_n: no cycle carries risk_accuracy yet.")):
+        canvas = _unfed_canvas(tmp_path / str(i), note)
+        assert m.calibration_due_findings(canvas) == [], note
+        assert m.calibration_coverage(canvas).startswith("1 threshold(s) uncalibrated"), note
+
+
+def test_a_calibration_note_blaming_the_count_still_gets_the_warn(tmp_path, scripts_path):
+    m = _ccr(scripts_path)
+    for i, note in enumerate(("Cycle-history below minimum_n (17 of 10 needed).",
+                              "Too few cycles recorded to calibrate.")):
+        canvas = _unfed_canvas(tmp_path / str(i), note)
+        out = m.calibration_due_findings(canvas)
+        assert len(out) == 1 and "uncalibrated because 0 of 49" in out[0], note
+        assert m.calibration_coverage(canvas) is None
+
+
+def test_calibration_coverage_is_silent_without_a_ledger_or_a_table(tmp_path, scripts_path):
+    m = _ccr(scripts_path)
+    assert m.calibration_coverage(tmp_path) is None
+    canvas = _cycle_canvas(tmp_path / "x", [{"cycle_class": "meta-dogfood"}])
+    assert m.calibration_coverage(canvas) is None
 
 
 def test_a_retired_bakeoff_delta_is_named_in_one_line_and_never_due_for_calibration(

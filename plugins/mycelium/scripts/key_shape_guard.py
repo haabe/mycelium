@@ -29,8 +29,12 @@ WHAT IT DOES NOT DO. Advisory, never a block: the message names the plain spelli
 and the `notes[]` form the convention prescribes, and the write goes ahead. The sweep stays
 as the retrofit path for keys that were already there. It cannot see a heredoc (the shell
 half of the absence guard exists for that reason; this guard has none yet, and the sweep
-covers what the heredoc wrote). It reads the target file to find stem collisions, so a file
-that does not exist or does not parse contributes no collisions, only the regex half.
+covers what the heredoc wrote). A Bash-matcher hook cannot see what a script writes either,
+so `safe_replace.py`, the framework's own tool for scripted multi-file edits, runs this
+check itself (`new_key_findings`, `message`) on every canvas or diamonds target it writes,
+and warns on stderr the same way; the edit goes ahead there too. It reads the target file
+to find stem collisions, so a file that does not exist or does not parse contributes no
+collisions, only the regex half.
 
 Contract: exit 0 silent = nothing to say. exit 0 + JSON additionalContext = warn. Logs one
 line per fire to `.claude/state/key-shape-guard-log.jsonl` through the absence guard's
@@ -138,10 +142,36 @@ def _walk(node, out: dict[str, set[str]], depth: int = 0) -> None:
 
 def findings(text: str, spellings: dict[str, set[str]] | None = None) -> list[str]:
     """One line per offending key in `text`. `spellings` is the target file's stem map."""
+    return key_findings(keys_in(text), spellings)
+
+
+def new_key_findings(path: str, before: str, after: str) -> list[str]:
+    """The findings for keys that `after` holds and `before` does not, for a whole-file edit
+    of `path` (safe_replace.py). Empty when `path` is not under .claude/canvas or
+    .claude/diamonds. A key already in the file is not this edit's to answer for, so it is
+    left to the sweep; `path` is read for its existing spellings as the hook reads its target.
+    """
+    if not _WATCHED_PATH.search(path.replace(os.sep, "/")):
+        return []
+    had = set(keys_in(before))
+    return key_findings([k for k in keys_in(after) if k not in had], _file_spellings(path))
+
+
+def message(hits: list[str]) -> str:
+    """The advisory text the hook gives, for `hits` (at most _NAMED quoted)."""
+    quoted = "\n".join(f"    > {h}" for h in hits[:_NAMED])
+    if len(hits) > _NAMED:
+        quoted += f"\n    ... and {len(hits) - _NAMED} more in this write."
+    today = datetime.now(timezone.utc).date().isoformat()
+    return _MESSAGE.format(quoted=quoted, today=today)
+
+
+def key_findings(keys: list[str], spellings: dict[str, set[str]] | None = None) -> list[str]:
+    """One line per offending key name in `keys`, in order, each name once."""
     spellings = spellings or {}
     out: list[str] = []
     seen: set[str] = set()
-    for key in keys_in(text):
+    for key in keys:
         if key in seen or _BARE_DATE.match(key):
             continue
         seen.add(key)
@@ -184,18 +214,14 @@ def main() -> int:
     hits = scan_for(payload)
     if not hits:
         return 0
-    quoted = "\n".join(f"    > {h}" for h in hits[:_NAMED])
-    if len(hits) > _NAMED:
-        quoted += f"\n    ... and {len(hits) - _NAMED} more in this write."
     tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
     _log("key-shape-guard", len(hits), hits[0], hashlib.sha256(hits[0].encode()).hexdigest()[:10], {
         "file": os.path.basename(str(tool_input.get("file_path") or "")),
         "session": str(payload.get("session_id") or ""),
         "text": _payload_text(str(payload.get("tool_name") or ""), tool_input)})
-    today = datetime.now(timezone.utc).date().isoformat()
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
-        "additionalContext": _MESSAGE.format(quoted=quoted, today=today)}}))
+        "additionalContext": message(hits)}}))
     return 0
 
 

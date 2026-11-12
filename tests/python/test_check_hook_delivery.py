@@ -59,12 +59,12 @@ def test_cancelled_session_start_fails_and_names_timeout(tmp_path, capsys):
         "s1",
         [
             _att("hook_success", "SessionStart", "Evidence link check"),
-            _att("hook_cancelled", "SessionStart", "Mycelium feedback loop check"),
+            _att("hook_cancelled", "SessionStart", "Mycelium feedback loop check (fast tier)"),
             "{not json",
             _att(
                 "hook_cancelled",
                 "SessionStart",
-                "Mycelium feedback loop check",
+                "Mycelium feedback loop check (fast tier)",
                 ts="2026-09-09T18:34:32.000Z",
             ),
         ],
@@ -72,7 +72,7 @@ def test_cancelled_session_start_fails_and_names_timeout(tmp_path, capsys):
     rc, out = _run(proj, home, capsys)
     assert rc == 0
     assert (
-        "hook-delivery FAIL: SessionStart | Mycelium feedback loop check: cancelled 2, ok 0" in out
+        "hook-delivery FAIL: SessionStart | Mycelium feedback loop check (fast tier): cancelled 2, ok 0" in out
     )
     assert "manifest timeout 5s" in out and "last cancelled 2026-09-10T05:38:34" in out
     assert "delivers NOTHING" in out
@@ -83,9 +83,9 @@ def test_cancelled_session_start_fails_and_names_timeout(tmp_path, capsys):
 def test_other_hook_cancelled_is_warn_not_strict_fail(tmp_path, capsys):
     proj, home = tmp_path / "proj", tmp_path / "home"
     proj.mkdir()
-    _transcript(home, proj, "s1", [_att("hook_cancelled", "Stop", "Mycelium stop check")])
+    _transcript(home, proj, "s1", [_att("hook_cancelled", "Stop", "Mycelium next-action check")])
     rc, out = _run(proj, home, capsys, "--strict")
-    assert rc == 0 and "hook-delivery WARN: Stop | Mycelium stop check" in out
+    assert rc == 0 and "hook-delivery WARN: Stop | Mycelium next-action check" in out
 
 
 def test_all_ok_reports_ok(tmp_path, capsys):
@@ -110,6 +110,100 @@ def test_old_transcript_outside_window_is_ignored(tmp_path, capsys):
     )
     rc, out = _run(proj, home, capsys, "--days", "7")
     assert rc == 0 and "no hook outcomes recorded" in out
+
+
+# --- retired labels: a hook renamed or split since is not a live FAIL ------------------------
+# Dogfood 2026-10-02: "SessionStart | Mycelium feedback loop check" was split in v0.186.0 into
+# "(fast tier)" and "(background tier)", and its old cancellations read as a FAIL for 30 days.
+
+OLD = "Mycelium feedback loop check"
+FAST = "Mycelium feedback loop check (fast tier)"
+BACKGROUND = "Mycelium feedback loop check (background tier)"
+
+
+def _manifest(tmp_path):
+    m = tmp_path / "hooks.json"
+    m.write_text(json.dumps({"hooks": {
+        "SessionStart": [{"matcher": "startup", "hooks": [
+            {"type": "command", "command": "bash fast.sh", "statusMessage": FAST},
+            {"type": "command", "command": "bash bg.sh", "statusMessage": BACKGROUND},
+            {"type": "command", "command": "bash contract-part.sh 1"},
+        ]}],
+        "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "bash stop.sh"}]}],
+    }}))
+    return m
+
+
+def _split_transcript(home, proj, *, current_cancelled=False):
+    events = [
+        _att("hook_cancelled", "SessionStart", OLD, ts="2026-09-09T18:34:32.000Z"),
+        _att("hook_success", "SessionStart", OLD, ts="2026-09-10T05:00:00.000Z"),
+        _att("hook_cancelled", "SessionStart", OLD, ts="2026-09-10T05:38:34.000Z"),
+        _att("hook_success", "SessionStart", FAST, ts="2026-09-12T08:00:00.000Z"),
+        _att("hook_success", "SessionStart", FAST, ts="2026-09-13T08:00:00.000Z"),
+        _att("hook_success", "SessionStart", BACKGROUND, ts="2026-09-13T08:00:00.000Z"),
+    ]
+    if current_cancelled:
+        events.append(_att("hook_cancelled", "SessionStart", FAST, ts="2026-09-14T08:00:00.000Z"))
+    _transcript(home, proj, "s1", events)
+
+
+def test_cancelled_retired_label_is_warn_with_last_seen_and_current_counts(tmp_path, capsys):
+    proj, home = tmp_path / "proj", tmp_path / "home"
+    proj.mkdir()
+    _split_transcript(home, proj)
+    rc, out = _run(proj, home, capsys, "--strict", "--days", "30",
+                   "--hooks-manifest", str(_manifest(tmp_path)))
+    assert rc == 0
+    assert "hook-delivery FAIL" not in out
+    assert f"hook-delivery WARN (retired label): SessionStart | {OLD}: cancelled 2, ok 1" in out
+    assert "last seen 2026-09-10" in out and "leaves the 30-day window on 2026-10-10" in out
+    assert (f"hook-delivery current labels of SessionStart in the last 30 day(s): "
+            f"{BACKGROUND}: ok 1, cancelled 0, error 0; {FAST}: ok 2, cancelled 0, error 0") in out
+
+
+def test_cancelled_current_label_still_fails_beside_a_retired_one(tmp_path, capsys):
+    proj, home = tmp_path / "proj", tmp_path / "home"
+    proj.mkdir()
+    _split_transcript(home, proj, current_cancelled=True)
+    rc, out = _run(proj, home, capsys, "--strict", "--days", "30",
+                   "--hooks-manifest", str(_manifest(tmp_path)))
+    assert rc == 1
+    assert f"hook-delivery FAIL: SessionStart | {FAST}: cancelled 1, ok 2" in out
+    assert f"hook-delivery WARN (retired label): SessionStart | {OLD}" in out
+    assert "current labels of SessionStart" in out
+
+
+def test_label_without_status_message_is_matched_by_command(tmp_path, capsys):
+    mod = _mod()
+    labels = mod.current_labels(_manifest(tmp_path))
+    assert not mod.is_retired("SessionStart | bash contract-part.sh 1", labels)
+    assert not mod.is_retired("SessionStart:startup | " + FAST, labels)  # hookName fallback
+    assert mod.is_retired("PreCompact | anything", labels)  # an event the manifest dropped
+    assert not mod.is_retired("? | bash stop.sh", labels)
+    assert mod.is_retired("? | gone", labels)
+
+
+def test_unreadable_manifest_treats_every_label_as_current(tmp_path, capsys):
+    proj, home = tmp_path / "proj", tmp_path / "home"
+    proj.mkdir()
+    _split_transcript(home, proj)
+    bad = tmp_path / "bad.json"
+    bad.write_text("{not json")
+    assert _mod().current_labels(bad) is None
+    assert _mod().current_labels(tmp_path / "missing.json") is None
+    rc, out = _run(proj, home, capsys, "--strict", "--days", "30", "--hooks-manifest", str(bad))
+    assert rc == 1 and f"hook-delivery FAIL: SessionStart | {OLD}" in out
+    assert "retired" not in out and "current labels of" not in out
+
+
+def test_shipped_manifest_retires_the_pre_split_session_start_label(tmp_path, capsys):
+    """The default manifest is the plugin's own hooks.json: the 0.186.0 split is in it."""
+    mod = _mod()
+    labels = mod.current_labels(mod.DEFAULT_MANIFEST)
+    assert labels is not None
+    assert mod.is_retired(f"SessionStart | {OLD}", labels)
+    assert not mod.is_retired(f"SessionStart | {FAST}", labels)
 
 
 # --- v0.204.0: the gate-block log has a reader --------------------------------------------

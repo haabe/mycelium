@@ -39,6 +39,15 @@ USAGE
 violation is most often a silently-wrong anchor. Pass `count: 0` to assert an
 anchor is ABSENT (a no-op edit used as a precondition), or an explicit integer.
 
+Canvas and diamonds targets (a file under `.claude/canvas/` or `.claude/diamonds/`) get the
+key-shape check that `hooks/key-shape-guard.sh` runs on a Write or Edit, because that hook
+is registered on the file tools only and never sees what a script writes (dogfood
+2026-10-02: dated keys reached the canvas after the guard shipped). A key the edit ADDS
+whose name carries a date or an entity id, or that spells a stem the file already holds a
+different way, is named on stderr in the hook's own words. Like the hook it is advisory:
+the edit is still written, and the exit code does not change. Keys already in the file are
+not reported; `check_key_shape.py` is the sweep for those.
+
 Exit codes:
   0 — every anchor validated and every file written (or --dry-run reported clean)
   1 — at least one anchor failed; NOTHING was written
@@ -49,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -89,6 +99,27 @@ def check_parses(path: Path, text: str) -> None:
         raise ParseError(
             f"{path}: the edited text does not parse ({exc}); NOTHING was written"
         ) from exc
+
+
+def key_shape_warnings(path: Path, before: str, after: str) -> list[str]:
+    """The key-shape guard's advisory for keys this edit adds to a canvas or diamonds file,
+    one message per file, or [] when there is nothing to say. Fails open like the hook: when
+    the guard cannot be loaded (PyYAML missing), one line says the check did not run."""
+    target = os.path.abspath(str(path))
+    if "/.claude/canvas/" not in target.replace(os.sep, "/") and \
+            "/.claude/diamonds/" not in target.replace(os.sep, "/"):
+        return []
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        import key_shape_guard  # noqa: PLC0415 - loaded only for a canvas or diamonds target
+    except Exception as exc:  # noqa: BLE001 — the check is advisory; the edit must not depend on it
+        return [f"safe_replace: key-shape check not run on {path} ({exc})"]
+    hits = key_shape_guard.new_key_findings(target, before, after)
+    if not hits:
+        return []
+    return [f"safe_replace: {path}:\n{key_shape_guard.message(hits)}"]
 
 
 def write_checked(path: Path, text: str, encoding: str = "utf-8") -> None:
@@ -155,6 +186,9 @@ def apply_edits(edits: list[dict], dry_run: bool = False) -> list[Path]:
     resolved = _validate(edits)
     for path, text, _ in resolved:  # every staged file parses, or nothing is written
         check_parses(path, text)
+    for path, text, _ in resolved:  # advisory, as the Write/Edit hook is: warns, never refuses
+        for warning in key_shape_warnings(path, path.read_text(), text):
+            print(warning, file=sys.stderr)
     if dry_run:
         return [p for p, _, _ in resolved]
     written = []

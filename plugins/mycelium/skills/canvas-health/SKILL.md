@@ -308,7 +308,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      ran nowhere. Measured on the dogfood repo 2026-09-10: 32 of 33 session starts in a month were
      cancelled at the manifest's own 5-second timeout while every test stayed green, because tests
      run the script and not the harness. Report this line FIRST; every other finding in this pass
-     is conditional on it. N/A on a runtime that keeps no transcripts.
+     is conditional on it. N/A on a runtime that keeps no transcripts. A hook is recorded by its
+     label (its statusMessage, or its command when it has none); a label that is no longer in the
+     plugin's current `hooks/hooks.json` is a hook since renamed or split, and its cancellations
+     are a WARN marked `(retired label)` with the date it was last seen and the date it leaves the
+     window, not a FAIL. The line `hook-delivery current labels of <event>` that follows gives
+     the counts for the labels that replaced it: report that line beside the retired one, because
+     a cancelled current label of SessionStart is still a FAIL.
 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
 
@@ -821,8 +827,11 @@ Three `WARN (cycle record)` lines from `validate_canvas.py`, computed by `check_
 a threshold whose eligible input count has reached `minimum_n` with `based_on_n` still 0
 (`calibration is due`; run the framework-health calibration step); a threshold that is uncalibrated
 because too few cycles of the right class carry the input, while the total cycle count is past the
-minimum (so a note blaming the count is stale); and a solution leaf in a terminal state with no
-cycle-history row naming it as `leaf_id`. engine/cycle-learning.md line 7: every terminal leaf
+minimum, printed only while `thresholds.yml#_meta.calibration_status` blames the count (rewrite
+that note to name the cycle class; once it does, or when there is no note, the same state is one
+`COVERAGE (calibration)` line for all such thresholds, because no edit ends it, only recording
+cycles of that class with an estimate and an actual); and a solution leaf in a terminal state with
+no cycle-history row naming it as `leaf_id`. engine/cycle-learning.md line 7: every terminal leaf
 generates a cycle record. On the dogfood canvas at shipping, 22 terminal solutions had no cycle and
 4 did, and every product threshold read "0 of 24 cycles are product-leaf cycles carrying
 `calibration.ice_accuracy`". Recording the missing cycles is the remedy; a reconstructed row with
