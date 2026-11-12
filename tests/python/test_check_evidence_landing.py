@@ -122,3 +122,43 @@ def test_has_evidence_helper():
     assert m.has_evidence({"reply_from_bob": "yes"})
     assert m.has_evidence({"touch_log": [{"direction": "inbound"}]})
     assert not m.has_evidence({"touch_log": [{"direction": "outbound"}], "objective": "o"})
+
+
+# --- mutation sample 2026-10-11 (seed 20260910): or/and swaps and an inverted membership ---
+# Each predicate below is taken one branch at a time: an entry that is a mapping without an id
+# (or a ledger row without a source) is skipped, a needs file written under `user_needs:` is read,
+# the listing prints for a new orphan alone, and an orphan that landed since the baseline is
+# counted as landed.
+
+def test_entries_without_an_id_or_source_are_skipped_not_crashed_on(tmp_path, capsys):
+    _canvas(tmp_path, ORPHAN_TASK + "- note: a row with no id\n",
+            needs_yaml="needs:\n- statement: no id here\n- id: need-001\n  statement: x\n")
+    h = tmp_path / ".claude" / "harness"
+    h.mkdir(parents=True)
+    (h / "evidence-landing-ledger.yml").write_text(
+        "reviewed:\n- reason: a row with no source\n- source: ht-001\n  reason: nothing citable\n")
+    rc, out = _run(tmp_path, capsys)
+    assert "evidence landing: 2 source(s)" in out
+    assert "REVIEWED 1" in out and "need-001" in out and rc == 1
+
+
+def test_a_needs_file_under_user_needs_is_read(tmp_path, capsys):
+    _canvas(tmp_path, "pending_tasks: []\n", needs_yaml="user_needs:\n- id: need-002\n")
+    rc, out = _run(tmp_path, capsys)
+    assert rc == 1 and "ORPHAN 1" in out and "need-002" in out
+
+
+def test_a_new_orphan_alone_lists_the_rows_and_marks_it_new(tmp_path, capsys):
+    _canvas(tmp_path, ORPHAN_TASK)
+    rc, out = _run(tmp_path, capsys)                 # no --verbose, no claimed source
+    assert rc == 1
+    assert any(line.startswith("  NEW ORPHAN") and "ht-001" in line for line in out.splitlines())
+
+
+def test_an_orphan_that_landed_since_the_baseline_is_counted_as_landed(tmp_path, capsys):
+    _canvas(tmp_path, ORPHAN_TASK)
+    _run(tmp_path, capsys, "--write-baseline")
+    _canvas(tmp_path, ORPHAN_TASK,
+            "opportunities:\n- id: opp-001\n  provenance:\n    evidence_sources: ['ht-001 reply']\n")
+    rc, out = _run(tmp_path, capsys)
+    assert rc == 0 and "1 orphan(s) at adoption, 0 still to land, 1 landed since" in out

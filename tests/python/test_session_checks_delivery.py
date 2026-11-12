@@ -175,3 +175,24 @@ def test_the_async_tier_writes_the_file_through_the_hook(tmp_path):
     assert done.returncode == 0, done.stderr[-400:]
     assert json.loads((state / "session-checks.json").read_text())["session"] == "s9"
     assert not [p.name for p in state.iterdir() if p.name.endswith(".tmp")]
+
+
+# --------------------------------------------------------------------------- the gate's own run
+
+def test_the_gates_stamp_renewal_does_not_spend_the_delivery(tmp_path):
+    """RED BEFORE 0.336.0: gate.sh renewed a missing stamp by running preflight.sh with its
+    output discarded, and that run delivered the background checks into /dev/null and removed
+    the pending marker, so the next prompt said nothing."""
+    gate = PLUGIN / "hooks" / "gate.sh"
+    state = _project(tmp_path)
+    (state / "session-checks.pending").write_text("s1")
+    (state / "session-checks.json").write_text(_cache())
+    payload = json.dumps({"tool_name": "Read", "tool_input": {"file_path": str(tmp_path / "x")},
+                          "session_id": "s1", "tool_use_id": "toolu_1"})
+    subprocess.run(["bash", str(gate)], input=payload, capture_output=True, text=True,
+                   env=_env(tmp_path), check=False, timeout=120)
+    assert list(tmp_path.glob("mycelium-preflight-stamp-*")), "the gate's run must still stamp"
+    assert (state / "session-checks.pending").exists()
+    out = _prompt(tmp_path)
+    assert DELIVERED in out
+    assert "OPEN human task: ht-1" in out

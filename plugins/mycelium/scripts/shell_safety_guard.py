@@ -691,9 +691,9 @@ def main() -> int:
     body = "MYCELIUM SHELL-SAFETY WARNING (the command still runs):\n" + "\n".join(
         f"  - {w}" for w in warnings
     ) + (
-        "\n  These are warnings, not blocks. Each of these traps has produced a "
-        "wrong answer in this project before — see corrections.md, "
-        "verification-hygiene class."
+        "\n  These are warnings, not blocks. Each trap above can make a command's "
+        "output or exit status say something other than what happened (a check that "
+        "failed read as passed, for one)."
     )
     print(json.dumps({
         "hookSpecificOutput": {

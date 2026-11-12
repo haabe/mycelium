@@ -18,7 +18,8 @@
 #
 # FORMAT
 #   <script-name>[ <args>]      one gate per line; `#` starts a comment
-#   !waived <script-name> <reason>   a CI gate deliberately NOT run locally
+#   !waived <script-name> <reason>   a CI gate deliberately NOT run locally, or a
+#                                    CI step that is not a gate (the reason says which)
 #
 # A waiver needs a reason on the same line. The alternative to supporting
 # waivers is that the first genuinely CI-only gate gets "fixed" by deleting the
@@ -33,6 +34,12 @@
 #   closed the idle SSH connection mid-hook so every push died with SIGPIPE after passing, and an
 #   agent reached for --no-verify and put a red commit on main. CI enforces this gate on every
 #   push (validate.yml), so nothing is unenforced — it is just not enforced twice.
+# Not in the loop below, and not unchecked. check_gate_parity.py reads every script the
+# workflow invokes, not only `check_*` ones (widened after the dogfood finding that
+# validate_canvas.py was in CI and nowhere here while parity printed OK), so each CI step
+# that is not in this loop says why on its own line.
+!waived validate_canvas.py runs before every push as the pre-push hook's FIRST layer (git-pre-push-example.sh), with an interpreter it has checked can import jsonschema, or uv; this loop runs a bare python3, so listing it here would run it twice and could fail it for the interpreter instead of the canvas
+!waived ingest_warnings.py is not a gate: CI runs it --dry-run over that run's validator-output.txt to prove the classifier still matches, it never blocks on findings, and locally there is no validator-output.txt to read
 check_legacy_paths.py --root .
 check_doc_references.py --root .
 check_theory_fidelity.py --root .

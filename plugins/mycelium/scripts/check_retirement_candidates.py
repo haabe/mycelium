@@ -267,8 +267,18 @@ def _print(result: dict) -> None:
                       for k in ("skill", "hook", "check")))
     print(f"  {len(cands)} candidate(s): no fire in the window and no reader.")
     print(f"  {len(unmeas)} hook(s) write no record and cannot be measured.\n")
+    if cands:
+        # UNWIRED IS NOT DEAD (dogfood 2026-10-11, harms-check and friction-log). Both were
+        # listed here on two assessments nine days apart, and read in full neither was unused
+        # because it was unneeded: nothing an agent meets on the way to the work named them.
+        # "No reader" is true, and a reader takes it for "no one needs this". The heading says
+        # what was measured, so wiring the mechanism in reads as a fix as plausible as retiring it.
+        print("  Candidates, named by nothing that runs (unwired, not necessarily dead):")
+        print("  no other skill, engine, harness or orchestration doc, hook, the gate set or")
+        print("  session-start names these, so nothing sends an agent to them. Wiring one in")
+        print("  where its own text says it belongs is as much a fix as retiring it.")
     for r in cands:
-        print(f"  {r['kind']:5} {r['name']:44} last {r['last'] or 'never'!s:10}  "
+        print(f"    {r['kind']:5} {r['name']:44} last {r['last'] or 'never'!s:10}  "
               f"fired: {r['fired']}; no reader")
     if cands:
         print()

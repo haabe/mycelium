@@ -318,3 +318,39 @@ def test_more_than_eight_unreconciled_dates_are_summarised_with_a_count(scripts_
     rc = _run(mod, "--project-dir", str(tmp_path), "--today", "2026-08-21")
     out = capsys.readouterr().out
     assert rc == 1 and "(+2 more)" in out, out
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-10-11)
+# Boundaries no fixture sat on (a correction dated the catalogue's own newest day, a threshold of
+# exactly 1, exactly eight dates) and the missing-file predicate taken one file at a time.
+
+def test_a_correction_on_the_catalogues_newest_day_is_not_newer(scripts_path):
+    mod = _import(scripts_path)
+    after, total = mod.corrections_after(_corrections("2026-08-05", "2026-08-06"), "2026-08-05")
+    assert after == ["2026-08-06"] and total == 2
+
+
+def test_a_threshold_of_one_is_allowed(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    _memory(tmp_path, corrections=_corrections("2026-08-01"), clusters=_rows("2026-07-20"))
+    assert _run(mod, "--project-dir", str(tmp_path), "--threshold", "1") == 1
+    assert "must be >= 1" not in capsys.readouterr().err
+
+
+def test_exactly_eight_dates_are_shown_with_no_count(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    dates = [f"2026-08-{d:02d}" for d in range(10, 18)]
+    _memory(tmp_path, corrections=_corrections(*dates), clusters=_rows("2026-08-01"))
+    assert _run(mod, "--project-dir", str(tmp_path), "--today", "2026-08-21") == 1
+    out = capsys.readouterr().out
+    assert "2026-08-17" in out and "more)" not in out
+
+
+def test_one_missing_file_is_a_skip_that_names_only_that_file(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    mem = tmp_path / ".claude" / "memory"
+    mem.mkdir(parents=True)
+    (mem / "corrections.md").write_text(_corrections("2026-08-01"))
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+    out = capsys.readouterr().out
+    assert "SKIP — missing cluster-instances.md —" in out

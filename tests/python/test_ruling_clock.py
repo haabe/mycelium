@@ -75,6 +75,18 @@ def test_evidence_later_the_same_day_is_since_the_ruling(tmp_path):
     assert "1 new evidence entry since" in items[0]["text"]
 
 
+def test_the_item_says_ruled_on_because_only_a_ruling_moves_the_record(tmp_path):
+    """Roadmap session 2026-10-05: l5-market was assessed with /mycelium:diamond-assess and the
+    item still said "was last assessed 2026-10-01". The record moves only when a ruling is written
+    to active.yml, which diamond-assess never does, so the word it uses is "ruled on"."""
+    root = _project(tmp_path, "2026-09-24")
+    _rule(root, NOW)
+    _at(root / "research" / "pilot.md", NOW + dt.timedelta(hours=5))
+    text = ni._unassessed(root, "2026-09-24")[0]["text"]
+    assert "was last ruled on 2026-09-24, and 1 new evidence entry since" in text
+    assert "assessed" not in text
+
+
 def test_a_typed_date_ahead_of_the_clock_does_not_silence_it(tmp_path):
     root = _project(tmp_path, "2026-10-26")  # the world date run 19 typed
     _rule(root, NOW)
@@ -148,4 +160,4 @@ def test_a_never_assessed_diamond_stays_never_assessed_after_the_recorder_sees_i
     dr.record(tmp_path, "s1", now=NOW.isoformat())
     items = ni._unassessed(tmp_path, "2026-09-24")
     assert [i["diamond"] for i in items] == ["l0-x"]
-    assert "has never been assessed" in items[0]["text"]
+    assert "has no ruling yet" in items[0]["text"]

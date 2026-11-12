@@ -179,6 +179,7 @@ Report the line for each scale with records. Since v0.302.0 (DL-1367) it counts 
    - If confidence is low: recommend evidence-gathering activities
    - If anti-patterns detected: recommend corrective actions
    - If the loop must iterate: recommend the decision to append (another `start_experiment`, a re-chosen front runner with another `commit_to_build`, DL-1373) and why; a recorded decision is never removed (DL-1374)
+   - A recommendation is not a ruling. This skill writes nothing to `.claude/diamonds/active.yml`, so a session-start item that says a diamond "has no ruling yet" or "was last ruled on" a date stays open after this assessment; it clears when `/mycelium:diamond-progress` records the decision, or when the person rules on the item itself. Say this when you recommend, so the person records the decision instead of running the assessment again.
 
 11. **Play devil's advocate**: Before recommending progression, ask:
     - What are we most likely wrong about?

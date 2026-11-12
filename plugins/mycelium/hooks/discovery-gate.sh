@@ -175,7 +175,16 @@ exempt). What is missing:
 
   ${HI_DELIVERY_WHY}
 
-Each scale opens on its parent (engine/diamond-rules.md, Entry locks): L1 on
+The ways on, cheapest first:
+
+1. If this is throwaway code written to learn something, put it in a prototype
+folder. Folders or patterns listed under \`prototype_paths\` at the top of
+.claude/diamonds/active.yml (for example \`prototype_paths: [prototypes/]\`)
+are free to write and edit with no delivery cycle; releasing anything under
+them is still gated, so listing a folder that holds the product does not make
+that code free to ship.
+
+2. Open the delivery cycle. Each scale opens on its parent (engine/diamond-rules.md, Entry locks): L1 on
 a purpose (who and why), L2 on a strategy (an L1 diamond, a North Star, the
 landscape) and a desired outcome, L3 on a target opportunity with evidence in
 an L2 diamond, L4 on an L3 at medium confidence, L5 on launch data. Produce
@@ -185,7 +194,7 @@ what is missing with the skill named above, open the L3 on its L2's target
   python3 \${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py --can-open L3
 says what is still missing.
 
-Only if the USER explicitly says this work should not be tracked, they record
+3. Only if the USER explicitly says this work should not be tracked, they record
 .claude/state/delivery-skip-ack: \`recorded_at\`, \`expires\` (30 days by default),
 \`covers\` (the paths it covers), \`releases: true\` only if releases are meant,
 and their own words in \`why\`. Do not write the ack file on your own judgement.

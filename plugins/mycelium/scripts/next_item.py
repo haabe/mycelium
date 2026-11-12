@@ -19,7 +19,8 @@ Items ruled `drop`, or `snooze` with a date still ahead, are skipped. Nothing qu
 nothing, and the hook says nothing; silence is the correct output for a clean canvas.
 
 THE VERBS. run (the command), rule (a human ruling where the item is a proposal), snooze-until DATE
-(`advisory_ledger.py rule --id <id> --ruling snooze --until DATE`), drop (`--ruling drop`). The
+(`advisory_ledger.py rule --id <id> --ruling snooze --until DATE`), drop (`--ruling drop`). What
+each verb records in the ledger is the OFFER table below, held equal to the ledger's RULINGS. The
 agent-facing advisory block is unchanged; this is the one line for the human, and the hook emits it
 as a `systemMessage` on resume and fork, which is the re-entry moment the record names (Alex,
 ht-057: "after a long gap, I'd want Mycelium to very quickly tell me where I am ... and what I
@@ -481,12 +482,16 @@ def _unassessed(root: Path, today: str) -> list[dict]:
             if n <= 0:
                 continue
             ruled = ruled or rec["ts"][:10]
-            why = f"was last assessed {rec['ts'][:10]}, and {n} {what} since"
+            # "Ruled on", not "assessed": the record moves only when a ruling is written to
+            # active.yml (/mycelium:diamond-progress). /mycelium:diamond-assess recommends and
+            # writes nothing, so "last assessed" contradicted a full assessment the builder had
+            # just run (roadmap session 2026-10-05, l5-market).
+            why = f"was last ruled on {rec['ts'][:10]}, and {n} {what} since"
         elif ruled and ruled >= newest:
             continue  # typed date, no machine record: ruled on since the newest evidence
         else:
             here = sl.position(d) if sl is not None else phase
-            why = (f"has never been assessed (it stands at: {here})" if not ruled
+            why = (f"has no ruling yet (it stands at: {here})" if not ruled
                    else f"was last ruled on {ruled}, and evidence has landed since")
         scale = str(d.get("scale") or "").upper()
         text, hint, waits = _move_text(state, d, phase, why)
@@ -1187,7 +1192,7 @@ def _ladder_item(root: Path, today: str, st: dict) -> dict | None:
     done = [str(r.get("assessed_at")) for r in rows if r.get("assessed_at")]
     return {"id": LADDER_ID, "diamond": lead["diamond"], "since": lead["since"], "text": text,
             "command": lead["command"], "assessed_at": max(done) if done else None,
-            "why": "the path to a release moves only when a diamond is assessed"}
+            "why": "the path to a release moves only when a ruling on a diamond is recorded"}
 
 
 def _product_paths_item(root: Path, today: str, st: dict) -> dict | None:
@@ -1451,10 +1456,37 @@ def _escalated(item: dict) -> bool:
 # was answered. Any real install keeps old versions in its cache.
 LEDGER = f'python3 "{Path(__file__).resolve().parent / "advisory_ledger.py"}"'
 
-# Which ruling fits which answer. Run 32: "not before Monday's demo ... ask me again after
-# Wednesday" was recorded as a bare `keep`, and the condition 0.254.1 exists to carry was lost.
-RULING_GUIDE = ('"not now, ask me after X" is `--ruling snooze --until asked --note "X"`; '
-                'a date is `--until YYYY-MM-DD`; "this is wrong" is `--ruling drop`')
+#: WHAT EACH OFFERED VERB RECORDS. The person is offered run | rule | snooze | drop; the agent
+#: records the answer with `advisory_ledger.py rule --ruling R`, which accepts only
+#: `advisory_ledger.RULINGS` (keep, fix, drop, snooze). Dogfood L1, 2026-10-14: the founder
+#: answered "rule it: does not choose a path", the line said `--ruling ...`, the agent wrote
+#: `--ruling rule`, and the ledger refused it with exit 2; "run" and "rule" mapped to nothing.
+#: Each row: (verb, the ledger values it records, how). The ledger values across the rows are
+#: exactly RULINGS, and a test holds the two sets equal, so the offer and the ledger cannot drift.
+OFFER: tuple[tuple[str, tuple[str, ...], str], ...] = (
+    ("run", (), ("nothing to record; do the command now, and the item leaves once what it "
+                 "asks is done")),
+    ("rule", ("keep", "fix"),
+     ('`--ruling keep --note "<their words>"` when they want it kept in front of them, or '
+      '`--ruling fix --note "<their words>"` when they will fix it (the ledger holds that ruling '
+      "until the condition clears); a `fired:` item is ruled on the record instead: write "
+      "`ruling:` and `ruled_at:` under its entry in `closes_on.fired`, or run "
+      "/mycelium:diamond-progress when the ruling chooses a path")),
+    # Run 32: "not before Monday's demo ... ask me again after Wednesday" was recorded as a bare
+    # `keep`, and the condition 0.254.1 exists to carry was lost.
+    ("snooze", ("snooze",),
+     ('"not now, ask me after X" is `--ruling snooze --until asked --note "X"`; a date is '
+      "`--ruling snooze --until YYYY-MM-DD`")),
+    ("drop", ("drop",), '"this is wrong" is `--ruling drop --note "<their words>"`'),
+)
+OFFERED_VERBS = tuple(v for v, _, _ in OFFER)
+#: The session-start line shares a bounded block, so it names the rule mapping in short; the
+#: prompt line carries RULING_GUIDE whole.
+RULE_SHORT = "`--ruling keep|fix`; a `fired:` item takes `ruling:` on its entry"
+_ACCEPTED = tuple(getattr(al, "RULINGS", ()) or ())
+RULING_GUIDE = "; ".join(f"{verb}: {how}" for verb, _, how in OFFER) + (
+    f". The ledger accepts only these rulings: {', '.join(_ACCEPTED)}"
+    if _ACCEPTED else "")
 
 
 def render(item: dict) -> str:
@@ -1491,7 +1523,7 @@ def render(item: dict) -> str:
     until, label = ("DATE", "snooze-until DATE") if dated else ("DATE|asked",
                                                                  "snooze-until DATE or asked")
     return (
-        f"{head}: {text} run `{item['command']}` | rule (say what you decide) | "
+        f"{head}: {text} run `{item['command']}` | rule (say what you decide: {RULE_SHORT}) | "
         f"{label} (`{LEDGER} rule --id {item['id']} "
         f'--ruling snooze --until {until} --note "..."`) | '
         f"drop (`--ruling drop`)."
@@ -1569,8 +1601,8 @@ def prompt_line(root: Path) -> str:
     return (f"MYCELIUM OPEN ITEM, unanswered for {st['shown']} sessions since "
             f"{st.get('first_shown')}: when you have answered this prompt, put this item to the "
             "user and ask them to decide: run, rule, snooze until a date, or drop (drop if the "
-            f"item is wrong). Record it with `{LEDGER} rule --id {st['id']} --ruling ...`: "
-            f"{RULING_GUIDE}. The item: "
+            f"item is wrong). Record their answer with `{LEDGER} rule --id {st['id']}` and the "
+            f"ruling their verb maps to: {RULING_GUIDE}. The item: "
             f"{st.get('text_human') or st.get('text', '')}")
 
 

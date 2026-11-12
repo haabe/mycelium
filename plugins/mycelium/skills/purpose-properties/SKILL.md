@@ -217,10 +217,26 @@ and offering it every run would make it nag-shaped. Offer on the retrofit and dr
 every invocation. **Do not compute anything from these three references** — they are not coordinates.
 Drift here is *checkable*, by naming a decision, and not computable.
 
-**NOT IMPLEMENTED, and stated rather than quietly skipped**: Sinek's five criteria for a Just Cause
-(*The Infinite Game*) are not encoded, because that book is not on disk in this project and the
-criteria were not read at the primary source. Encode them when someone has read them; do not
-reconstruct them from memory.
+**Then read the statement against Sinek's five criteria for a Just Cause** (*The Infinite Game*,
+2019, read at the source). A Just Cause is:
+
+1. **For something**: affirmative and optimistic.
+2. **Inclusive**: open to all those who would like to contribute.
+3. **Service oriented**: for the primary benefit of others.
+4. **Resilient**: able to endure political, technological and cultural change.
+5. **Idealistic**: big, bold and ultimately unachievable.
+
+Name to the user any criterion the statement does not meet, and let them revise it or keep it.
+`contradicting_decision` above stays the check that decides whether anything is written at all. The
+fifth criterion is the one this field already rests on: a statement that could be achieved is not a
+Just Cause, by Sinek's own test, so a bearing written as a milestone fails it.
+
+**A Just Cause is not a why, and Sinek says so.** *"A Just Cause is not the same as our WHY. A WHY
+comes from the past. It is an origin story... A Just Cause is about the future. It defines where we
+are going."* He also allows more than one: *"Unlike a WHY, of which there can be only one, we can
+work to advance more than one Just Cause."* The `just_cause` field holds one object. Whether it
+should hold several is not settled, and this skill does not settle it; if the user names more than
+one, say that the field holds one.
 
 ## Theory grounding
 

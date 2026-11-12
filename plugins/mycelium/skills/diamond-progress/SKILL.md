@@ -683,7 +683,12 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_purpose_stance.py" --strict --diamo
 **Pass `--diamond-id`.** Without it every diamond committed to build or released is blocking-eligible,
 so this decision can fail on a DIFFERENT diamond's missing stance — a stop for a reason that has
 nothing to do with the step just taken. With it, the block is scoped to the diamond being moved and
-every other one still reports at the never-fail tier.
+every other one still reports at the never-fail tier. The same scope applies to solutions: only the
+solutions this diamond names block (its `front_runner`, or the solution its `object_ref` names; with
+neither, the live solutions under the opportunity its `object_ref` names). Every other solution in the
+tree reports as WARN and does not block this decision. Through 0.334.1 every solution in the tree blocked
+whatever `--diamond-id` said, so one contradiction left on another opportunity's idea stopped every
+diamond's `commit_to_build` and `release`.
 
 Non-zero exit **blocks the decision**. It fires when a solution carries no stance against a binding
 property, when a verdict has no note, when a declared contradiction has no human override, or when the

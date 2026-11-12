@@ -316,6 +316,11 @@
             "type": "command",
             "command": "MYCELIUM_RUNTIME=codex bash \"${CLAUDE_PLUGIN_ROOT}/hooks/next-item-repeat.sh\"",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "MYCELIUM_RUNTIME=codex bash \"${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh\" stop",
+            "timeout": 15
           }
         ]
       }

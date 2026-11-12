@@ -401,6 +401,15 @@ reviewed:
     (dated and entity-scoped keys) still runs on the text. A new canvas file has no prior
     spellings to collide with; a broken one is the sweep's finding, not this guard's. Advisory
     hook, must never break a write.
+- id: key_shape_guard.py@3f16160219
+  verdict: accepted
+  reason: >-
+    provenance_findings, the file this write would leave does not parse as YAML (0.336.0): no
+    provenance block can be read, so the classes advisory says nothing. Something else speaks:
+    the PostToolUse schema check (`canvas-schema-check.sh`) tells the agent the written file does
+    not parse, and once it parses `check_source_class_fidelity.py` reports unequal arrays at
+    session start. Asserted by test_control_what_cannot_be_worked_out_says_nothing. Advisory
+    hook, must never break a write. Reviewed 2026-11-12.
 - id: validate_canvas.py@a7e642008d
   verdict: accepted
   reason: >-
@@ -1135,6 +1144,14 @@ reviewed:
     still put back, and the warning line goes into what `post` tells the person and the agent.
     Asserted by test_when_the_hold_s_own_script_cannot_be_loaded_that_is_said. Reviewed
     2026-10-15, v0.325.0.
+- id: bash_state_guard.py@a10d0d64f3
+  verdict: accepted
+  reason: >-
+    `_of_session`, at Stop, cannot read an open snapshot's record, so it cannot tell which session
+    took it. It returns True, so the snapshot is judged, and `_put_back_guard_state` puts the
+    WARNING that nothing was compared and nothing was put back into what `stop` tells the person
+    and the agent. Asserted by test_an_unreadable_open_snapshot_is_said_at_stop. Reviewed
+    2026-11-12.
 
 - id: lesson_triggers.py@1f4e59a3a9
   verdict: accepted

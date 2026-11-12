@@ -201,7 +201,7 @@ Before progressing a diamond to a new scale (L2->L3, L3->L4), systematically cha
 
 **G-P7: Close the loop after every task batch** `REVIEW` `quality`
 After completing any batch of changes, before reporting done: (1) verify cross-repo consistency if changes span repos, (2) log corrections for any mistakes made, (3) log patterns for anything reusable, (4) update corrections.md TL;DR if new entries added. If the user has to ask whether this happened, the guardrail already failed.
-*Source: Hoskins Ch4 (friction logging), Argyris (double-loop learning)*
+*Source: Argyris (double-loop learning), Mycelium self-learning (the corrections register). Not Hoskins's friction log: his is written while using a product and handed to whoever is responsible for it, a different object (`docs/errata.md` §B).*
 
 **G-M1: Never use promotional language in the decision log** `REVIEW` `quality`
 At L5 Market scale, the agent is primed toward optimistic/promotional framing by the go-to-market context. The decision log must remain an honest internal record. Forbidden phrases: "mostly positive", "minor concerns", "largely validated", "strong validation", "confirms product-market fit", "high confidence", "validates the concept", "clear demand." Use specific evidence and hedged language instead: "3 of 5 users mentioned X" not "strong validation from users."

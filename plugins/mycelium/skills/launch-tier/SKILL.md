@@ -31,7 +31,10 @@ Corrected after reading *LOVED* chapter 12 directly. What the book actually says
    reference points, people have a known comparison to calibrate from."*
    **So a project with no release history cannot build a release scale yet, and a generic table
    handed to it is precisely the academic exercise she forbids.** Say so rather than filling one in.
-3. **IT IS AN ALIGNMENT TOOL, NOT A GATE.** Its job is shared vocabulary between functions. A solo
+3. **IN HER BOOK IT IS AN ALIGNMENT TOOL, NOT A GATE.** Its job is shared vocabulary between functions.
+   **Mycelium does use it as a gate criterion, and that use is Mycelium's, not hers:** the L5
+   Evidence row in `engine/theory-gates.md` passes only with the release categorised against a
+   scale built from this project's own past releases. A solo
    builder has no second function to align with; the honest reduced form is the *customer-impact*
    and *marketing-objective* questions (her steps 3 and 4), which one person can answer, without the
    resourcing, lead-time and planning-meeting steps (5–7) that assume a company.
@@ -279,6 +282,15 @@ If `/mycelium:bias-check` reveals significant biases, address them before finali
    **Content**: refund rate, completion rate, drop-off points, return rate, reviews, NPS
    **AI tool**: task success rate, retention, DAU, refund rate, user feedback
    **Service**: client satisfaction (NPS/CSAT), referral rate, retention, delivery lead time feedback
+
+1b. **Name who left, and ask the people who left why.** Retention, churn, refund rate and drop-off count who left; they do not say why, and a re-targeted L2 built on a count re-targets on a guess. So, before the L5 -> L2 hand-off:
+   - **Name them.** List the people who stopped using it, and the people who were shown it and never started. A name, a handle or an account is enough; write roles, not names, into the canvas unless they agreed (`/mycelium:user-interview` Pre-Interview step 5).
+   - **Ask each one why, in their own words.** One open question, past tense, about what happened ("what made you stop?", "what happened after you looked at it?"), never a rating or a list of reasons to tick. A form is a count with extra fields; the point is the conversation.
+   - **Ask on a short fixed rhythm, and stop at a clear no.** One project's rhythm, made by hand for its own launch and not yet tested elsewhere: one question at 3, 7 and 14 days after the person was shown the product, and nothing further once they say no. Pick the rhythm before the first message, so silence is read against a plan rather than waited out.
+   - **The agent drafts; the human sends.** Each message goes out from the person, per `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md` ("Send external message / outreach"). `/mycelium:handoff` writes the brief with task type `outreach`.
+   - **Route each reason to the opportunity it bears on** in step 4, with the person's words (or a paraphrase where they did not agree to be quoted) as the evidence. A reason that bears on no mapped opportunity is a new one.
+
+   Why this step exists: until it was written, the only place in the framework that asked who left and why was one row of `${CLAUDE_PLUGIN_ROOT}/harness/cognitive-biases.md` (survivorship bias: "Ask who left and why"), which a builder meets only in a bias check. Cagan names "why are people not using our product?" as the more important why, one that "most teams never ask" (Cagan, "Strong Opinions, loosely held", Lenny and Friends Summit, 2026-09-10).
 
 2. **Validate scenarios against reality** (Hoskins):
    - For each scenario in `.claude/canvas/scenarios.yml` linked to this launch: did the persona's story play out?

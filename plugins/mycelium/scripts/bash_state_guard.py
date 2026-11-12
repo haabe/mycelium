@@ -98,6 +98,23 @@ script went on writing after the put-back, so the file matched neither version. 
 applies its own edit to the copies taken before each running command, before it writes
 (`own_writer_writes`), so the comparison sees only what the command did. A command that also
 changed the file is put back as before, to a version that keeps the writer's change.
+
+A COMMAND WHOSE AFTER HALF NEVER RUNS IS JUDGED AT THE END OF THE TURN (v0.336.0). Claude Code
+2.1.314 runs the PreToolUse hooks matching Bash on a command the Monitor tool starts, and no
+PostToolUse for it (measured 2026-11-03 on 2.1.317), so such a command was snapshotted and never
+compared: what it did to the files above stood, unsaid.
+
+  stop    (Stop) every snapshot of this session still open belongs to a command whose after half
+          has not run, since every other shell command of the turn has had its own. Each is
+          compared as its after half would have been, put back, said, and removed.
+  post    and `edited`: a file the person was asked about (a visible shell write, an edit tool),
+          or one the call was free to change (`upgrade.sh`, the person's override), is taken into
+          every other open snapshot (`_take_in`), so the end-of-turn comparison does not undo it.
+
+Not caught: what a Monitor command changes after the turn it started in has ended, and a change
+the person makes in their own terminal during that turn is put back and said, as it is during any
+running command. A background subagent's command that is still running at the main agent's Stop
+is judged then.
 """
 from __future__ import annotations
 
@@ -214,9 +231,7 @@ def pre(payload: dict, project: Path) -> int:
             else:
                 (state / "active.yml.before").unlink(missing_ok=True)
             _drop_old_snapshots(state)
-            cwd = payload.get("cwd") if isinstance(payload.get("cwd"), str) else ""
-            _snapshot_guard_state(project, state, cmd, _call_id(payload),
-                                  Path(cwd) if cwd else project)
+            _snapshot_guard_state(project, state, cmd, payload)
             (state / "stamp").write_text(repr(time.time()))
         except OSError:
             return 0  # SPEAKS in post: with no stamp, post says it could not tell what changed
@@ -234,9 +249,9 @@ def _call_id(payload: dict) -> str:
 
 
 def _drop_old_snapshots(state: Path, older_than: float = 86400.0) -> None:
-    """A snapshot whose post half never ran (the session ended mid-command) is removed after a
-    day, so the folder does not grow. Nothing is put back from it: a day later it says nothing
-    about who wrote what."""
+    """A snapshot whose post half never ran and that no Stop of its session judged (the session
+    ended mid-command, or the turn was interrupted) is removed after a day, so the folder does not
+    grow. Nothing is put back from it: a day later it says nothing about who wrote what."""
     root = state / GUARD_SNAP
     if not root.is_dir():
         return
@@ -276,10 +291,13 @@ def _runs_own_writer(cmd: str, base: Path) -> bool:
         return False  # SPEAKS: not shown to be Mycelium's own, so its change is put back and told
 
 
-def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str,
-                          base: Path | None = None) -> None:
-    base = base or project
-    snap = state / GUARD_SNAP / call
+def _snapshot_guard_state(project: Path, state: Path, cmd: str, payload: dict) -> None:
+    """This call's snapshot, under its own id. The session is noted so that the end-of-turn
+    comparison (`stop`, v0.336.0) judges only this session's commands."""
+    cwd = payload.get("cwd") if isinstance(payload.get("cwd"), str) else ""
+    base = Path(cwd) if cwd else project
+    session = str(payload.get("session_id") or "")
+    snap = state / GUARD_SNAP / _call_id(payload)
     shutil.rmtree(snap, ignore_errors=True)
     _state_dir.prepare_dir(snap)
     files = {}
@@ -306,7 +324,8 @@ def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str,
         shutil.copyfile(project / ACTIVE_REL, snap / RECORD_SNAP)
     (snap / "index.json").write_text(json.dumps({
         "files": files, "asked": asked, "own": own, "own_writer": own_writer, "settings": settings,
-        "override": hi.human_override(), "git": _git_before(project), "record": record}))
+        "override": hi.human_override(), "git": _git_before(project), "record": record,
+        "session": session}))
 
 
 def _git_before(project: Path) -> dict:
@@ -413,8 +432,9 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
     """Undo what the command did to a file that switches a stop off, unless the person was asked.
     Returns one line per file put back; a file it could not put back is named as such. `extras`,
     when given, receives what else the snapshot held: `settings`, the two lists
-    `_put_back_settings` returns, `git`, where the commit pointer was before the command, and
-    `record`, what `_put_back_the_record` did to the diamonds file."""
+    `_put_back_settings` returns, `git`, where the commit pointer was before the command,
+    `record`, what `_put_back_the_record` did to the diamonds file, and `allowed`, the files the
+    command was free to change (the ones the person was asked about, or all of them)."""
     snap = state / GUARD_SNAP / call
     if not (snap / "index.json").is_file():
         return []  # no snapshot for this call: its before half did not run, so nothing to compare
@@ -430,31 +450,78 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
             extras["settings"] = _put_back_settings(project, index)
             extras["git"] = index.get("git") if isinstance(index.get("git"), dict) else {}
             extras["record"] = _put_back_the_record(project, state, call, index)
+            extras["allowed"] = _allowed(index)
         # The override as it was BEFORE the command (v0.322.6); a snapshot from an older version
         # has no such note and falls back to the environment now.
         if index.get("own") or index.get("override", hi.human_override()):
             return []
-        for rel, was in index.get("files", {}).items():
-            if rel in index.get("asked", []):
-                continue
-            f = project / rel
-            now = f.is_file()
-            if was.get("existed") == now and (not now or _digest(f) == was.get("sha")):
-                continue
-            try:
-                if was.get("existed"):
-                    _state_dir.prepare_dir(f.parent)
-                    shutil.copyfile(snap / was["copy"], f)
-                    out.append(f"{rel} (restored to what it held before the command)")
-                else:
-                    f.unlink()
-                    out.append(f"{rel} (the command created it; removed)")
-            except OSError as exc:
-                out.append(f"{rel} (COULD NOT BE PUT BACK: {type(exc).__name__}; it is as the "
-                           "command left it)")
+        out = _restore_files(project, snap, index)
     finally:
         shutil.rmtree(snap, ignore_errors=True)
     return out
+
+
+def _allowed(index: dict) -> list[str]:
+    """The off-switch files this call was free to change: the ones the person was asked about,
+    or all of them for Mycelium's own upgrade script and the person's own override."""
+    if index.get("own") or index.get("override", hi.human_override()):
+        return list(hi.GUARD_STATE_REL)
+    return [r for r in index.get("asked", []) if isinstance(r, str)]
+
+
+def _restore_files(project: Path, snap: Path, index: dict) -> list[str]:
+    out = []
+    for rel, was in index.get("files", {}).items():
+        if rel in index.get("asked", []):
+            continue
+        f = project / rel
+        now = f.is_file()
+        if was.get("existed") == now and (not now or _digest(f) == was.get("sha")):
+            continue
+        try:
+            if was.get("existed"):
+                _state_dir.prepare_dir(f.parent)
+                shutil.copyfile(snap / was["copy"], f)
+                out.append(f"{rel} (restored to what it held before the command)")
+            else:
+                f.unlink()
+                out.append(f"{rel} (the command created it; removed)")
+        except OSError as exc:
+            out.append(f"{rel} (COULD NOT BE PUT BACK: {type(exc).__name__}; it is as the "
+                       "command left it)")
+    return out
+
+
+def _take_in(project: Path, state: Path, rels: list[str], skip: str = "") -> None:
+    """Every snapshot still open, except `skip`'s, takes these files as they are now for its
+    "before" (v0.336.0). They changed where the person was asked, or by a call that was free to
+    change them, so a command that is still running, or whose after half never runs and is judged
+    at the end of the turn (`stop`), must not be held to have made the change."""
+    root = state / GUARD_SNAP
+    if not rels or not root.is_dir():
+        return
+    for snap in root.iterdir():
+        if snap.name == skip:
+            continue
+        try:
+            index = json.loads((snap / "index.json").read_text())
+            files = index.get("files") if isinstance(index, dict) else None
+            if not isinstance(files, dict):
+                continue
+            for rel in rels:
+                if rel not in files:
+                    continue
+                f = project / rel
+                if f.is_file():
+                    was = files[rel] if isinstance(files[rel], dict) else {}
+                    copy = was.get("copy") or f"{hi.GUARD_STATE_REL.index(rel)}.before"
+                    shutil.copyfile(f, snap / copy)
+                    files[rel] = {"existed": True, "sha": _digest(f), "copy": copy}
+                else:
+                    files[rel] = {"existed": False}
+            (snap / "index.json").write_text(json.dumps(index))
+        except (OSError, ValueError):
+            continue  # SPEAKS: that snapshot's own comparison says when it cannot be read
 
 
 def _hold_lines(before: str | None, after: str | None) -> list[str]:
@@ -669,8 +736,11 @@ def edited(payload: dict, project: Path) -> int:
         targets = hi.target_paths(payload.get("tool_input"))
     except hi.BadInputError:
         return 0  # SPEAKS: the gates refuse a call they cannot read before it runs
-    if not any(hi.resolve(path, str(project), key=key).rel == ACTIVE_REL
-               for key, path in targets):
+    rels = [hi.resolve(path, str(project), key=key).rel for key, path in targets]
+    # v0.336.0: an off-switch file written by an edit tool was put to the person by
+    # guard-state-gate.sh, so every open snapshot takes it as it is now.
+    _take_in(project, project / STATE_REL, sorted({g for r in rels if (g := hi.is_guard_state(r))}))
+    if ACTIVE_REL not in rels:
         return 0
     root, active = project / STATE_REL / GUARD_SNAP, project / ACTIVE_REL
     if not root.is_dir() or not active.is_file():
@@ -762,15 +832,53 @@ def _diamond_problems(project: Path, state: Path, session: str) -> list[str]:
     return out
 
 
+def _say(reasons: list[str], out: dict, told: str, tail: str) -> None:
+    """One finding: the person reads `told` (systemMessage), the agent `told` and `tail`."""
+    out["systemMessage"] = " ".join(x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
+    reasons.append(told + " " + tail)
+
+
+_LEAVE_IT = ("Do not try another way of writing it: tell the person what happened and let them "
+             "decide.")
+
+
+def _judge(project: Path, state: Path, call: str) -> tuple[list[str], dict, dict]:
+    """Compare one call's snapshot with the files now and put back what is put back: the
+    off-switch files, the diamonds file, the settings switches. Returns what the agent is told,
+    what the person is told (`systemMessage`), and the extras `_put_back_guard_state` filled.
+    The snapshot is removed."""
+    extras: dict = {}
+    put_back = _put_back_guard_state(project, state, call, extras)
+    undone, reported = extras.get("settings") or ([], [])
+    record = extras.get("record") or {}
+    reasons: list[str] = []
+    out: dict = {}
+    if put_back:
+        _say(reasons, out,
+             "A shell command changed a file that switches one of Mycelium's stops off, and "
+             "you were not asked first: " + "; ".join(put_back) + ". Mycelium put it back, so "
+             "the stop is as it was. If you want that file changed, write it yourself in your "
+             "own terminal, or have the agent write it with a plain command that names the "
+             "file, so that you are asked.", _LEAVE_IT)
+    if record:
+        _say(reasons, out, _record_told(record), _LEAVE_IT)
+    if undone or reported:
+        _say(reasons, out, _settings_told(undone, reported),
+             "Do not try another way of setting it: tell the person what happened and let them "
+             "decide.")
+    return reasons, out, extras
+
+
 def post(payload: dict, project: Path) -> int:
     state = project / STATE_REL
     try:
         since = float((state / "stamp").read_text())
     except (OSError, ValueError):
         return 0  # no stamp: pre did not run (not a Mycelium project, or an unwritable state dir)
-    extras: dict = {}
-    put_back = _put_back_guard_state(project, state, _call_id(payload), extras)
-    undone, reported = extras.get("settings") or ([], [])
+    call = _call_id(payload)
+    reasons, out, extras = _judge(project, state, call)
+    # v0.336.0: what this call was free to change is not another open command's change.
+    _take_in(project, state, extras.get("allowed") or [], skip=call)
     committed = _secrets_committed(extras.get("git") or {})
     record = extras.get("record") or {}
     changed = _changed(project, since)
@@ -781,37 +889,14 @@ def post(payload: dict, project: Path) -> int:
     problems = _schema_problems(changed) if changed else []
     if changed and project / ACTIVE_REL in changed:
         problems += _diamond_problems(project, state, str(payload.get("session_id") or ""))
-    reasons, out = [], {}
-    if put_back:
-        told = ("A shell command changed a file that switches one of Mycelium's stops off, and "
-                "you were not asked first: " + "; ".join(put_back) + ". Mycelium put it back, so "
-                "the stop is as it was. If you want that file changed, write it yourself in your "
-                "own terminal, or have the agent write it with a plain command that names the "
-                "file, so that you are asked.")
-        out["systemMessage"] = "Mycelium: " + told
-        reasons.append(told + " Do not try another way of writing it: tell the person what "
-                       "happened and let them decide.")
-    if record:
-        told = _record_told(record)
-        out["systemMessage"] = " ".join(
-            x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
-        reasons.append(told + " Do not try another way of writing it: tell the person what "
-                       "happened and let them decide.")
-    if undone or reported:
-        told = _settings_told(undone, reported)
-        out["systemMessage"] = " ".join(
-            x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
-        reasons.append(told + " Do not try another way of setting it: tell the person "
-                       "what happened and let them decide.")
     if committed:
-        told = ("A commit this command made holds something that looks like a secret: "
-                + "; ".join(committed) + ". Mycelium has not changed the commit, and will refuse "
-                "to push it. A new commit on top does not take the value out of history: the "
-                "commit has to be amended or redone. If the value was ever real it should be "
-                "replaced. A false alarm is yours to wave through.")
-        out["systemMessage"] = " ".join(
-            x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
-        reasons.append(told + " Do not push. Tell the person what happened and let them decide.")
+        _say(reasons, out,
+             "A commit this command made holds something that looks like a secret: "
+             + "; ".join(committed) + ". Mycelium has not changed the commit, and will refuse "
+             "to push it. A new commit on top does not take the value out of history: the "
+             "commit has to be amended or redone. If the value was ever real it should be "
+             "replaced. A false alarm is yours to wave through.",
+             "Do not push. Tell the person what happened and let them decide.")
     if problems:
         names = ", ".join(str(f.relative_to(project)) for f in changed)
         reasons.append(
@@ -823,16 +908,57 @@ def post(payload: dict, project: Path) -> int:
     return 0
 
 
+def _of_session(snap: Path, session: str) -> bool:
+    """Was this snapshot taken by a command of this session? One whose record cannot be read is
+    judged here, and its comparison prints the WARNING that nothing was compared or put back."""
+    try:
+        index = json.loads((snap / "index.json").read_text())
+    except (OSError, ValueError):
+        return True  # SPEAKS: _put_back_guard_state tells the person nothing could be compared
+    return (str(index.get("session") or "") if isinstance(index, dict) else "") == session
+
+
+_AT_STOP = ("This was found at the end of the turn, for a shell command whose after-check never "
+            "ran: Claude Code runs no after-hook for a command started by the Monitor tool, so "
+            "its changes are compared here instead. A change it makes after this point is not "
+            "compared.")
+
+
+def stop(payload: dict, project: Path) -> int:
+    """The turn has ended (Stop, v0.336.0). Every shell command of this turn has had its after
+    half by now, except one whose after half never runs: Claude Code 2.1.314 runs the before
+    hooks on a command the Monitor tool starts and no PostToolUse for it. Each snapshot of this
+    session still open is compared now, as its after half would have, and removed."""
+    root = project / STATE_REL / GUARD_SNAP
+    if not root.is_dir():
+        return 0
+    session = str(payload.get("session_id") or "")
+    reasons: list[str] = []
+    told: list[str] = []
+    for snap in sorted(p for p in root.iterdir() if p.is_dir()):
+        if not _of_session(snap, session):
+            continue  # another session's command, judged by its own hooks or dropped after a day
+        r, out, _ = _judge(project, project / STATE_REL, snap.name)
+        reasons += r
+        if out.get("systemMessage"):
+            told.append(out["systemMessage"])
+    if reasons:
+        print(json.dumps({"decision": "block", "reason": _AT_STOP + "\n\n" + "\n\n".join(reasons),
+                          "systemMessage": " ".join(told) + " (" + _AT_STOP + ")"}))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     mode = (argv or sys.argv[1:] or [""])[0]
     try:
         payload = json.loads(sys.stdin.read() or "{}")
     except ValueError:
         return 0  # the runtime refuses a malformed payload before any command runs
-    if not isinstance(payload, dict) or mode not in ("pre", "post", "edited"):
+    modes = {"pre": pre, "post": post, "edited": edited, "stop": stop}
+    if not isinstance(payload, dict) or mode not in modes:
         return 0
     project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()).resolve()
-    return {"pre": pre, "post": post, "edited": edited}[mode](payload, project)
+    return modes[mode](payload, project)
 
 
 if __name__ == "__main__":

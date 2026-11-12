@@ -39,6 +39,11 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 2. Review current OST -- what are you trying to learn?
 3. **Seed learning-target questions from open canvas gaps** (per `engine/canvas-guidance.yml#learning_target_coupling`): scan the canvas for entries explicitly waiting on evidence â€” ON HOLD / RE-GATED action flags, in-progress human-tasks naming a MISSING SIGNAL, low-confidence entries with an un-validated assumption â€” and seed AT LEAST ONE question per relevant gap. Tag each seeded question inline `[target â†’ <file>#<anchor>]` so the answer routes back via `/mycelium:log-evidence`. Feedback capacity is scarce and non-repeating; an un-targeted session spends it without retiring any open gap. NUDGE-tier: zero-target sessions are allowed (pure discovery), but the omission should be a choice.
 4. Design questions that are story-based and past-tense
+5. **Consent: say what the notes are for and where they are kept, before the first question.** The person being interviewed never chose this tool, and what they say lands in `.claude/canvas/`, which the operating contract has committed to git (`${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md`), so it can end up in a shared or public repository. Write the opening line into the interview guide so the interviewer says it: what the notes are for (to understand the problem they describe; say so plainly if anything might be quoted publicly), where they are kept (a project file in a git repository, and whether that repository is shared or public), and that they can say no to any part of it. Then:
+   - **Ask before keeping words that could identify them.** Verbatim quotes beside a role and an employer identify a person as well as a name does. If they say no, keep a paraphrase and the role in general terms ("a nurse at a home-care agency"), never the employer.
+   - **Leave out the names of other people they mention** (a colleague, a manager, a client) unless that person agreed. Write the role instead.
+   - **Write what they agreed to as one line of the post-interview snapshot** (notes kept or not, verbatim words or paraphrase only, named or not), so a later reader knows what may be quoted. Keeping real names out of git is a storage rule (agent-operating-contract.md, "Plain language first"); use a pseudonym in the canvas when the person did not agree to be named.
+   - **The agent drafts; the person sends.** Any message to the interviewee (the ask, a follow-up, a thank-you) is drafted by the agent and sent by the human. Sending an external message is a human-approved action in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md` (authority map: "Send external message / outreach").
 
 ## Question Design Rules
 
@@ -74,7 +79,8 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 
 ## Post-Interview Snapshot
 Create immediately after each interview:
-- 3-5 key quotes (verbatim)
+- What the person agreed to (Pre-Interview step 5): notes kept or not, verbatim or paraphrase only, named or not
+- 3-5 key quotes (verbatim where they agreed to it; a paraphrase where they did not)
 - Opportunities identified (needs/pain points/desires)
 - Surprises (things you didn't expect)
 - JTBD dimensions observed (functional/emotional/social)

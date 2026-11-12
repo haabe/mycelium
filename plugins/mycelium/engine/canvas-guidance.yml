@@ -842,8 +842,11 @@ prior_findings_first:
   # open gap, and did nothing to ensure findings you PRODUCE are ever read again.
   #
   # THE WORKED FAILURE. `theory-audit-2026-04-17.md` graded Wardley fidelity and ranked its
-  # gaps — climatic patterns zero of ~30 HIGH, gameplay 4-5 of 64+ HIGH, inertia not modelled.
-  # The ranking was correct. **Nothing consumed it for four months**, while the map was
+  # gaps — climatic patterns not encoded (HIGH), a small encoded gameplay set (HIGH), inertia
+  # not modelled. It stated the first two as ratios ("zero of ~30", "4-5 of 64+") whose
+  # denominators are not in the book, for sets Wardley says are open, so the ratios could
+  # never be scored; the qualitative findings stand (`docs/errata.md` §B).
+  # **Nothing consumed the ranking for four months**, while the map was
   # repeatedly described as strategy. It surfaced 2026-08-05 only because an agent happened to
   # search before proposing, one turn after logging a correction about not doing so. An audit
   # that ranks work and is never re-read is the same shape as a check that runs and is never

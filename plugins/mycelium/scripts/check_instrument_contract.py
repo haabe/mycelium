@@ -609,10 +609,18 @@ def _emit_proportion(r: dict, emit) -> None:
          "(why the heavier test is worth it) and `costly_test_by` (their role: founder, product "
          "lead, team).",
          lambda t: f"{t[0]}: {t[1]}")
+    # A QUESTION, NOT A FORM. Canvas-health 2026-10-02: put to the founder as "accept it with
+    # `light_test_reason` and `light_test_by`", the answer was "the task is too abstract for me to
+    # write a reason". Only the owner can judge whether the product may ship on this evidence; the
+    # fields are Mycelium's paperwork, so the agent drafts them and asks one yes/no question.
     emit(r["undersized"],
          "UNDERSIZED — the test is lighter than the decision it informs (v0.269.0). Choose a "
-         "heavier test, or have the decision owner accept it with `light_test_reason` and "
-         "`light_test_by` (their role).",
+         "heavier test, or put one question to the decision owner that they can answer yes or "
+         "no. Draft it yourself from the test file, in the product's words, not the test's: "
+         '"<what ships> ships on <the evidence this test gives>; if <what would make you change '
+         'it back> happens, it goes back. Fine?" On a yes, write your draft to '
+         "`light_test_reason` with their answer quoted in it, and their role to `light_test_by`. "
+         "On a no, or no answer, set neither and choose a heavier test.",
          lambda t: f"{t[0]}: {t[1]}")
     emit(r["misclassed"],
          "MISCLASSED — decision_class is lighter than its recorded axes (v0.269.0).",

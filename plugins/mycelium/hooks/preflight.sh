@@ -92,6 +92,17 @@ rm -f "$STAMP_FILE"
 EOF
 )
 
+# THE GATE'S OWN RUN WANTS THE STAMP AND NOTHING ELSE (0.336.0). gate.sh renews a missing stamp
+# by running this script with its output discarded. Everything below either speaks to the agent
+# or spends something that happens once: the background checks are marked delivered and their
+# pending marker removed, and the next-item and exposure lines count as said. In the gate's run
+# nobody reads any of it, so a session whose first tool call renewed the stamp lost its
+# background checks without a word. The gate sets MYCELIUM_PREFLIGHT_STAMP_ONLY=1; the run ends
+# here, with the stamp written.
+if [ "${MYCELIUM_PREFLIGHT_STAMP_ONLY:-}" = "1" ]; then
+  exit 0
+fi
+
 # Disambiguate "memory not yet initialized" from "memory has zero entries"
 # from "memory has N entries" — bare "0 corrections" reads as a possible
 # counting failure to first-run users (per opp-001).

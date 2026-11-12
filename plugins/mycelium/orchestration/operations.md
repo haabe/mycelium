@@ -89,13 +89,12 @@ If a dogfood session surfaces zero gaps, that's a signal to make the session har
 - **Killed**: Abandoned with documented reason
 
 ### Stale Diamond Detection
-A diamond is stale if:
-- No progress for 30+ days
-- Phase hasn't changed in 2+ weeks without documented reason
-- Blocking children that are themselves stale
+Nothing computes staleness. At session start `scripts/next_item.py` proposes a diamond for a ruling only when it has never been ruled on or has new evidence since its last ruling, so a diamond with no new evidence is never proposed however old it is; no script measures a diamond's age. The rule and its reasons are in `../engine/diamond-rules.md` (Stale Diamond Detection). For the monthly cleanup, read `diamonds/active.yml` by hand for these signs. A diamond may be stale if:
+- No decision has been recorded for two weeks or more, and no reason or blocker is documented (a month or more is the clear case)
+- It is blocking children that are themselves stale
 
 ### Cleanup Process
-1. Run `/diamond-assess` to identify stale diamonds
+1. Run `/diamond-assess`, and read each open diamond's last recorded decision against the signs above (the skill does not compute them)
 2. For each stale diamond, decide: continue, archive, or kill
 3. **Archive**: Move from `active_diamonds` to an `archived` section in `active.yml`. Canvas data preserved.
 4. **Kill**: Remove from `active.yml`. Log reason in `decision-log.md`. Canvas data preserved with "killed" note.

@@ -82,12 +82,20 @@ GATE_SET_REL = "plugins/mycelium/scripts/local-gate-set.txt"
 #: missing gate, which is the quiet direction to be wrong in. Widened rather than
 #: renaming the fixture, because the fixture was right and the pattern was
 #: narrower than the thing it claims to scan.
+#:
+#: ANY SCRIPT NAME, NOT ONLY `check_*` (widened after the dogfood finding
+#: gate-parity-only-matches-scripts-named-check). The `check_` prefix is a naming
+#: habit, not what makes a step a gate: validate.yml also runs `validate_canvas.py`,
+#: `ingest_warnings.py` and `release_gaps.py`, and the first of those was in neither
+#: the local set nor a waiver while this check printed OK. A CI step that is not a
+#: gate is waived in the set with a reason that says so, so it is seen on every run
+#: instead of being invisible by name.
 INVOCATION_RE = re.compile(
-    r"^\s*(?:-\s*)?(?:run:\s*)?.*python3?\s+\S*scripts/(check_[a-z0-9_]+\.py)",
+    r"^\s*(?:-\s*)?(?:run:\s*)?.*python3?\s+\S*scripts/([a-z0-9_]+\.py)",
     re.MULTILINE,
 )
 
-WAIVER_RE = re.compile(r"^!waived\s+(check_[a-z0-9_]+\.py)\s+(.+?)\s*$")
+WAIVER_RE = re.compile(r"^!waived\s+([a-z0-9_]+\.py)\s+(.+?)\s*$")
 
 #: Group index of the trailing-arguments capture. Both invocation patterns capture the
 #: script name first and its arguments second; a pattern with only the name has no group 2.
@@ -97,7 +105,7 @@ _ARGS_GROUP = 2
 #: The same line as INVOCATION_RE, but keeping what follows the script name so flags can be
 #: compared. Name-only parity was not enough: see strict_mismatches.
 INVOCATION_WITH_ARGS_RE = re.compile(
-    r"^\s*(?:-\s*)?(?:run:\s*)?.*python3?\s+\S*scripts/(check_[a-z0-9_]+\.py)(.*)$",
+    r"^\s*(?:-\s*)?(?:run:\s*)?.*python3?\s+\S*scripts/([a-z0-9_]+\.py)(.*)$",
     re.MULTILINE,
 )
 
@@ -130,7 +138,7 @@ def strict_mismatches(workflow_text: str, gate_set_text: str) -> list[str]:
     a class of defect that can only ever go red after a push.
     """
     ci = _strict_flags(workflow_text.splitlines(), INVOCATION_WITH_ARGS_RE)
-    local_re = re.compile(r"^(check_[a-z0-9_]+\.py)(.*)$")
+    local_re = re.compile(r"^([a-z0-9_]+\.py)(.*)$")
     local = _strict_flags([ln.strip() for ln in gate_set_text.splitlines()], local_re)
     out = []
     for name, ci_strict in sorted(ci.items()):

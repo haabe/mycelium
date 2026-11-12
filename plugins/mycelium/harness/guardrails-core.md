@@ -34,7 +34,7 @@ Every significant decision in the decision log must reference the specific theor
 
 **G-P7: Close the loop after every task batch** `REVIEW` `quality`
 After completing any batch of changes, before reporting done: (1) verify cross-repo consistency if changes span repos, (2) log corrections for any mistakes made, (3) log patterns for anything reusable, (4) update corrections.md TL;DR if new entries added. If the user has to ask whether this happened, the guardrail already failed.
-*Source: Hoskins Ch4 (friction logging), Argyris (double-loop learning)*
+*Source: Argyris (double-loop learning), Mycelium self-learning (the corrections register). Not Hoskins's friction log: his is written while using a product and handed to whoever is responsible for it, a different object (`docs/errata.md` §B).*
 
 **G-P8: Never gamify the framework's own discipline** `NUDGE` `quality`
 Do not add extrinsic rewards (points, badges, streaks, XP, leaderboards, completion dopamine) to gates, skills, canvas updates, or protocol adherence. Extrinsic tokens crowd out the intrinsic motivation of building good products — the overjustification effect — and collapse the moment the token stops mattering. Motivate adherence by removing friction (Herzberg hygiene) and surfacing mastery, not by bolting on tokens. Extrinsic/variable reward is a legitimate lever for *end-user* product design (Hook Model, `/launch-tier`), never for the maintainer's own discipline loop.

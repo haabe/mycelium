@@ -14,16 +14,19 @@ Evaluate organizational design for fast flow. Source: Skelton & Pais, *Team Topo
 
 **Model re-verified against primary sources 2026-09-01** — teamtopologies.com/key-concepts, the
 2nd-edition publisher page, and the 2026 AI material (QCon London keynote 17 Mar 2026; "AI ROI"
-executive report 12 Aug 2026). It is still **four** fundamental team types and **three**
-interaction modes. The authors have added no AI-specific team type, and their stated position is
+executive report 12 Aug 2026). The site still lists **four** team types and **three** interaction
+modes; the 2nd edition recasts one of the four, platform, as a grouping of teams rather than a team
+type (step 1). The authors have added no AI-specific team type, and their stated position is
 that none is needed. Third parties do propose new ones (SAFe, various blogs) and InfoQ's QCon
 report names an "Innovation and Practices Enabling Team" — read the name: that is a *named
 specialization of the existing enabling team*, not a fifth fundamental type. Do not add either to
 the enum in `schemas/canvas/team-shape.schema.json`.
 
-Two caveats worth carrying: the 2nd edition adds **platform grouping** (a platform team may itself
-be one or more teams), and the live site renders the third interaction mode "Facilitation" while
-the book says "facilitating" — which is why that enum is deliberately unpinned.
+Two caveats worth carrying: the 2nd edition renames the internal platform a **platform grouping**,
+a container for one or more teams and not a team type (step 1), and the live site renders the third
+interaction mode "Facilitation" while the book says "facilitating" — which is why that enum is
+deliberately unpinned. The re-verification of 2026-09-01 read the site and missed the rename; the
+2nd edition's own note on the change is the source for it.
 
 ## Preflight: Read target canvas file(s) before any Write/Edit
 
@@ -54,14 +57,79 @@ For each team, classify:
 - **Stream-aligned**: Owns a user journey or business domain (most teams should be this)
 - **Enabling**: Helps other teams acquire capabilities (temporary engagement)
 - **Complicated subsystem**: Deep specialist knowledge (only when cognitive load justifies)
-- **Platform**: Internal product that reduces cognitive load for stream-aligned teams
+- **Platform grouping**: an internal platform, which reduces cognitive load for stream-aligned
+  teams. **In the 2nd edition this is not a team type.** The authors retract the earlier framing in
+  their note on the second edition: *"Unfortunately, by referring to a platform as a type of team,
+  we caused some inadvertent confusion. A platform is a grouping of teams providing a coherent
+  capability or set of services to other teams... In the case of an internal platform, we're now
+  calling this a platform grouping."* And: *"This means that the four team types could really be
+  three team types plus a special 'platform grouping' of teams (or a team of teams)."* They redrew
+  figure 5.1 with dotted lines *"to indicate it's not a team type in the sense of a single team of
+  around eight people, but instead a kind of 'container' for one or more teams."* The teams inside
+  a platform grouping are typed like any other: *"the types of teams working inside a platform are
+  the same types of teams as outside a platform"*. Whether a grouping needs more than one team is a
+  matter of size: *"In an organization larger than about forty to fifty people, an internal platform
+  will typically need more than one eight-person team."* Below that size the distinction still
+  matters as vocabulary, even where the structure does not.
+
+The `type` enum in `schemas/canvas/team-shape.schema.json` still lists `platform` beside the three
+team types, from the first-edition framing. It has not been changed to match the 2nd edition.
 
 ### 2. Evaluate Cognitive Load
-For each team, assess:
+
+**The source supplies a one-question probe and four heuristics, not a measurement.** The authors
+say so: *"While there is no formula for cognitive load"*, and measuring it by code size, *"lines of
+code, number of modules, classes, or methods is misguided"*. Do not report a team's cognitive load
+as a number or a score.
+
+**Ask the team the book's question**, in a non-judgmental way: *"Do you feel like you're effective
+and able to respond in a timely fashion to the work you are asked to do?"* The authors' own caveat
+on it: *"While not an accurate measure, the answer will help gauge whether teams are feeling
+overloaded."* Record the answer as the team's self-report, not as a measured load.
+
+**Check how domains are allocated against the four heuristics**, which the authors state as
+heuristics:
+1. One domain per team.
+2. Two to three simple domains per team.
+3. A team with a complex domain has no other domain, *"not even a simple one"*.
+4. Never two complicated domains on one team.
+
+Domains are compared relatively (*"How does domain A stack against domain B?"*), and when the
+comparison is unclear the tie-break is *"always prioritize how the responsible team feels about
+it"*.
+
+Then, for each team, look at the three kinds of load:
 - **Intrinsic load**: Problem complexity (can't reduce, only manage)
 - **Extraneous load**: Bad tools/processes (SHOULD reduce -- platform teams help here)
 - **Germane load**: Learning new relevant things (encourage)
+
+The authors warn that the three do not separate cleanly: *"because there is no clean 'split'
+between intrinsic, extrinsic, and germane types of cognitive load, we run the risk of overlooking
+drivers of team cognitive load that are not as visible or overinvest in solutions that address
+consequences rather than the causes"*. The book uses "extrinsic" in the foreword and "extraneous"
+in chapter 3 for the same kind of load.
+
+**Team load as a sum is the book's assertion, not a finding.** The step from an individual's
+cognitive load (Sweller, 1988, working memory) to a team's is one sentence with no citation:
+*"The same happens for any one team by simply adding up all the team members' cognitive
+capacities."* The sentence after it says neither side of the sum can be quantified: *"Perhaps
+because it's hard to quantify both the available capacity and what the cognitive load will be."*
+So do not add up individual loads into a team figure.
+
 - If team is overloaded: shrink domain, move complexity to platform, or split
+
+**Lowering load is not the goal; a load that only ever rises is the failure.** The 2nd edition
+corrects the reading of load as a bucket to empty: *"A misguided view would see the load as a
+bucket that we fill with water, and once it's full, the team should never be asked to learn new
+things or take on new responsibilities. A river analogy is more on point. You don't want an
+overflow causing disaster, but the river level is expected to change over time. Also, our goal
+should not be to always lower the level; otherwise, we end up with no flow!"* A temporary rise is
+*"a 'necessary evil' that teams might need as long as there's a clear objective."* The failure the
+authors name is *"continuously increasing the team's cognitive load by demanding more ownership
+without adequate guidance and support"*. So when load has risen, ask whether the rise is bounded
+and has a clear objective, not only whether it occurred. Adopting the model itself raises load for
+a while: one appendix case found workshops and documentation *"took time away from primary tasks,
+increasing pressure and cognitive load"*.
 
 ### 3. Audit Interaction Modes
 Between each pair of collaborating teams:

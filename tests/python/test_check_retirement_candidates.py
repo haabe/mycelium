@@ -192,3 +192,20 @@ def test_print_and_main_in_process(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr("sys.argv", ["x", "--project-dir", str(proj)])
     assert m.main() == 1
     assert "NOT A PASS" in capsys.readouterr().out
+
+
+def test_candidates_print_under_an_unwired_not_dead_heading(tmp_path, monkeypatch, capsys):
+    """RED BEFORE THE FIX: candidates printed straight under "no fire in the window and no
+    reader", and two skills nothing named (harms-check, friction-log, dogfood 2026-10-11) read
+    as dead when they were unwired. The rows sit under a heading that says what was measured."""
+    m = _mod()
+    root, proj = _framework(tmp_path), _project(tmp_path)
+    monkeypatch.setattr("sys.argv", ["x", "--framework-root", str(root), "--project-dir",
+                                     str(proj), "--today", "2026-09-15"])
+    assert m.main() == 0
+    out = capsys.readouterr().out
+    heading = "named by nothing that runs (unwired, not necessarily dead)"
+    assert heading in out
+    after = out.split(heading, 1)[1].split("\n\n", 1)[0]
+    assert "quiet-unread" in after and "check_orphan.py" in after
+    assert "quiet-read " not in after          # read by another skill: not under this heading

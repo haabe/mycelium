@@ -14,6 +14,12 @@ what the tree contains, in both directions:
   LANDED    status: open, but the probe finds the change. Close the entry.
   REGRESSED status: shipped, but the probe no longer finds it. Go and look.
 
+"Open" here is every status that is not a closed one (CLOSED_STATUSES below):
+`surfaced`, `proposed`, `reopened_...` and any other word an author writes for
+"not settled yet" are read under the open rule. Until this was widened only the
+literal `open` could ever say LANDED, and a registry that had grown eight more
+statuses held 59 probes that could not report the one thing the file is for.
+
 It deliberately does NOT auto-update the registry. A checker that silently retargeted
 would be the same fail-open the dependency-drift check exists to avoid — and closing a
 candidate is a judgement about whether the thing that was asked for is what landed.
@@ -44,6 +50,40 @@ UNREADABLE = "unreadable"
 #: Candidates surfaced on or after this date must carry a `different_builder:` sentence.
 SCENARIO_RULE_DATE = "2026-09-11"
 DEFAULT_REGISTRY = Path(".claude/harness/upstream-candidates.yml")
+
+# Statuses that close a candidate. Read from the dogfood registry 2026-11-12, which
+# uses these five plus open-like ones (open, surfaced, proposed, reopened_on_proposal_b,
+# open-but-headline-retracted); `retracted` is listed because the 2026-10-11 count of
+# that registry named a retracted candidate. `shipped` is the one closed status with its own probe
+# rule (REGRESSED); the rest are closed with no claim about the tree, so their probes
+# are not compared. Every status NOT in this set is open for the probe and for the
+# different-builder rule: an unknown word is far more often "not yet" than "done", and
+# reading it as open costs at most a LANDED line a human then reads.
+CLOSED_STATUSES = frozenset({
+    "shipped", "declined", "withdrawn", "retracted", "resolved-by-design",
+    "no-longer-reproduces",
+})
+
+# The three rules a probe can be read under, for the per-rule counts on every run.
+RULE_OPEN = "open rule (LANDED if the change is in the tree)"
+RULE_SHIPPED = "shipped rule (REGRESSED if the change is gone)"
+RULE_CLOSED = "closed, not compared"
+
+
+def _status(entry: dict) -> str:
+    return str(entry.get("status") or "open").strip()
+
+
+def is_open(entry: dict) -> bool:
+    """Not closed. A missing status is open, as it always was in classify()."""
+    return _status(entry) not in CLOSED_STATUSES
+
+
+def probe_rule(entry: dict) -> str:
+    status = _status(entry)
+    if status == "shipped":
+        return RULE_SHIPPED
+    return RULE_CLOSED if status in CLOSED_STATUSES else RULE_OPEN
 
 # Where the framework tree might be, most specific first. CI checks the framework
 # out beside the roadmap; locally it is either the plugin cache or the operator's
@@ -95,16 +135,16 @@ def probe(verify: dict | None, root: Path) -> tuple[bool | None, str]:
 
 
 def classify(entry: dict, root: Path) -> tuple[str, str]:
-    status = entry.get("status", "open")
+    rule = probe_rule(entry)
     found, detail = probe(entry.get("verify"), root)
     if found is None:
         return (UNVERIFIABLE if entry.get("verify") is None else UNREADABLE), detail
     expect_present = (entry.get("verify") or {}).get("expect", "present") == "present"
     satisfied = found if expect_present else not found
     # `satisfied` means: the tree looks the way this status claims it should.
-    if status == "shipped":
+    if rule == RULE_SHIPPED:
         return (AGREES, detail) if satisfied else (REGRESSED, detail)
-    if status == "open":
+    if rule == RULE_OPEN:
         return (LANDED, detail) if not satisfied else (AGREES, detail)
     return AGREES, detail
 
@@ -123,10 +163,18 @@ def _first_line(text: str | None) -> str:
 
 
 def _no_scenario(entries: list) -> list:
-    """Candidates surfaced on or after the rule date with no `different_builder:` sentence."""
+    """Candidates surfaced on or after the rule date with no `different_builder:` sentence.
+
+    OPEN CANDIDATES ONLY. The sentence exists to decide whether a finding is a framework
+    finding; once a candidate has shipped, been declined, withdrawn or retracted, no
+    decision is left for it to change, and failing --strict on it asked for exactly the
+    bulk backfill the rule rules out. Measured on the dogfood registry 2026-10-11: 34
+    rows without a sentence, 17 of them already closed.
+    """
     return [
         e for e in entries
-        if str(e.get("surfaced", "")) >= SCENARIO_RULE_DATE
+        if is_open(e)
+        and str(e.get("surfaced", "")) >= SCENARIO_RULE_DATE
         and not str(e.get("different_builder") or "").strip()
     ]
 
@@ -134,12 +182,35 @@ def _no_scenario(entries: list) -> list:
 def _report_no_scenario(no_scenario: list) -> None:
     if not no_scenario:
         return
-    print(f"\nNO DIFFERENT-BUILDER SCENARIO — {len(no_scenario)} candidate(s) surfaced on or "
-          f"after {SCENARIO_RULE_DATE} carry no `different_builder:` sentence. A finding that\n"
+    print(f"\nNO DIFFERENT-BUILDER SCENARIO — {len(no_scenario)} open candidate(s) surfaced on "
+          f"or after {SCENARIO_RULE_DATE} carry no `different_builder:` sentence. A finding that\n"
           "cannot say what it looks like for another builder on another product has not shown\n"
           "it is a framework finding (engine/agent-operating-contract.md):")
     for e in no_scenario:
         print(f"  {e['id']}  (surfaced {e.get('surfaced', '?')})")
+
+
+def _report_rule_counts(results: list) -> None:
+    """How many probes were read under each rule, and which statuses fed the open rule.
+
+    Printed on every run so a status the check reads differently from its author's
+    intent is visible in the output, not only in this file.
+    """
+    counts = {RULE_OPEN: 0, RULE_SHIPPED: 0, RULE_CLOSED: 0}
+    open_statuses = set()
+    for entry, verdict, _detail in results:
+        if verdict in (UNVERIFIABLE, UNREADABLE):
+            continue
+        rule = probe_rule(entry)
+        counts[rule] += 1
+        if rule == RULE_OPEN:
+            open_statuses.add(_status(entry))
+    print("\nProbes evaluated per rule:")
+    for rule, n in counts.items():
+        extra = ""
+        if rule == RULE_OPEN and n:
+            extra = f"  [statuses: {', '.join(sorted(open_statuses))}]"
+        print(f"  {n:4d}  {rule}{extra}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -208,9 +279,11 @@ def main(argv: list[str] | None = None) -> int:
 
     _report_no_scenario(no_scenario)
 
-    open_n = sum(1 for e in entries if e.get("status") == "open")
-    print(f"\n{len(entries)} candidates: {open_n} open, "
-          f"{sum(1 for e in entries if e.get('status') == 'shipped')} shipped, "
+    _report_rule_counts(results)
+
+    open_n = sum(1 for e in entries if is_open(e))
+    print(f"\n{len(entries)} candidates: {open_n} open (any status not closed), "
+          f"{sum(1 for e in entries if _status(e) == 'shipped')} shipped, "
           f"{len(landed)} LANDED, {len(regressed)} REGRESSED, {len(unver)} unverifiable")
     return 1 if (args.strict and (landed or regressed or no_scenario)) else 0
 

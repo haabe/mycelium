@@ -606,7 +606,10 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_upstream_candidates.py"
 For projects that surface framework friction back upstream. Re-runs every `verify` probe in
 `.claude/harness/upstream-candidates.yml` against the live framework tree and reports the two
 disagreements that matter: **LANDED** (marked open, but the change is in the tree — close it) and
-**REGRESSED** (marked shipped, but the probe can no longer find it).
+**REGRESSED** (marked shipped, but the probe can no longer find it). "Open" means any status that
+is not closed (shipped, declined, withdrawn, retracted, resolved-by-design, no-longer-reproduces), so
+`surfaced` and `proposed` entries are probed too; the output prints how many probes were read under
+each rule and which statuses fed the open rule.
 
 **The value is knowing what is already built, not remembering what to build.** A dogfood pass on
 2026-08-17 found six of ten surfaced items already shipped; the log is append-only, so shipped work
