@@ -80,6 +80,10 @@ ignore = [
                 # from Python 3.11 only, and the hooks and scripts run under whatever
                 # `python3` the builder has; macOS ships 3.9. The hooks discard stderr, so
                 # on 3.9 a script using the name logged nothing and said nothing.
+                # Supporting that 3.9 is stated, not assumed: the v0.322.4 changelog entry
+                # says the hook launcher (scripts/_safe_c.py) "is what covers older ones,
+                # such as the 3.9 that macOS ships". target-version stays py311 because
+                # lowering it changes lint for the whole repo (39 new findings, measured).
                 # tests/python/test_no_py311_only_names.py keeps the name out of the plugin.
 ]
 
