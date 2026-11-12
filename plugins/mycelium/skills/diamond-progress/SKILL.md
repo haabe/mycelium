@@ -62,6 +62,14 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 
    **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): rung (b) â€” record the declared persona's gut call BEFORE running gates, tag `internal_simulated`, ledger it. The compare-after step still runs.
 
+1c. **At an L1 or L2 `set_target`: the opposite question (a prompt, not a block)**:
+
+   When the decision is `set_target` on an L1 (the outcome it sets) or an L2 (the opportunity it targets), ask the same one-line question `/mycelium:define-done` step 1 asks of an outcome, about the target being set:
+
+   > "Write the opposite of this outcome. Would anyone choose it?"
+
+   Ask it in the same turn as step 1b's question, so the run pauses once. A target whose opposite is absurd on its face makes no choice: it rules out no work, and every later diamond can be argued to serve it. If the opposite is absurd, offer to narrow one part (who, what changes, how) until the opposite is something a reasonable builder might pick; what the person decides is written as any choice is (step 8, "A choice is written when it is made"), and the decision-log entry keeps both wordings, the first and the narrowed one. This is a prompt, never a block: the person judges whether the opposite is absurd, a target that already rules something out passes as written, and no gate reads the answer. The source is cited in `/mycelium:define-done` step 1.
+
 2. **Run all required theory gates** (per ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md Decision Matrix, one column per decision; a move needs the gates of every decision it records):
    - For each gate:
      a. State the gate name and source theory.
@@ -101,6 +109,18 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    7. Do NOT proceed to step 3 or beyond. The conflict must be resolved first.
 
    The perspective resolution framework (`${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`) is the authoritative reference. The anti-pattern to avoid is Perspective Suppression â€” resolving a conflict by ignoring one perspective.
+
+2b-2. **Four Risks: a blind pass runs before the gate is recorded as passed** (2026-11-12; at `commit_to_build` and `release`, L1-L4, wherever this run is about to write `four_risks` as `pass` or `pass-with-risk`):
+
+   Before you write the pass, run `/mycelium:devils-advocate` Technique 7, the blind adversarial pass, on the Four Risks assessment, as that section describes: hand each reader the chosen solution's `four_risks` block from `opportunities.yml` (the four assessments and the evidence each cites) plus one line on how it was assessed, and nothing else; ask for the single most likely way it is wrong; permit "NO OBJECTION". It runs by default. The person can decline it; record the decline as below.
+
+   **It can only raise concerns. It never passes anything.** A "NO OBJECTION" is not evidence for the gate and is never cited as a reason the gate passed: the gate passes on its own pass criteria (`${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md`, Four Risks gate). Verify each concern against the canvas yourself. A concern that holds is a gate finding like any other: `four_risks` is `fail` or `pending`, and the concern goes in `progression_blockers` with `gate: four_risks`. A concern that does not hold is recorded with the reason it was ruled out.
+
+   **Record the result on the gate.** In the decision entry whose gates include `four_risks` (the `commit_to_build` or `release` entry in `decisions`), add one line to its `note`: `blind pass on four_risks: <n> reader(s); <each concern and what was done with it>`, or `blind pass on four_risks: no objection`, or `blind pass on four_risks: not run: <why>`. The decision-log entry carries the same line. When the ruling is not `progressed` and no decision entry is written, the line goes in the decision-log entry, and a concern that held is already in `progression_blockers`.
+
+   **If no subagent can be spawned** (Technique 7's prerequisite), say so, offer to run it if the person permits one subagent, and record `not run: <why>`. The pass not running does not fail the gate: a step that can only raise concerns cannot block by being absent. In autonomous mode, run it, and never record a decline on the person's behalf.
+
+   Why this is a default step: the Four Risks are otherwise assessed and judged by the agent that wrote them, and a solo builder has no second person to challenge them. A blind reader stands in for that person's judgement, never for their stake (devils-advocate, Technique 7, "What it stands in for").
 
 2c. **Build-to-learn awareness NUDGE** (at `commit_to_build` only):
    When the diamond commits to build, surface this prompt to the human:

@@ -89,7 +89,7 @@ For each solution leaf in `.claude/canvas/opportunities.yml`, check that `four_r
 - **Value** (product lens): Do users want/need this?
 - **Usability** (design lens): Can users figure it out?
 - **Feasibility** (engineering lens): Can we build it within constraints?
-- **Viability** (cross-cutting): Does it align with business/legal/ethical constraints?
+- **Viability** (cross-cutting): Does it align with business/legal/ethical constraints? Inside it, ask the ethics question by name: **"Should we build it?"** Assuming it works exactly as designed, could it harm the people who use it or the people it reaches? Answer it with `/mycelium:harms-check`; if the solution has no user-facing flow and reaches no vulnerable people, say so in one line. Still four risks: this is a question inside Viability, not a fifth risk (`${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md`, Four Risks gate, for the Cagan source).
 
 If any risk dimension is missing, assess it first. Each dimension must have its own evidence — a single combined statement fails (Torres Product Trio rule).
 

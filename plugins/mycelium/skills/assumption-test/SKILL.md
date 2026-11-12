@@ -124,6 +124,15 @@ no answer, set neither and choose a heavier test.
 | **User interviews** | Days | High | Story-based interviews about past behavior (see `/mycelium:user-interview`) |
 | **Field research** | Days | High | Observe users in their natural context |
 
+### Published research: a claim about people, or a claim about this product?
+
+Before a study, a statistic or a book counts as evidence for an assumption, ask what the assumption is about.
+
+- **A claim about people in general** (how people perceive, decide, remember or get confused; a known cognitive bias; a known usability pattern; how a kind of design affects a named group of people) can be answered from published research. A large, well-run study can be a better instrument for it than a handful of interviews. Grade the source by what was measured, on whom, how many, and whether anyone replicated it. Being published is not a grade: a book of case studies the authors ran themselves is weaker evidence than a replicated experiment, though both arrive as a citation.
+- **A claim about this product, its market or its users** (will these people adopt it, where does this flow confuse them, how many people in this segment rate this outcome as important) needs a human: an interview, a test, observed use. No study has measured what this product does to the people who meet it. Research on the general case can say where to look (a known confusion pattern is a candidate to test here); it is not the test.
+
+If one assumption mixes both, split it and route each half: the general half to the literature, the half about this product to a test with people.
+
 ### Tests (controlled artifacts — days to weeks)
 
 | Test Type | Effort | Signal Quality | When to Use |
