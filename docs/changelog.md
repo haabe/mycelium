@@ -2,7 +2,62 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-11-06.
+**Last updated**: 2026-11-12.
+
+## v0.335.0 - The hooks run on the Python macOS ships, and nine checks stop misreading what they see
+
+**2026-11-12.** The first release from a triage of 85 open entries in the maintainer's upstream-candidates list,
+each checked against 0.334.1 by reading the code. These are the ones that touch the hooks every session runs.
+
+- **The hooks run on Python 3.9.** Hooks run whatever `python3` is on the PATH, and on a stock Mac that is 3.9.
+  31 files used `datetime.UTC` (3.11 and later) and the fire logs ran with errors discarded, so nothing was logged
+  and nothing was said; seven more modules failed to import on 3.9 (`itertools.pairwise`, `X | None` annotations
+  evaluated at definition), so the shell-safety hook printed nothing there. All now use the 3.9 forms, and
+  `ruff.toml` ignores the three rules that ask for the newer ones (UP017, B905, RUF007), with the reason in the file.
+  `test_hooks_run_on_python_3_9.py` finds the modules the hooks load from the manifests and the hook scripts, scans
+  them in CI, and imports all 68 under any Python older than 3.10 on the machine.
+- **Background session checks are no longer lost.** Both writers of `.claude/state/session-checks.json` wrote it in
+  place, so a prompt could read half a file, and the reader then deleted its pending marker: the checks were never
+  delivered. Both now write a temp file and rename it over; a failed read keeps the marker and retries, and says
+  "could not be delivered" once, on the third failed read.
+- **The corrections gate checks the re-read it asks for.** After `corrections.md` changed, `gate.sh` refused the
+  next call and asked for a re-read, and a plain retry then passed. It now stays refused until the session's read
+  log shows the file was read after its last change (a shell read counts, for runtimes without a Read tool).
+- **Shell-safety reads commands, not text inside quotes.** Rules 3 and 4 read quoted strings and quoted heredoc
+  bodies as commands; the backticks rule read single-quoted text, where backticks are literal. Replayed over 11,134
+  real commands from the maintainer's sessions: rule 3 fires 67 times instead of 106 (and catches 2 real cases the
+  old read missed), the backticks rule 26 instead of 57.
+- **Two zsh traps get a warning.** Under zsh, an unquoted glob in an option value (`--include=*.sh`: "no matches
+  found") and a word starting with `=` (`echo ====`: "=== not found") now warn, with the quoted form. In the same
+  replay the first fired 85 times on commands that all failed, the second 96 times with at most 4 that ran fine.
+- **Prompt hooks skip subagent reports.** A subagent's hand-back or a task notification arrives as a prompt, and the
+  claim-about-people advisory, the open-item answer reader and the go-live test read it as the person typing.
+  `_hook_input.builder_text()` now removes those frames and keeps any typed text around a closed one.
+- **Hook delivery tells a retired label from a failing one.** A cancelled run of a hook label that the current
+  `hooks.json` no longer has is now a WARN with the date last seen, not a FAIL, and the current labels' clean
+  counts are printed beside it. A cancelled current label still fails.
+- **`safe_replace.py` gives the key-shape advisory too.** A scripted canvas edit adding a dated key (`tested_2026_09_22:`)
+  was invisible to the key-shape hook, which watches Write and Edit only. The script now prints the hook's advisory
+  for keys new to the file, and still writes, as the hook does.
+- **The calibration WARN stops repeating once its note is right.** It printed from the counts alone and never read
+  `_meta.calibration_status`. It now prints only while the note blames the cycle count; otherwise the state is one
+  COVERAGE line. That line also says when it could not be computed, instead of printing nothing.
+
+- **Alternatives considered.**
+  - *Python:* lowering ruff's `target-version` to py39 (39 new lint findings across the repo, unrelated to this);
+    declaring 3.10 or 3.11 the minimum and warning at session start (the changelog for 0.322.4 already says 3.9 is
+    meant to work, and the fix is mechanical); per-line `noqa` markers (ruff would keep asking every new line for the
+    newer form, against the test); a hand-kept list of hook modules (a new hook would fall outside it).
+  - *Session checks:* a shared lock file (the rename is enough for readers); retrying without a cap (a file that
+    stays corrupt would never be reported).
+  - *Corrections gate:* exempting the preflight call from the check. The message would name a remedy that works,
+    but nothing would check the re-read, which is the gate's purpose.
+  - *Shell-safety:* refusing the zsh shapes instead of warning (no measurement yet that a warning fails there);
+    blanking double-quoted text for the backticks rule (backticks inside double quotes do run).
+  - *Prompt hooks:* skipping any prompt that opens with a frame (typed text sent with it would be lost too).
+  - *Hook delivery:* dropping retired labels from the report (the cancellation happened and the delivery SLI counts it).
+  - *safe_replace:* refusing the edit (the hook it mirrors never refuses; the script path would be the stricter rule).
+  - *Calibration:* silencing the state once the note is right (the threshold is still uncalibrated, and one line says so).
 
 ## v0.334.1 - The system card reports the first faithfulness audit
 

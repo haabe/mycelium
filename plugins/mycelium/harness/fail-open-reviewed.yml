@@ -1179,3 +1179,25 @@ reviewed:
     first in main() and reports every canvas file that does not parse, so a broken landscape.yml
     fails the validation loudly before this line is reached. Printing a second message here would
     report one fault twice.
+- id: check_hook_delivery.py@d9131384ac
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `current_labels` (candidate batch 1) returns None when hooks.json cannot be read. None turns the
+    retired-label softening off, so every cancelled label is reported as it was before that change:
+    a cancelled SessionStart contract label still prints FAIL. The failure therefore errs toward the
+    louder report, never toward hiding a cancellation; `is_retired` documents that it is never True
+    without a manifest.
+- id: next_item.py@37268ef7ce
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `_prompt_of` returns '' for a UserPromptSubmit payload that is not JSON. '' means "no answer was
+    typed", so nothing is recorded and the open item is put to the person again on the next prompt.
+    The cost of the handler firing is one repeated question, which the person sees; it cannot record
+    a ruling nobody gave.
+- id: safe_replace.py@0635f0768c
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    The handler does speak: when key_shape_guard cannot be imported it returns the line
+    "safe_replace: key-shape check not run on <path> (<error>)", which is printed to stderr with the
+    edit's other output. The scan reads the return as a default value; it is the message. The edit
+    itself goes ahead, as the Write/Edit hook's advisory does.

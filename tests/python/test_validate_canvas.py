@@ -2592,6 +2592,25 @@ def test_a_corrected_calibration_note_ends_the_warn_and_leaves_one_coverage_line
     assert "uncalibrated because" not in out
 
 
+def test_calibration_coverage_says_so_when_the_recording_check_cannot_run(
+        tmp_path, scripts_path, monkeypatch):
+    """When check_cycle_recording.py raises, the validator's line must say it did not look,
+    not go silent (silence reads as "nothing to report"; fail-open review 2026-11-12)."""
+    vc = _import_validator(scripts_path)
+    canvas = _unfed_canvas(tmp_path, None)
+    real = vc.importlib.util.spec_from_file_location
+
+    def broken(name, location, *a, **k):
+        if name == "_ccr":
+            raise RuntimeError("simulated load failure")
+        return real(name, location, *a, **k)
+
+    monkeypatch.setattr(vc.importlib.util, "spec_from_file_location", broken)
+    line = vc.calibration_coverage(canvas)
+    assert line.startswith("not computed: check_cycle_recording.py could not run")
+    assert "simulated load failure" in line
+
+
 def test_a_note_naming_only_the_field_or_no_note_is_not_called_stale(tmp_path, scripts_path):
     m = _ccr(scripts_path)
     for i, note in enumerate((None, "", "Below minimum_n: no cycle carries risk_accuracy yet.")):

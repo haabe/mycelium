@@ -1912,8 +1912,10 @@ def calibration_coverage(canvas_dir):
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         return mod.calibration_coverage(canvas_dir)
-    except Exception:  # noqa: BLE001 — a broken advisory line must never fail a build
-        return None
+    except Exception as exc:  # noqa: BLE001 — a broken advisory line must never fail a build
+        # Say the line could not be computed rather than print nothing: silence here reads
+        # as "nothing to report about calibration" while the check never looked.
+        return f"not computed: check_cycle_recording.py could not run ({type(exc).__name__}: {exc})"
 
 
 def cycle_record_findings(canvas_dir):
