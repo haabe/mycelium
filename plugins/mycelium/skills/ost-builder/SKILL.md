@@ -82,7 +82,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    - **Value** (product lens): Is there evidence users want/need this?
    - **Usability** (design lens): Can users figure out how to use it?
    - **Feasibility** (engineering lens): Can we build it within constraints?
-   - **Viability** (cross-cutting): Does it align with business/legal/ethical?
+   - **Viability** (cross-cutting): Does it align with business/legal/ethical? Inside it, ask the ethics question by name: **"Should we build it?"** Assuming it works exactly as designed, could it harm the people who use it or the people it reaches? Answer it with `/mycelium:harms-check`, or in one line when the solution has no user-facing flow and reaches no vulnerable people. Still four risks (`${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md`, Four Risks gate).
    Each risk must have its own evidence â€” a combined statement fails.
    Write `four_risks` per solution in `.claude/canvas/opportunities.yml`.
 

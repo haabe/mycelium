@@ -54,6 +54,7 @@ Before committing any **substantive** work (≥1 framework file modified, OR a n
 7. **Manifest impact** — are new files in `manifest.yml` so upgrade/packaging syncs them?
 8. **Test coverage** — per G-V12, every check that flags a problem ships with a test demonstrating it.
 9. **Attribution check on causal claims** — label each evidence piece *cleanly-attributed* / *consistency-only* / *unrelated*; if ≥1 link is consistency-only, mark the chain provisional; if N=1, do not publish a structural conclusion.
+10. **Bypass price** (a new gate, required field or mandatory step) — state what complying costs and what the cheapest way around it costs, exemption and waiver fields included (an empty value, a one-word exemption, a skipped step, a gate that passes on absence). If going around is cheaper, change the design before it ships (`harness/design-principles.md`, *Price the bypass*).
 
 Real findings change the plan. Theatre findings are worse than none.
 
@@ -86,6 +87,10 @@ After completing ANY batch of changes, before reporting done: (1) **Verify** —
 All product knowledge lives in `.claude/canvas/*.yml` — the single source of truth, committed to git, updated through evidence not assumption. **Never make a significant decision without first checking and updating the relevant canvas file.** **You cannot progress a diamond by saying "I'm confident enough" — you must demonstrate evidence that satisfies each gate.**
 
 **Canvas writes — Read before Write (HARD RULE).** `Write`/`Edit` on any `.claude/canvas/*.yml` require a prior **`Read` tool** call in the same session (`cat`/`head`/`grep` do NOT satisfy it). `Edit`: `Read limit:1` suffices. `Write`: full Read first. For ID-bearing entries, `grep "^  - id: <prefix>-"` and pick the next free integer before assigning.
+
+## Before dismissing anything on its metadata
+
+**A dismissal made from metadata, when the artifact is one call away, needs the artifact opened first.** Ruling something out (a candidate, a lead, a source, a repository, a person to contact) as irrelevant, unreachable or low-value is a claim, and it needs the same evidence as including it. If the ruling rests on a title, a description, a name, a count or a snippet, and one read, fetch or open would show the thing itself, open it before you rule it out, and say what you opened. A wrong inclusion is read and challenged later; a wrong dismissal leaves nothing for anyone to check, and the thing is never looked at again.
 
 ## Before recording any statistic or dated source
 
