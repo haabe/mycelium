@@ -18,6 +18,17 @@ succeeded, how many were cancelled, the last cancellation and its timeout. FAIL 
 delivers the contract (SessionStart) was cancelled in the window; WARN for any other cancellation;
 N/A, spoken, when there is no transcript directory (a runtime that keeps none, or a fresh machine).
 
+RETIRED LABELS (dogfood 2026-10-02). The harness records a hook by its label (its
+statusMessage, or its command when it has none), and a release that renames or splits a hook
+leaves the old label's cancellations in the window for up to --days days after the fix. Those
+read as a live FAIL on the first line canvas-health tells its reader to report. A key whose
+label is no longer in the current hooks manifest (`hooks/hooks.json` beside this script) is
+a WARN marked `retired label`, with the date it was last seen and the date it leaves the window;
+a cancelled CURRENT label of the contract hook is still a FAIL. Whenever a hook event has a
+reported key, one more line gives the counts for that event's current labels, so the reader can
+see whether what replaced the old label runs clean. When the manifest cannot be read, every
+label is treated as current, which is the behaviour before this change.
+
 WHAT IT DOES NOT DO. It cannot make a cancelled hook deliver. It runs at the NEXT session start,
 inside the hook it audits, which is why the hook now carries an in-hook deadline so that next start
 survives. It reads the harness's record; it does not parse anything a human wrote.
@@ -33,6 +44,38 @@ from pathlib import Path
 
 HOOK_ATTACHMENTS = ("hook_cancelled", "hook_success", "hook_error")
 SEV_WARN, SEV_FAIL = 1, 2
+DEFAULT_MANIFEST = Path(__file__).resolve().parent.parent / "hooks" / "hooks.json"
+
+
+def current_labels(manifest: Path) -> dict[str, set[str]] | None:
+    """Per hook event, every label the current manifest gives a hook: its statusMessage and its
+    command (the harness records the statusMessage when there is one, else the command).
+
+    None when the manifest is missing or unreadable: then no label can be called retired.
+    """
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        out: dict[str, set[str]] = {}
+        for event, groups in data["hooks"].items():
+            labels = out.setdefault(event, set())
+            for group in groups:
+                for h in group.get("hooks", []):
+                    labels.update(str(h[f]) for f in ("statusMessage", "command") if h.get(f))
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+    return out
+
+
+def is_retired(key: str, labels: dict[str, set[str]] | None) -> bool:
+    """True when the key's label is in no current hook of its event (of any event, when the
+    transcript did not name one). Never True when the manifest could not be read."""
+    if labels is None:
+        return False
+    event, _, label = key.partition(" | ")
+    event = event.split(":", 1)[0]  # a hookName fallback reads "SessionStart:startup"
+    if event == "?":
+        return not any(label in s for s in labels.values())
+    return label not in labels.get(event, set())
 
 
 def transcript_dir(project: Path, claude_home: Path) -> Path:
@@ -40,7 +83,7 @@ def transcript_dir(project: Path, claude_home: Path) -> Path:
     return claude_home / "projects" / slug
 
 
-def scan(tdir: Path, since: datetime) -> dict[str, dict]:  # noqa: C901 — one pass, three outcomes
+def scan(tdir: Path, since: datetime) -> dict[str, dict]:
     """Per hook command: ok / cancelled / error counts, last cancellation time and timeout."""
     per: dict[str, dict] = {}
     for f in sorted(tdir.glob("*.jsonl")):
@@ -76,44 +119,100 @@ def scan(tdir: Path, since: datetime) -> dict[str, dict]:  # noqa: C901 — one 
                         "error": 0,
                         "last_cancelled": None,
                         "timeout_ms": None,
+                        "last_seen": None,
                     },
                 )
-                kind = a["type"].split("_", 1)[1]
-                if kind == "success":
-                    row["ok"] += 1
-                elif kind == "cancelled":
-                    row["cancelled"] += 1
-                    ts = d.get("timestamp") or ""
-                    if not row["last_cancelled"] or ts > row["last_cancelled"]:
-                        row["last_cancelled"] = ts
-                    row["timeout_ms"] = a.get("timeoutMs") or row["timeout_ms"]
-                else:
-                    row["error"] += 1
+                _tally(row, d, a)
     return per
 
 
-def report(per: dict[str, dict], days: int, contract_marker: str) -> tuple[int, list[str]]:
-    lines = []
+def _tally(row: dict, d: dict, a: dict) -> None:
+    """Count one hook outcome into its row; keep the latest time seen and cancelled."""
+    ts = d.get("timestamp") or ""
+    if ts and (not row["last_seen"] or ts > row["last_seen"]):
+        row["last_seen"] = ts
+    kind = a["type"].split("_", 1)[1]
+    if kind == "success":
+        row["ok"] += 1
+    elif kind == "cancelled":
+        row["cancelled"] += 1
+        if not row["last_cancelled"] or ts > row["last_cancelled"]:
+            row["last_cancelled"] = ts
+        row["timeout_ms"] = a.get("timeoutMs") or row["timeout_ms"]
+    else:
+        row["error"] += 1
+
+
+def _retired_note(r: dict, days: int) -> str:
+    seen = (r.get("last_seen") or "")[:10]
+    leaves = ""
+    try:
+        when = datetime.fromisoformat(seen) + timedelta(days=days)
+        leaves = f", and it leaves the {days}-day window on {when.date().isoformat()}"
+    except ValueError:
+        pass
+    return (
+        f" Retired label: no hook in the current hooks manifest carries it, so this is a hook "
+        f"since renamed or split; last seen {seen or '?'}{leaves}. The counts for the current "
+        f"labels of this hook are on the line that follows."
+    )
+
+
+def _problem_line(key: str, r: dict, days: int, retired: bool, contract_marker: str) -> tuple:
+    contract_cancel = contract_marker in key and r["cancelled"]
+    sev = "FAIL" if (contract_cancel and not retired) else "WARN"
+    tag = " (retired label)" if retired else ""
+    tmo = f", manifest timeout {r['timeout_ms'] / 1000:.0f}s" if r["timeout_ms"] else ""
+    line = (
+        f"hook-delivery {sev}{tag}: {key}: cancelled {r['cancelled']}, ok {r['ok']}, "
+        f"error {r['error']} in the last {days} day(s); last cancelled "
+        f"{(r['last_cancelled'] or '?')[:19]}{tmo}. A cancelled hook delivers NOTHING: "
+        "its stdout is discarded by the harness."
+    )
+    if retired:
+        line += _retired_note(r, days)
+    return (SEV_FAIL if sev == "FAIL" else SEV_WARN), line
+
+
+def _current_counts_line(event: str, per: dict[str, dict], labels, days: int) -> str:
+    """One line with the counts of every current label of `event` seen in the window."""
+    parts = [
+        f"{key.partition(' | ')[2]}: ok {r['ok']}, cancelled {r['cancelled']}, error {r['error']}"
+        for key, r in sorted(per.items())
+        if key.partition(" | ")[0] == event and not is_retired(key, labels)
+    ]
+    body = "; ".join(parts) if parts else "none of them ran in the window"
+    return f"hook-delivery current labels of {event} in the last {days} day(s): {body}"
+
+
+def report(
+    per: dict[str, dict],
+    days: int,
+    contract_marker: str,
+    labels: dict[str, set[str]] | None = None,
+) -> tuple[int, list[str]]:
+    """`labels` is current_labels() of the hooks manifest; None treats every label as current."""
     if not per:
         return 0, [f"hook-delivery: no hook outcomes recorded in the last {days} day(s)"]
+    lines: list[str] = []
     worst = 0
+    events: list[str] = []
     for key, r in sorted(per.items(), key=lambda kv: -kv[1]["cancelled"]):
         if not r["cancelled"] and not r["error"]:
             continue
-        sev = "FAIL" if (contract_marker in key and r["cancelled"]) else "WARN"
-        worst = max(worst, SEV_FAIL if sev == "FAIL" else SEV_WARN)
-        tmo = f", manifest timeout {r['timeout_ms'] / 1000:.0f}s" if r["timeout_ms"] else ""
-        lines.append(
-            f"hook-delivery {sev}: {key}: cancelled {r['cancelled']}, ok {r['ok']}, "
-            f"error {r['error']} in the last {days} day(s); last cancelled "
-            f"{(r['last_cancelled'] or '?')[:19]}{tmo}. A cancelled hook delivers NOTHING: "
-            "its stdout is discarded by the harness."
-        )
+        sev, line = _problem_line(key, r, days, is_retired(key, labels), contract_marker)
+        worst = max(worst, sev)
+        lines.append(line)
+        event = key.partition(" | ")[0]
+        if event not in events:
+            events.append(event)
     if not lines:
         total = sum(r["ok"] for r in per.values())
-        lines.append(
+        return 0, [
             f"hook-delivery: OK — {total} hook run(s) in the last {days} day(s), none cancelled"
-        )
+        ]
+    if labels is not None:
+        lines.extend(_current_counts_line(e, per, labels, days) for e in events)
     return worst, lines
 
 
@@ -191,6 +290,12 @@ def main(argv=None) -> int:
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--contract-hook", default="SessionStart")
     ap.add_argument("--strict", action="store_true", help="exit 1 on FAIL")
+    ap.add_argument(
+        "--hooks-manifest",
+        type=Path,
+        default=DEFAULT_MANIFEST,
+        help="the current hooks.json; a label absent from it is reported as a retired label",
+    )
     args = ap.parse_args(argv)
     tdir = transcript_dir(args.project_dir, args.claude_home)
     if not tdir.is_dir():
@@ -200,7 +305,8 @@ def main(argv=None) -> int:
               "0.204.0, or the gate has never blocked here; not the same thing)")
         return 0
     since = datetime.now(tz=UTC) - timedelta(days=args.days)
-    worst, lines = report(scan(tdir, since), args.days, args.contract_hook)
+    labels = current_labels(args.hooks_manifest)
+    worst, lines = report(scan(tdir, since), args.days, args.contract_hook, labels)
     for line in lines:
         print(line)
     print(gate_blocks(args.project_dir, since) or "gate-block: no gate-block log under "

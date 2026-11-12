@@ -308,7 +308,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      ran nowhere. Measured on the dogfood repo 2026-09-10: 32 of 33 session starts in a month were
      cancelled at the manifest's own 5-second timeout while every test stayed green, because tests
      run the script and not the harness. Report this line FIRST; every other finding in this pass
-     is conditional on it. N/A on a runtime that keeps no transcripts.
+     is conditional on it. N/A on a runtime that keeps no transcripts. A hook is recorded by its
+     label (its statusMessage, or its command when it has none); a label that is no longer in the
+     plugin's current `hooks/hooks.json` is a hook since renamed or split, and its cancellations
+     are a WARN marked `(retired label)` with the date it was last seen and the date it leaves the
+     window, not a FAIL. The line `hook-delivery current labels of <event>` that follows gives
+     the counts for the labels that replaced it: report that line beside the retired one, because
+     a cancelled current label of SessionStart is still a FAIL.
 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
 
