@@ -47,6 +47,7 @@ except ImportError:  # spoken by _fired_proposals: fired proposals are then repo
     yaml = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _hook_input
 import _state_dir
 
 try:
@@ -1629,12 +1630,17 @@ def _session_of(payload: str) -> str:
 
 
 def _prompt_of(payload: str) -> str:
-    """The prompt text from a UserPromptSubmit payload, or '' when there is none."""
+    """The text the builder typed in a UserPromptSubmit payload, or '' when there is none.
+
+    A subagent's hand-back or a task notification arrives as a prompt too, and a report that
+    says "snooze it" is not the human answering the open item (2026-11-12); only the typed
+    part is read (_hook_input.builder_text).
+    """
     try:
         d = json.loads(payload) if payload.strip() else {}
     except ValueError:
         return ""  # no payload is not an answer: nothing to record
-    return str(d.get("prompt") or "") if isinstance(d, dict) else ""
+    return _hook_input.builder_text(str(d.get("prompt") or "")) if isinstance(d, dict) else ""
 
 
 def main(argv=None) -> int:

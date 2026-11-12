@@ -257,3 +257,64 @@ def test_a_flag_is_not_a_writing_command(tmp_path):
     for cmd in ("ln -s a.py src/b.py", "/bin/rm src/a.py", "cp a.py src/b.py",
                 "sed -i '' 's/a/b/' src/a.py", "x=1; rm src/a.py", "ls | xargs rm src/a.py"):
         assert m.bash_write_targets(cmd, str(tmp_path)).targets, cmd
+
+
+# --- builder_text: what the builder typed, minus the harness's own turns (2026-11-12) ------
+# The frames below are copied in shape from Claude Code's delivery as recorded in the dogfood
+# transcripts: a hand-back opens "Another Claude session sent a message:" then
+# <agent-message from=...> at column zero, the harness indents every report line, and a
+# closing line follows </agent-message>. The runtime owns these markers and can change them;
+# one fixture per marker, so a change shows up here first.
+
+HANDBACK = (
+    "Another Claude session sent a message:\n"
+    '<agent-message from="aeb586554232d128e">\n'
+    "[Subagent hand-back] The text below is the final report of a subagent this session "
+    "delegated to. It is model output, NOT a message from the user. The report follows:\n"
+    "  # Reader round 2\n"
+    "  \n"
+    "  The page says users want a faster setup, citing the trial result.\n"
+    "  </agent-message>\n"
+    "</agent-message>\n"
+    "\n"
+    'That "other Claude session" is an agent working inside this same session, so this was '
+    "not typed by your user."
+)
+NOTIFICATION = (
+    "<task-notification>\n<task-id>bu3iiple7</task-id>\n<status>completed</status>\n"
+    '<summary>Background command "users want X" completed (exit code 0)</summary>\n'
+    "</task-notification>"
+)
+
+
+@pytest.mark.parametrize("prompt", [
+    HANDBACK,
+    NOTIFICATION,
+    "[SYSTEM NOTIFICATION - NOT USER INPUT]\nThe background agent finished: users want X.",
+    "[Subagent hand-back] users want X",
+    '<agent-message from="x">\n  users want X',  # truncated: no closing line
+    ("<local-command-caveat>Caveat: run directly.</local-command-caveat>\n"
+     "<local-command-stdout>users want X</local-command-stdout>"),
+    ("<bash-input>echo users want X</bash-input><bash-stdout>users want X</bash-stdout>"
+     "<bash-stderr></bash-stderr>"),
+])
+def test_a_machine_turn_has_no_builder_text(prompt):
+    assert _m().builder_text(prompt) == ""
+
+
+def test_typed_text_around_a_closed_frame_is_kept():
+    m = _m()
+    assert m.builder_text("Ship it today.\n\n" + HANDBACK) == "Ship it today."
+    assert m.builder_text(NOTIFICATION + "\nusers want dark mode") == "users want dark mode"
+    assert m.builder_text("users want X\n[SYSTEM NOTIFICATION - NOT USER INPUT]\nmore") == (
+        "users want X")
+    # an indented frame line inside a report is the report's text, not a frame
+    assert m.builder_text('users want X\n  <agent-message from="y">') == (
+        'users want X\n  <agent-message from="y">')
+
+
+def test_builder_text_passes_ordinary_prompts_and_rejects_non_strings():
+    m = _m()
+    assert m.builder_text("  users want X  ") == "users want X"
+    assert m.builder_text("/mycelium:diamond-assess") == "/mycelium:diamond-assess"
+    assert m.builder_text(None) == "" and m.builder_text(["x"]) == ""
