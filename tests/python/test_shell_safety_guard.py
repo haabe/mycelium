@@ -664,3 +664,131 @@ def test_classify_in_process(scripts_path):
     assert refuse == [] and len(warn) == 1
     assert mod._piped_gate_lands("git push | tail -1 && gh pr create")
     assert not mod._piped_gate_lands("git push | tail -1")
+
+
+# ------------------------------------------- quoted text is not syntax (2026-11-12)
+# Rules 1 and 6 read the command with quoted strings blanked and quoted heredoc bodies
+# stripped. Rule 3 read the raw text, rule 4's commit test kept quoted heredoc bodies, and
+# rule 2 warned on backticks inside single quotes, where sh and zsh read them literally.
+# Each case is a shape from the dogfood ledger or the sibling-rule sweep of 2026-10-11.
+
+_GREP = "`grep` gates"
+_TICKS = "Backticks present"
+_UNGATED = "ungated commit"
+
+
+@pytest.mark.parametrize(("command", "phrase", "warns"), [
+    # rule 3: the && or the word grep is quoted text
+    ("rg -n foo src | awk '$2 > 3 && $3 < 9'", _GREP, False),
+    ("git commit -m 'rule 3 warned on grep x && y'", _GREP, False),
+    ('git commit -m "fix: grep -q x f && echo ok was skipped"', _GREP, False),
+    ("cat <<'EOF'\ngrep -c x f && echo done\nEOF", _GREP, False),
+    # rule 3: real chains still warn, including one the raw read MISSED because a `;` inside
+    # the quoted pattern ended its scan early
+    ("grep -q x f && echo found", _GREP, True),
+    ('grep -c "a; b" f && echo y', _GREP, True),
+    # rule 4: a reminder to push inside a quoted heredoc is text, not a commit
+    ("echo x >> .claude/memory/a.md\ncat <<'EOF'\nthen git push when green\nEOF", _UNGATED, False),
+    ("echo x >> .claude/memory/a.md\ngit commit -m m", _UNGATED, True),
+    # rule 2: single quotes, $'...' and comments are literal; double quotes and unquoted
+    # heredocs still expand
+    ("sed -i '' 's/`old`/`new`/' notes.md", _TICKS, False),
+    ("printf $'a\\'b `c`\\n'", _TICKS, False),
+    ("ls  # see `man ls`", _TICKS, False),
+    ('gh pr create --body "$(cat <<\'EOF\'\nuses `x`\nEOF\n)"', _TICKS, False),
+    ('git commit -m "a `b` c"', _TICKS, True),
+    ("cat <<EOF\nit's `date`\nEOF", _TICKS, True),
+    ("echo 'quoted' `date`", _TICKS, True),
+])
+def test_rules_two_to_four_read_outside_quoted_text(scripts_path, command, phrase, warns,
+                                                    monkeypatch):
+    monkeypatch.setenv("SHELL", "/bin/bash")  # these are not about zsh
+    got = _import(scripts_path).findings(command)
+    assert any(phrase in w for w in got) is warns, got
+
+
+def test_blank_inert_keeps_offsets_and_newlines(scripts_path):
+    mod = _import(scripts_path)
+    cmd = "a 'b c' \"d\" # e\ncat <<X\nbody\nX\ncat <<'Y'\nlit\nY\ndone"
+    for expanding_too in (False, True):
+        out = mod._blank_inert(cmd, expanding_too=expanding_too)
+        assert len(out) == len(cmd)
+        assert out.count("\n") == cmd.count("\n")
+    narrow = mod._blank_inert(cmd, expanding_too=False)
+    assert "b c" not in narrow and '"d"' in narrow and "body" in narrow and "lit" not in narrow
+    wide = mod._blank_inert(cmd, expanding_too=True)
+    assert '"d"' not in wide and "body" not in wide and wide.endswith("done")
+    assert mod._blank_inert("cat <<X\nno end", expanding_too=True).strip() == "cat <<X"
+
+
+# --------------------------------------------------- two zsh traps (2026-11-12)
+# zsh, the macOS login shell, rejects two shapes bash accepts: an unquoted glob in an option
+# value (NOMATCH: "no matches found: --include=*.sh") and a word starting with `=` (EQUALS:
+# "=== not found"). Warnings only, like rules 1 to 4. Replayed over 11,134 unique Bash
+# commands from the dogfood transcripts: the glob rule fired on 85, every one of which failed
+# with "no matches found"; the `=` rule fired on 96, of which 92 show the zsh error.
+
+_GLOB = "unquoted glob character"
+_EQ = "unquoted `=`"
+
+
+@pytest.mark.parametrize(("command", "phrase"), [
+    ("grep -rn foo --include=*.ts src", _GLOB),
+    ("rg --glob=!*.md x", _GLOB),
+    ("grep -rn x --include=*.{sh,py} .", _GLOB),
+    ("curl --url=https://example.com/?a=1", _GLOB),
+    ("echo ====", _EQ),
+    ("cat a; echo ======; cat b", _EQ),
+    ("[ a == b ] && echo same", _EQ),
+])
+def test_zsh_traps_warn_under_zsh(scripts_path, command, phrase):
+    got = _import(scripts_path).findings(command, zsh=True)
+    assert any(phrase in w for w in got), got
+
+
+@pytest.mark.parametrize("command", [
+    "grep -rn foo --include='*.ts' src",
+    'grep -rn foo --include="*.ts" src',
+    "grep -rn foo --include=\\*.ts src",
+    "git log --format=%H -1",
+    "echo --status=$? ${arr[1]}",
+    "case $a in --file=*) echo f;; --x=*|--y=*) echo xy;; esac",
+    "echo '===='",
+    'echo "===="',
+    "echo \\====",
+    "[[ a == b ]] && echo same",
+    "echo $((1 == 1))",
+    "x=$(( a==b ))",
+    '[ "$a" = "$b" ]',
+    "ls  # ==== and --include=*.md",
+    "cat <<EOF\n====\n--include=*.md\nEOF",
+    "git commit -m 'see --include=*.sh and ===='",
+])
+def test_zsh_rules_are_silent_on_quoted_and_inert_forms(scripts_path, command):
+    got = _import(scripts_path).findings(command, zsh=True)
+    assert not any(_GLOB in w or _EQ in w for w in got), got
+
+
+@pytest.mark.parametrize("command", ["grep -rn foo --include=*.ts src", "echo ===="])
+def test_zsh_rules_are_silent_when_the_shell_is_not_zsh(scripts_path, command, monkeypatch):
+    mod = _import(scripts_path)
+    assert mod.findings(command, zsh=False) == []
+    monkeypatch.setenv("SHELL", "/bin/bash")
+    assert mod.findings(command) == []
+    monkeypatch.setenv("SHELL", "/bin/zsh")
+    assert len(mod.findings(command)) == 1
+
+
+def test_zsh_rules_warn_and_never_refuse_through_the_hook(scripts_path):
+    env = {"SHELL": "/bin/zsh", "PATH": "/usr/bin:/bin"}
+    r = subprocess.run([sys.executable, str(scripts_path / SCRIPT)],
+                       input=_cmd("grep -rn x --include=*.md . ; echo ===="),
+                       capture_output=True, text=True, check=False, env=env)
+    out = json.loads(r.stdout)["hookSpecificOutput"]
+    assert "permissionDecision" not in out
+    assert _GLOB in out["additionalContext"] and _EQ in out["additionalContext"]
+    env["SHELL"] = "/bin/bash"
+    r = subprocess.run([sys.executable, str(scripts_path / SCRIPT)],
+                       input=_cmd("grep -rn x --include=*.md . ; echo ===="),
+                       capture_output=True, text=True, check=False, env=env)
+    assert r.stdout.strip() == ""

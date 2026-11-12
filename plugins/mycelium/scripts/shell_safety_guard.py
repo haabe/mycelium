@@ -50,6 +50,22 @@ WHAT IT CHECKS, each anchored to a documented contract rather than a preference:
      line is selected, 1 if no lines were selected". Zero matches is frequently
      the DESIRED answer, so `grep -c X f && echo done` silently skips the echo.
 
+  7, 8. Two zsh traps, checked only when SHELL is zsh (the macOS login shell, and the
+     shell the Bash tool then runs). zsh's NOMATCH option (on by default) aborts a
+     command whose unquoted pattern word matches no file, so `grep --include=*.sh` fails
+     with "no matches found" where bash passes the word through; its EQUALS option
+     expands a word starting with `=` as a command path, so `echo ====` fails with
+     "=== not found". Warnings, like 1 to 4: each fails loudly, so the harm is a wasted
+     call, not a wrong answer.
+
+Every rule reads the command outside quoted text: rules 1, 3, 4 and 6 with quoted strings
+blanked and quoted heredoc bodies stripped; rule 2 with single-quoted text, quoted heredoc
+bodies and comments blanked (backticks still expand inside double quotes and unquoted
+heredocs, so those are read); rules 7 and 8 with all quoted text, every heredoc body and
+comments blanked. Rule 5 reads the raw text on purpose: it inspects the script a heredoc
+carries. The pipestatus and pipefail suppressions also read the raw text: `"${pipestatus[1]}"`
+is the remedy and sits inside double quotes, so blanking it would warn people who applied it.
+
 WHAT IT DELIBERATELY DOES NOT CHECK, stated because a guard that overstates its
 reach is worse than none. **cwd persistence** — a `cd` in one Bash call leaking
 into the next — is the fourth trap in this family and bit twice the same session.
@@ -139,6 +155,114 @@ def _blank_quoted(command: str) -> str:
         else:
             i += 1
     return "".join(out)
+
+
+#: Any heredoc opener, quoted or not. `<<<` is a here-string, not a heredoc, hence the guards.
+_HEREDOC_OPEN = re.compile(r"(?<!<)<<(?!<)-?[ \t]*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+_COMMENT_START = " \t\n;&|("
+
+
+def _blank(out: list[str], lo: int, hi: int) -> None:
+    for k in range(lo, hi):
+        if out[k] != "\n":
+            out[k] = " "
+
+
+def _skip_heredoc_bodies(command: str, pos: int, pending: list[tuple[str, bool]],
+                         out: list[str], expanding_too: bool) -> int:
+    """Blank the bodies of the heredocs opened on the line that ends just before `pos`.
+
+    Returns the offset of the newline that ends the last delimiter line, or the end of the
+    command when a delimiter never comes.
+    """
+    stop = pos - 1
+    for delim, quoted in pending:
+        end = re.compile(r"^[ \t]*" + re.escape(delim) + r"[ \t]*$", re.MULTILINE).search(
+            command, pos)
+        if quoted or expanding_too:
+            _blank(out, pos, end.start() if end else len(command))
+        if not end:
+            return len(command)
+        stop = end.end()
+        pos = stop + 1
+    return stop
+
+
+def _blank_quoted_heredoc_bodies(command: str) -> str:
+    """`_strip_quoted_heredoc_bodies` with the bodies blanked instead of removed.
+
+    Run first, by regex over the whole command, because the scanner below does not descend
+    into `"$(...)"`: `gh pr create --body "$(cat <<'EOF' ... EOF)"` keeps its heredoc inside
+    a double-quoted string, and a quoted heredoc there is as inert as anywhere else.
+    """
+    out = list(command)
+    for m in _QUOTED_HEREDOC_START.finditer(command):
+        body_start = command.find("\n", m.end())
+        if body_start == -1:
+            continue
+        end = re.compile(r"^[ \t]*" + re.escape(m.group(2)) + r"[ \t]*$", re.MULTILINE).search(
+            command, body_start + 1)
+        _blank(out, body_start + 1, end.start() if end else len(command))
+    return "".join(out)
+
+
+def _blank_inert(command: str, *, expanding_too: bool) -> str:
+    """Return `command` with the text the shell will not read as syntax replaced by spaces.
+
+    Always blanked: single-quoted bodies ('...' and $'...'), quoted heredoc bodies, and
+    comments. With `expanding_too`, also double-quoted bodies and UNQUOTED heredoc bodies.
+    Those two still expand `$(...)` and backticks, so a rule about command substitution
+    (rule 2) must read them, and a rule about words (the zsh rules) must not: no word in
+    them is globbed or `=`-expanded. Offsets and newlines are preserved; the quote marks
+    themselves stay, so a word scan stops at them.
+
+    Written for rule 2 (2026-11-12): it used to strip quoted heredoc bodies only, so a
+    backtick inside a single-quoted sed or awk program, where sh and zsh read it as a
+    literal character, was warned as command substitution.
+    """
+    command = _blank_quoted_heredoc_bodies(command)
+    out, i, n = list(command), 0, len(command)
+    pending: list[tuple[str, bool]] = []
+    while i < n:
+        ch = command[i]
+        if ch == "\n" and pending:
+            i = _skip_heredoc_bodies(command, i + 1, pending, out, expanding_too)
+            pending = []
+            if i < n and command[i] == "\n":
+                i += 1
+            continue
+        if ch == "\\":
+            i += 2
+            continue
+        if ch in "'\"":
+            i = _skip_quoted(command, i, out, blank=ch == "'" or expanding_too)
+            continue
+        if ch == "#" and (i == 0 or command[i - 1] in _COMMENT_START):
+            j = command.find("\n", i)
+            j = n if j == -1 else j
+            _blank(out, i, j)
+            i = j
+            continue
+        m = _HEREDOC_OPEN.match(command, i)
+        if m:
+            pending.append((m.group(2), bool(m.group(1))))
+            i = m.end()
+            continue
+        i += 1
+    return "".join(out)
+
+
+def _skip_quoted(command: str, i: int, out: list[str], *, blank: bool) -> int:
+    """Skip the quoted string opening at `i`; blank its body if asked. Returns the offset
+    after the closing quote. A backslash escapes inside "..." and $'...', not inside '...'."""
+    ch, n = command[i], len(command)
+    escapes = ch == '"' or (i > 0 and command[i - 1] == "$")
+    j = i + 1
+    while j < n and command[j] != ch:
+        j += 2 if (escapes and command[j] == "\\") else 1
+    if blank:
+        _blank(out, i + 1, min(j, n))
+    return j + 1
 
 
 _PIPE = re.compile(r"(?<!\|)\|(?!\|)")          # a real pipe, not ||
@@ -271,7 +395,10 @@ def _ungated_commit(command: str) -> bool:
     """True when a durable write precedes a commit or push in a LATER step."""
     write_seen = False
     for step in _raw_steps(command):
-        if write_seen and _GIT_LANDS.search(_blank_quoted(step)):
+        # The commit is looked for outside quoted text AND quoted heredoc bodies: a reminder
+        # to push written inside a heredoc is text, not a commit (2026-11-12). The write is
+        # still looked for in the raw step, because a python heredoc's body IS the write.
+        if write_seen and _GIT_LANDS.search(_blank_quoted(_strip_quoted_heredoc_bodies(step))):
             return True
         if _DURABLE_PATH.search(step) and _WRITE_SHAPE.search(step):
             write_seen = True
@@ -304,14 +431,67 @@ def _status_reads_a_pipeline(base: str, scan: str) -> bool:
     return False
 
 
-def findings(command: str) -> list[str]:
+#: Rules 7 and 8 (2026-11-12). Both read a word scan: quoted text, every heredoc body and
+#: comments blanked (`_blank_inert(expanding_too=True)`), then `[[ ]]`, `(( ))` and `${...}`,
+#: where zsh neither globs nor `=`-expands a word, blanked as well.
+_ZSH_NOT_WORDS = re.compile(r"\[\[.*?\]\]|\(\(.*?\)\)|\$\{[^}\n]*\}")
+_WORD_START = r"(?:^|(?<=[\s;&|(]))"
+#: An option whose value holds an unquoted, unescaped `*`, `?` or `[` (not `$?` or `$*`).
+_ZSH_GLOB_OPTION = re.compile(
+    _WORD_START + r"--?[A-Za-z][\w-]*=(?:\\.|[^\s;&|<>()'\"\\`*?\[])*(?<!\$)[*?\[]"
+    # ...unless the word ends in `)` or `|`: then it is a `case` pattern, which zsh matches
+    # against the subject and never expands. The lookahead-and-backreference pair takes the
+    # rest of the word whole, so the match cannot stop short of the `)` to dodge the test.
+    r"(?=(?P<rest>[^\s;&|<>()'\"\\`]*))(?P=rest)(?![|)])",
+    re.MULTILINE,
+)
+#: A word that starts with an unquoted `=` and has something after it (`==`, `====`, `=ls`).
+_ZSH_EQUALS_WORD = re.compile(_WORD_START + r"=[^\s;&|<>()]", re.MULTILINE)
+
+
+def _shell_is_zsh() -> bool:
+    """True when the Bash tool's shell is zsh.
+
+    Claude Code runs the Bash tool in the user's login shell, and a hook inherits the same
+    environment, so SHELL names it. This is the guard's first reading of the shell: rule 1
+    names both shells' pipestatus forms instead of choosing one.
+    """
+    return os.path.basename(os.environ.get("SHELL", "")) == "zsh"
+
+
+def _zsh_findings(command: str) -> list[str]:
+    """Warnings for the two zsh traps (rules 7 and 8) in `command`."""
+    words = _blank_inert(command, expanding_too=True)
+    words = _ZSH_NOT_WORDS.sub(lambda m: " " * len(m.group()), words)
+    out = []
+    if _ZSH_GLOB_OPTION.search(words):
+        out.append(
+            "zsh: an option value holds an unquoted glob character (`--include=*.sh`). zsh "
+            "expands the whole word as a filename pattern and, when no file matches, stops "
+            "the command with `no matches found` (NOMATCH is on by default; bash passes the "
+            "word through unchanged). Quote the value: `--include='*.sh'`."
+        )
+    if _ZSH_EQUALS_WORD.search(words):
+        out.append(
+            "zsh: a word starts with an unquoted `=` (`====`, `==`, `=name`). zsh's EQUALS "
+            "option replaces `=name` with the path of the command `name`, so `echo ====` fails "
+            "with `=== not found` and `[ a == b ]` with `= not found`. Quote the word "
+            "(`'===='`), or compare with `=` or inside `[[ ]]`."
+        )
+    return out
+
+
+def findings(command: str, zsh: bool | None = None) -> list[str]:
     """Return a message per trap present, refusals first. Empty list means nothing to say."""
-    refuse, warn = classify(command)
+    refuse, warn = classify(command, zsh)
     return refuse + warn
 
 
-def classify(command: str) -> tuple[list[str], list[str]]:
-    """Return (refusals, warnings). Only rules 5 and 6 refuse; see the module docstring."""
+def classify(command: str, zsh: bool | None = None) -> tuple[list[str], list[str]]:
+    """Return (refusals, warnings). Only rules 5 and 6 refuse; see the module docstring.
+
+    `zsh` says whether the command will run under zsh; None reads it from SHELL.
+    """
     out: list[str] = []
     refuse: list[str] = []
 
@@ -343,8 +523,9 @@ def classify(command: str) -> tuple[list[str], list[str]]:
                 "`${pipestatus[1]}`. Or drop the pipe."
             )
 
-    # 2. Backticks — outside quoted heredocs, whose contents do not expand.
-    if _BACKTICK.search(_strip_quoted_heredoc_bodies(command)):
+    # 2. Backticks — outside quoted heredocs, single quotes and comments, where they do not
+    # expand. Inside double quotes and unquoted heredocs they do, so those are still read.
+    if _BACKTICK.search(_blank_inert(command, expanding_too=False)):
         out.append(
             "Backticks present. ShellCheck SC2006 says use `$(...)`; more "
             "importantly, backticks inside a DOUBLE-QUOTED string are command "
@@ -354,8 +535,10 @@ def classify(command: str) -> tuple[list[str], list[str]]:
             'or -c "...".'
         )
 
-    # 3. grep gating an && chain.
-    if _GREP_AND.search(command):
+    # 3. grep gating an && chain — read outside quoted text and quoted heredoc bodies, as
+    # rules 1 and 6 are. Until 2026-11-12 it read the raw command, so an `&&` inside a quoted
+    # awk program, or the word grep in a commit message, read as a gated chain.
+    if _GREP_AND.search(_blank_quoted(_strip_quoted_heredoc_bodies(command))):
         out.append(
             "`grep` gates an `&&` chain. grep(1) exits 1 when NOTHING matched, "
             "and zero matches is often the desired answer, so the right-hand "
@@ -402,6 +585,10 @@ def classify(command: str) -> tuple[list[str], list[str]]:
             "`set -o pipefail;`. If the piped command is not meant as a check, join it with "
             "`;` instead of `&&`."
         )
+
+    # 7 and 8. Two zsh-only traps (2026-11-12), only when the shell is zsh.
+    if _shell_is_zsh() if zsh is None else zsh:
+        out.extend(_zsh_findings(command))
 
     return refuse, out
 
