@@ -116,7 +116,7 @@ Map all three dimensions for every job (Christensen):
 - **Emotional**: How does the user want to feel? What anxieties do they want to reduce?
 - **Social**: How does the user want to be perceived by others?
 
-Format:
+Format (Mycelium's convention; the statement format is not in Christensen's book, the three dimensions are):
 ```
 When [situation], I want to [motivation], so I can [expected outcome].
 Functional: [task-level job]

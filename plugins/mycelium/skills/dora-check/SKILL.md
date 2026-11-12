@@ -51,6 +51,20 @@ Gather current metrics from CI/CD, deployment logs, incident records.
 
 *Note: DORA's core set is **four delivery metrics** (below). "MTTR" was renamed to "Failed Deployment Recovery Time" (FDRT) for precision — the original was ambiguous with other mean-time-to-X metrics. **Reliability** is an **operational-performance** dimension DORA added in **2021** — dora.dev classifies it as operational, not software-delivery — so it is assessed here as an adjunct via SLOs/SLIs (Part 3 SRE), not as a fifth delivery metric. (The 2024 State of DevOps report's additional delivery metric was **deployment rework rate**, which this skill does not separately track.)*
 
+**Classification and prediction rest on different metric sets in the source.** *Accelerate* (ch. 3
+sidebar): *"when we tried to turn these four metrics into a construct, we ran into a problem: the
+four measures don't pass all of the statistical tests of validity and reliability. Analysis showed
+that only lead time, release frequency, and time to restore together form a
+valid and reliable construct. Thus, in the rest of book, when we talk about software delivery performance it is defined
+using only the combination of those three metrics."* Change failure rate is *"strongly correlated
+with"* that construct, not part of it. The book still uses all four to classify teams (they *"are
+good at categorizing teams"*), so change failure rate is not useless. But every predictive claim the
+book makes about software delivery performance rests on the three. **So when this skill states an
+overall verdict, or writes `overall_classification` in `dora-metrics.yml`, say which set it rests
+on:** the three-metric construct (lead time, deployment frequency, time to restore), or all four as
+a classification. Do not present a four-metric verdict as what *Accelerate* found predicts
+performance.
+
 **Deployment Frequency**: How often does code reach production?
 - Elite: On-demand (multiple deploys/day)
 - High: Between once/day and once/week
@@ -123,6 +137,7 @@ For each field below, **compute the number first** from the raw artifact, **then
 **`apex.ai_rework_rate`** — fix-forward commits as a % of total commits in window.
 - Raw artifact: `git log --since="<window>" --pretty='%H %s'` on the repo's primary branches.
 - Computation: a commit counts as "fix-forward" if its subject matches the project's fix-pattern (default: `^(fix|amend|patch|hotfix|chore: re-validate|chore: fix)` or modifies files touched by the immediately prior commit on the same path within N hours). Document the chosen pattern + window in `apex.ai_rework_rate.method`.
+- **Check that the method still has its input, before you report the number.** Both criteria read wording or file overlap, not what the change was for, and both can lose their input without any error. When the fix-pattern matches under 2% of the window's commits, read 20 of the window's subjects. If the project no longer writes prefixed subjects (`fix: ...`, `feat(x): ...`), or you find subjects that name something that was wrong and do not match the pattern, report `value: null` and write in `notes:` that the method may have lost its input, with the match count and two of the unmatched subjects. Report the low number only when the subjects still carry the prefixes and simply contain few fixes. Why: on the dogfood record the same default pattern gave 6.2% (8 of 130 commits) on 2026-09-10 and 0.9% (2 of 214) on 2026-10-20, after the subjects changed from "fix: ..." to plain descriptions, while a hand reading of 40 release subjects in the second window found roughly three in four naming something that was wrong. The number fell and read as quality improving. The Goodhart pair below could not catch it, because its counter was itself 40 days stale. The file-overlap criterion fails the other way: on the same record it read 86.7% at 6 hours and 96.6% at 24 hours with version and changelog files excluded, because nearly every change touches shared files. When it counts most of the window's commits, it is measuring shared files, not rework; report null with the same note. A record that does not depend on wording exists: `cycle-history.yml#cycles[].demand_type` (value or failure, set when the cycle opens, per `engine/cycle-learning.md`; `/mycelium:framework-health` reads it). Part 2b does not compute `ai_rework_rate` from it; if you cite it beside a null, say it is a different measure (cycles, not commits).
 - Output: `{ value: <pct>, window: "<24h|7d|30d>", method: "<pattern>", notes: "<prior narrative>" }`.
 - Trend: maintain a small numeric series in `measurement_history` alongside the existing `change_failure_rate` strings.
 - Honest framing: when the project is 100% AI (solo + agent), `ai_rework_rate` ≈ project rework_rate; name this in `notes:`.
@@ -386,12 +401,12 @@ Update `.claude/canvas/service-metrics.yml` with current measurements and `last_
 
 Before producing new findings, **rule on the previous run's** — per `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#prior_findings_first`. For each: CLOSED (name what closed it), STILL-OPEN (carry it forward with a horizon), or DECLINED (a reason AND a re-open trigger). If there is no prior run, say so and continue.
 
-**Scoring goes first because it is the boring half.** A periodic instrument that produces findings and never scores its old ones accumulates a ranking nobody reads — `theory-audit-2026-04-17.md` ranked its gaps correctly and sat unconsumed for four months. Anything placed after the interesting work is what a long session drops.
+**Scoring goes first because it is the boring half.** A periodic instrument that produces findings and never scores its old ones accumulates a ranking nobody reads — `theory-audit-2026-04-17.md` ranked its gaps and sat unconsumed for four months. Anything placed after the interesting work is what a long session drops.
 
 **A finding ranked HIGH must leave this skill with a home** — tag or create an opportunity on the framework-side root of the OST (`opportunities.yml`, `rolls_up_to`), or decline it with a re-open trigger. Scoring alone does not close the loop: it fires only when someone runs this skill again, so on a slow cadence findings still sleep. An opportunity is read by instruments on their own schedule. Not `human-tasks.yml` — that canvas is scoped to offline HUMAN work (interviews, outreach), and an engineering finding filed there is a category error.
 
 ## Theory Citations
-- Forsgren, Humble, Kim: Accelerate (DORA metrics -- 5 metrics including Reliability and FDRT naming from 2024 report)
+- Forsgren, Humble, Kim: Accelerate (DORA metrics -- four delivery metrics, of which lead time, deployment frequency and time to restore form the book's software delivery performance construct and change failure rate classifies; Reliability is DORA's 2021 operational-performance dimension, an adjunct here and not a fifth delivery metric (Part 1); FDRT naming from 2024 report)
 - LinearB: APEX Framework (AI-era delivery measurement)
 - Beyer, Jones, Petoff, Murphy: Site Reliability Engineering (error budgets, SLIs/SLOs)
 - Smart: BVSSH (holistic flow optimization — APEX X maps to Happier)

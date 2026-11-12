@@ -34,7 +34,7 @@
               "platform",
               null
             ],
-            "description": "Skelton's four fundamental team types, taken from skills/team-shape/SKILL.md. MOST TEAMS SHOULD BE stream-aligned; the doc says so, and a canvas where most are not is the finding the assessment exists to surface. `complicated-subsystem` is conditional in the source — 'only when cognitive load justifies' — which a schema cannot check."
+            "description": "Skelton's four fundamental team types, taken from skills/team-shape/SKILL.md. The 2nd edition (2025) recasts `platform` as a platform grouping, a container for one or more teams of the other three types, not a team type; the enum still carries it from the first-edition framing (the skill's step 1 says so). MOST TEAMS SHOULD BE stream-aligned; the doc says so, and a canvas where most are not is the finding the assessment exists to surface. `complicated-subsystem` is conditional in the source — 'only when cognitive load justifies' — which a schema cannot check."
           },
           "focus": {
             "type": [

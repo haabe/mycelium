@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/user-needs.schema.json",
   "title": "User Needs Canvas",
-  "description": "Indi Allen User Needs Mapping — needs discovered independently of solutions. Each need requires provenance.",
+  "description": "Rich Allen's User Needs Mapping — needs discovered independently of solutions. Each need requires provenance.",
   "type": "object",
   "properties": {
     "schema_version": {

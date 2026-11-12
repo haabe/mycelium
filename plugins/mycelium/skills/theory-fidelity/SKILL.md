@@ -60,8 +60,11 @@ For each claimed theory, record:
    If no prior audit exists, say so and continue — a first audit has nothing to score.
 
    **WHY THIS IS STEP 0 AND NOT STEP 9.** `theory-audit-2026-04-17.md` graded Wardley
-   fidelity and ranked its gaps correctly: climatic patterns zero of ~30 HIGH, gameplay
-   4-5 of 64+ HIGH, inertia not modelled. **Nothing consumed that ranking for four months**,
+   fidelity and ranked its gaps: climatic patterns not encoded (HIGH), a small encoded
+   gameplay set (HIGH), inertia not modelled. (It stated the first two as ratios, "zero of
+   ~30" and "4-5 of 64+". Neither denominator is in the book, and Wardley says both sets
+   are open, so the ratios could never be scored; the qualitative findings stand
+   (`docs/errata.md` §B).) **Nothing consumed that ranking for four months**,
    while the map was repeatedly described as strategy. It surfaced on 2026-08-05 only
    because an agent happened to search before proposing — and had it not, the next audit
    would have re-derived the same list and called it new. The failure is not dishonesty:
@@ -170,6 +173,7 @@ be graded as one.
 
 - Never grade a load-bearing theory from model-knowledge alone — source-ground it, or tag the grade provisional and say so.
 - Never blind-sweep an attribution fix — ground-truth every occurrence (step 7).
+- An attribution fix is not closed until its replacement wording has been checked against the source, not only against the error it replaces. The 2026-04 Allen correction replaced one wrong attribution with another (wrong object, wrong step numbers, wrong owner) and was recorded as proof the fix loop worked; it was reasoned from what was wrong rather than from what the book says (`docs/errata.md` §C and A2).
 - A deliberate adaptation with documented rationale is `Justified-Adaptation`, not a failure — do not flag conscious divergence as infidelity.
 - Surface large fan-outs for re-authorization before spending (scope checkpoint, G-P9).
 - **Never open a fresh audit without ruling on the previous one (Step 0).** An audit that

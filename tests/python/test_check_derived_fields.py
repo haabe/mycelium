@@ -77,3 +77,48 @@ def test_nothing_to_resolve_is_not_a_pass_and_missing_canvas_is_a_precondition(t
     r2 = subprocess.run([sys.executable, str(SCRIPT), "--project-dir", str(tmp_path / "none")],
                         capture_output=True, text=True, check=False)
     assert r2.returncode == 2
+
+
+# ---------------------------------------------------------------- mutation survivors (2026-10-11)
+# Lines no test constrained: only `id` and `*_id` keys name an item; an index equal to the list's
+# length is not an index; a count that matches more than one item; an item with no id is labelled
+# by its position; and the depth limit, through dicts and through lists.
+
+def test_only_an_id_key_names_an_item():
+    m = _mod()
+    assert m._is({"id": "a", "name": "b"}, "a") and m._is({"cycle_id": "c"}, "c")
+    assert not m._is({"id": "a", "name": "b"}, "b")
+
+
+def test_an_index_equal_to_the_length_is_read_as_an_id(tmp_path):
+    m = _mod()
+    p = _project(tmp_path)
+    assert m.resolve("cycle-history.yml#cycles.2.terminal_state", p) == (None, "no item id `2`")
+
+
+def test_a_count_with_a_condition_counts_every_match(tmp_path):
+    m = _mod()
+    p = _project(tmp_path)
+    (p / ".claude" / "canvas" / "cycle-history.yml").write_text(
+        "cycles:\n  - {cycle_id: c1, terminal_state: killed}\n"
+        "  - {cycle_id: c2, terminal_state: killed}\n  - {cycle_id: c3, terminal_state: launched}\n")
+    assert m.resolve("cycle-history.yml#cycles|count terminal_state=killed", p) == (2, "")
+
+
+def test_an_item_with_no_id_is_labelled_by_its_position():
+    m = _mod()
+    assert m._item_label({"name": "n"}, 3) == "3"
+    assert m._item_label("a scalar", 1) == "1"
+    assert m._item_label({"id": "x"}, 0) == "x"
+
+
+def test_a_pointer_at_the_depth_limit_is_collected_and_one_below_it_is_not():
+    m = _mod()
+    for as_list in (False, True):
+        for depth, seen in ((m._MAX_DEPTH, 1), (m._MAX_DEPTH + 1, 0)):
+            node = {"source_ref": "x.yml#a", "value": 1}
+            for _ in range(depth):
+                node = [node] if as_list else {"k": node}
+            out: list = []
+            m._collect(node, "c", "", out)
+            assert len(out) == seen, (as_list, depth)

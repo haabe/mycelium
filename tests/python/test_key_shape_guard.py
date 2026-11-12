@@ -194,3 +194,97 @@ def test_control_an_id_or_date_inside_a_field_name_still_fires():
     g = _mod()
     assert g.findings("  ht_010_status: done\n")
     assert g.findings("  rederived_2026_09_30: x\n")
+
+
+# ---------------------------------------------------------------- evidence sources (v0.336.0)
+# The HARD RULE "Evidence writes carry source_classes": a write that adds evidence_sources adds
+# a class for each in the same edit. Until 0.336.0 nothing read that at write time.
+
+OPPS = ("opportunities:\n- id: opp-001\n  provenance:\n"
+        "    evidence_sources: ['ht-001 reply']\n    source_classes: [external_human]\n")
+SHORT = ("- id: opp-002\n  provenance:\n"
+         "    evidence_sources: ['ht-002 reply', 'ht-003 call', 'ht-004 note']\n"
+         "    source_classes: [external_human, internal]\n")
+
+
+def _canvas_file(tmp_path, text=OPPS):
+    f = tmp_path / ".claude/canvas/opportunities.yml"
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(text)
+    return f
+
+
+def test_an_edit_that_adds_sources_without_their_classes_is_named(tmp_path):
+    """RED BEFORE 0.336.0: the write drew no word at all."""
+    f = _canvas_file(tmp_path)
+    old = "    source_classes: [external_human]\n"
+    payload = json.dumps({"tool_name": "Edit", "tool_input": {
+        "file_path": str(f), "old_string": old, "new_string": old + SHORT}})
+    r = _run(payload)
+    assert r.returncode == 0, r.stderr
+    said = json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert "PROVENANCE CHECK" in said
+    assert "opp-002: 3 evidence_sources, 2 source_classes" in said
+    assert "opp-001" not in said                     # the block already in the file is not this edit's
+
+
+def test_a_write_with_sources_and_no_classes_is_named(tmp_path):
+    m = _mod()
+    f = tmp_path / ".claude/canvas/opportunities.yml"
+    text = "opportunities:\n- id: opp-003\n  provenance:\n    evidence_sources: [a, b]\n"
+    hits = m.provenance_for(_payload_dict(f, text))
+    assert hits == ["opp-003: 2 evidence_sources, 0 source_classes"]
+
+
+def test_multiedit_is_applied_in_order(tmp_path):
+    m = _mod()
+    f = _canvas_file(tmp_path)
+    edits = [{"old_string": "['ht-001 reply']", "new_string": "['ht-001 reply', 'ht-005 call']"},
+             {"old_string": "opp-001", "new_string": "opp-009"}]
+    hits = m.provenance_for({"tool_name": "MultiEdit",
+                             "tool_input": {"file_path": str(f), "edits": edits}})
+    assert hits == []                                # one class for both: the one-class convention
+    edits[0]["new_string"] = "['ht-001 reply', 'ht-005 call', 'ht-006']"
+    f.write_text(OPPS.replace("[external_human]", "[external_human, internal]"))
+    hits = m.provenance_for({"tool_name": "MultiEdit",
+                             "tool_input": {"file_path": str(f), "edits": edits}})
+    assert hits == ["opp-009: 3 evidence_sources, 2 source_classes"]
+
+
+def test_control_the_sanctioned_one_class_forms_and_a_reviewed_block_are_silent(tmp_path):
+    m = _mod()
+    base = "- id: o\n  provenance:\n    evidence_sources: [a, b, c]\n"
+    for extra in ("    source_class: external_human\n",
+                  "    source_classes: [external_human]\n",
+                  "    source_classes: [x]\n    alignment_reviewed: {date: '2026-11-01'}\n",
+                  "    source_classes: [x, y]\n    alignment_reviewed: {date: '2026-11-01'}\n",
+                  "    source_classes: [x, y, z]\n"):
+        assert m.provenance_findings("", base + extra) == [], extra
+
+
+def test_control_what_cannot_be_worked_out_says_nothing(tmp_path):
+    m = _mod()
+    f = _canvas_file(tmp_path)
+    assert m.provenance_for(_payload_dict(f, "x: [unclosed\n")) == []       # does not parse
+    stale = {"tool_name": "Edit", "tool_input": {"file_path": str(f), "old_string": "absent",
+                                                 "new_string": SHORT}}
+    assert m.provenance_for(stale) == []                                    # old_string is gone
+    assert m.provenance_for(_payload_dict(tmp_path / "docs/x.yml", SHORT)) == []
+    assert m.provenance_for({"tool_input": "not a dict"}) == []
+    assert m.provenance_for({"tool_name": "Read", "tool_input": {"file_path": str(f)}}) == []
+    assert m.provenance_findings("x: [unclosed\n", SHORT) == [
+        "opp-002: 3 evidence_sources, 2 source_classes"]                    # before unreadable
+
+
+def test_main_says_both_findings_in_one_context(tmp_path, monkeypatch, capsys):
+    import io
+    m = _mod()
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    text = SHORT.replace("- id: opp-002\n", "- id: opp-002\n  noted_2026_11_12: x\n")
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(
+        _payload_dict(tmp_path / ".claude/canvas/opportunities.yml", text))))
+    assert m.main() == 0
+    said = json.loads(capsys.readouterr().out)["hookSpecificOutput"]["additionalContext"]
+    assert "KEY-SHAPE GUARD" in said and "PROVENANCE CHECK" in said
+    monkeypatch.setattr("sys.stdin", io.StringIO("[]"))
+    assert m.main() == 0 and capsys.readouterr().out == ""

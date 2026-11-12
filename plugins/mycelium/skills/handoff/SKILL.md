@@ -83,6 +83,12 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    [Specific persona description or named contact if known.
    Include: role, context, why this person's perspective matters.]
 
+   ### Say This First (consent)
+   [One or two sentences the human says before the first question: what the
+   notes are for, where they are kept (a project file in a git repository, and
+   whether it is shared or public), and that the person can say no to any part.
+   Then ask whether their own words may be kept, or only a paraphrase.]
+
    ### Key Questions (3-5, Torres-style)
    1. [Story-based, open-ended question -- "Tell me about the last time you..."]
    2. [Follow the energy -- "What was the hardest part of that?"]
@@ -114,8 +120,9 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    Date:
    Person (role, not name):
    Context (how do they relate to the problem):
+   Agreed to (notes kept / own words or paraphrase only / named or not):
 
-   Key quotes (verbatim if possible):
+   Key quotes (verbatim if they agreed; otherwise a paraphrase):
    -
    -
 
@@ -131,7 +138,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    Contradicts our assumptions? (yes/no, which one):
 
    Anything else said in the room (added 2026-08-31 â€” see below):
-     Who came up in conversation, even in passing:
+     Who came up in conversation, even in passing (role, not name, unless that person agreed):
      How is this organised â€” who decides, who pays, where does that sit:
      What is anyone near them spending time or money on:
      Did they challenge how you are going about this:
@@ -160,6 +167,20 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    enough that it can be written out by hand before the room.
 
    Pick the 3-5 by what the task is FOR â€” the pre-committed bar's question always makes the card.
+
+4c. **Consent, and who sends.** The people a brief sends the human to (an interviewee, someone in
+   the room, someone an outreach brief contacts) never chose this tool, and what the capture
+   template collects comes back through `/mycelium:log-evidence` into `.claude/canvas/`, which the
+   operating contract has committed to git. So every brief that involves another person carries
+   the "Say This First" lines above, and the capture template's "Agreed to" line is filled before
+   the quotes are. Words that could identify someone (verbatim quotes beside a role and an
+   employer identify a person as well as a name does) are kept only where they agreed; otherwise
+   a paraphrase and a general role. Other people named in the room are written as roles unless
+   that person agreed. Use `/mycelium:user-interview` Pre-Interview step 5 for the full wording.
+   **For `outreach`, the agent drafts and the human sends.** Sending an external message is a
+   human-approved action in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md` (authority map:
+   "Send external message / outreach", REVIEW rising to BLOCK at fan-out). Say in the brief that
+   the human sends it.
 
 5. **Write to `.claude/canvas/human-tasks.yml`**:
    - Add a `pending_tasks` entry with all fields populated

@@ -303,14 +303,22 @@ def test_unprefixed_release_subjects_are_counted(scripts_path, tmp_path):
 
 
 def test_an_unprefixed_version_mentioned_mid_subject_is_not_a_release(scripts_path, tmp_path, capsys):
-    """'0.307.1: what 0.307.0 still read' is a patch that NAMES a minor release."""
+    """'0.307.1: what 0.307.0 still read' is a patch that NAMES a minor release.
+
+    The point of this test is that the mentioned 0.307.0 is not counted. Its status
+    assertion used to be `no-releases-matched`; since the patch-only fix the subject
+    0.307.1 is read as a patch release, so the window is a measured zero (`ok`, 0).
+    """
     import json as _json
     mod = _import(scripts_path)
     project = _repo(tmp_path / "proj", ["0.307.1: what 0.307.0 still read in the old shape"])
     _cycles(project, "2000-01-01T00:00:00Z")
 
     _run(mod, "--project-dir", str(project), "--json")
-    assert _json.loads(capsys.readouterr().out)["status"] == "no-releases-matched"
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["releases"] == 0
+    assert payload["release_tokens"] == []
+    assert payload["status"] == "ok"
 
 
 def test_one_release_named_twice_counts_once(scripts_path, tmp_path, capsys):
@@ -574,3 +582,52 @@ def test_never_recorded_counts_tags_too(scripts_path, tmp_path, capsys):
     assert code == 1
     assert payload["status"] == "never-recorded"
     assert payload["releases"] == 2
+
+
+# --- untagged repository, patch-only window: a measured zero, not "cannot measure" ---
+
+def test_patch_only_subjects_after_a_cycle_are_a_measured_zero(scripts_path, tmp_path, capsys):
+    """RED BEFORE THE FIX: the subject scan saw v0.310.1..v0.310.3 since the cycle, none
+    minor, and returned `no-releases-matched`, which session-start renders as "could not
+    measure here ... set release_repo" (dogfood 2026-10-03). Releases WERE read; none was
+    minor. That is `ok` with 0, and the output says what it read."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["0.310.1: a", "v0.310.2: b", "chore: c", "0.310.3: d"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project))
+    assert code == 0
+    assert payload["status"] == "ok"
+    assert payload["releases"] == 0
+    assert payload["release_source"] == "commit-subjects"
+    assert payload["version_subjects"] == 3
+    assert payload["commits_scanned"] == 4
+
+    assert _run(mod, "--project-dir", str(project)) == 0
+    out = capsys.readouterr().out
+    assert "OK — 0 minor release(s)" in out
+    assert "3 commit subject(s) name a patch release" in out
+    assert "no-releases-matched" not in out
+
+
+def test_a_version_mentioned_mid_subject_does_not_make_a_measured_zero(scripts_path, tmp_path, capsys):
+    """The patch count uses the minor pattern's anchoring: an unprefixed version merely
+    mentioned mid-subject is not a release, so this window still cannot be measured."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["fix: what 0.307.1 still read"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project))
+    assert payload["status"] == "no-releases-matched"
+
+
+def test_a_forced_pattern_keeps_no_releases_matched_on_patch_subjects(scripts_path, tmp_path, capsys):
+    """--release-pattern says how THIS project writes minor releases and nothing about
+    patches, so patch subjects do not turn its empty result into a measured zero."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["v0.310.1: a"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project),
+                              "--release-pattern", r"^release (\d+)\.(\d+)$")
+    assert payload["status"] == "no-releases-matched"

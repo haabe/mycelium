@@ -69,7 +69,20 @@ For each component:
 | **Commodity** | Utility, cost competition | Consume as service, don't differentiate here |
 
 ### 5. Add Movement
-Mark components that are evolving (arrow pointing right). All components evolve over time.
+Mark components that are evolving (arrow pointing right).
+
+**Evolution is conditional, and not every component survives it.** Wardley states the pattern with
+its condition: *"Any novel and therefore uncertain act will evolve due to supply and demand
+competition if it creates some form of advantage."* And: *"this assumes survival and though
+everything evolves not everything survives."* In his own catalogue of biases he names this as the
+map's survivorship bias: *"At the heart of mapping is a survivorship bias. The evolution curve...
+was built from data for components that had survived to become a commodity... But what about the
+components that didn't survive? Unfortunately I was not able to distinguish another pattern to
+explain them other than to say they followed the path of evolution and died in one of the
+stages."* He adds that components die most visibly in the custom-built stage.
+
+So for each component, ask both questions: will it advance a stage, or will it die or be abandoned
+where it is? Do not draw an arrow on a component only because the axis points right.
 
 ### 6. Identify Patterns
 - Components in Genesis = Complex domain (Cynefin) -> probe
@@ -78,7 +91,14 @@ Mark components that are evolving (arrow pointing right). All components evolve 
 
 ### 7. Assess Climate — the patterns that act on you whether or not you look (added v0.95.0)
 
-Wardley's Strategy Cycle runs **Purpose → Landscape → Climate → Doctrine → Gameplay → Leadership.**
+Wardley's Strategy Cycle has **five factors**, taken from Sun Tzu: *"purpose, landscape, climate,
+doctrine and leadership"*. **Gameplay is not a sixth stage; it is what leadership consists of:**
+*"Leadership is about the strategy that you choose considering your purpose, the landscape, the
+climate and your capabilities... It is context specific."* So step 8 (gameplay) is the leadership
+factor, chosen after the other four. Wardley's diagnosis of his own early failure was *"jumping from
+purpose to leadership and missing three of them"*; skipping climate or doctrine on the way to
+gameplay is the same error.
+
 Steps 1-6 built the landscape. Climate comes BEFORE gameplay because gameplay chosen against a
 static picture assumes the board stops moving while you think.
 
@@ -88,11 +108,17 @@ below and emit at least one dated prediction per pass into `landscape.yml#climat
 
 | Pattern | The question it forces | What a prediction from it looks like |
 |---|---|---|
-| **everything-evolves** | Which component will have moved a stage by when? | "comp-0NN reaches product by <date> — a second vendor ships a paid managed version." |
+| **everything-evolves** | Which component will have moved a stage by when, and which will die or be abandoned before it does? | "comp-0NN reaches product by <date> — a second vendor ships a paid managed version." Or the death shape: "comp-0NN is abandoned before it reaches product, by <date> — no maintained version is offered." |
 | **characteristics-change** | What stops being true about a component as it evolves? | "As X commoditises, buyers stop evaluating it on capability and start on price/SLA." |
 | **no-choice-over-evolution** | What are we resisting that competition will decide anyway? | "Our custom-built Y is superseded by a commodity equivalent by <date>." |
 | **commoditisation-genericisation** | **Which of our differentiating TERMS will become category vocabulary?** | "The phrase we lead with appears in 3+ unrelated products' one-liners by <date>." |
 | **inertia** | Who has a working alternative, and what event would break it? | "Self-solvers do not adopt absent a triggering failure; adoption arrives only after a public burn." |
+
+**Both everything-evolves shapes are legal, because the source says not everything survives (step
+5).** Score a death with the existing vocabulary in step 0: a prediction that a component advances
+is `refuted` when the component dies or is abandoned first, since what it predicted did not happen
+and that can be checked; a prediction that a component dies is `held` when it does. `unscoreable`
+is for a prediction that could not be checked, not for a component that stopped existing.
 
 **Genericisation applies to VOCABULARY, not only components, and that is the case most teams miss.**
 The phrase a project leads with is itself a component on the map, and it commoditises like any

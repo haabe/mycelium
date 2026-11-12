@@ -120,3 +120,21 @@ def test_the_sizes_are_required_from_2026_09_27_only(scripts_path):
     fm, _ = _run(mod, "", frozen="2026-09-20")
     missing, _ = mod._required_field_state(fm)
     assert "decision_class" not in missing, "a corpus written before the rule is not failed by it"
+
+
+def test_undersized_asks_the_owner_a_yes_or_no_question_not_for_the_fields(scripts_path):
+    """Canvas-health 2026-10-02: told to "accept it with `light_test_reason` and `light_test_by`",
+    the founder answered "the task is too abstract for me to write a reason". The message now has
+    the agent draft the reason and put one question the owner answers with a yes or a no."""
+    mod = _import(scripts_path)
+    heads = []
+    r = {**{k: [] for k in EMPTY}, "costly_override": [],
+         "undersized": [("t.md", "light test for a heavy decision")]}
+    mod._emit_proportion(r, lambda items, head, fmt=str: heads.append(head) if items else None)
+    (head,) = heads
+    assert head.startswith("UNDERSIZED")
+    assert "have the decision owner accept it with" not in head   # the form it used to hand over
+    assert "yes or no" in head and 'Fine?"' in head               # the question it asks instead
+    assert "Draft it yourself from the test file" in head
+    # the fields are still where the answer goes, and only a yes sets the owner's role
+    assert "On a yes" in head and "`light_test_by`" in head and "On a no" in head

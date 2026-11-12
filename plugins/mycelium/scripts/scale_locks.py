@@ -2330,6 +2330,15 @@ in .claude/state/scale-lock-ack: `<id> <scale> <YYYY-MM-DD> <their own words>`. 
 file on your own judgement."""
 
 
+#: Every release refusal ends here (v0.336.0): the gate holds the agent's commands, not the
+#: person's. Harms check 2026-10-11: the refusal did not say so, and a builder read it as a lock on
+#: her own deploy.
+_YOURS_TO_RUN = (
+    "This gate holds the commands the agent runs, not the person's. The person can run this "
+    "command themselves, in their own terminal, and nothing in Mycelium stops it; that is their "
+    "decision, made knowing what is missing above. Tell them so as their choice: do not recommend "
+    "it, and do not run it another way yourself.")
+
 _EXPOSE_TAIL = """
 A pilot or prototype that meets real people follows security and privacy practice whatever its
 scale: anything user-facing that holds data can let strangers in or leak it out. Record its
@@ -2342,7 +2351,8 @@ asks who it could harm when it works as designed. It advises and never blocks.
 Only if the USER explicitly says this work is not to be tracked, they record it in
 .claude/state/delivery-skip-ack with `recorded_at`, `expires` (30 days by default), the paths it
 `covers`, `releases: true` (a release is lifted only when it says so) and their words in `why`.
-Do not write that file on your own judgement."""
+Do not write that file on your own judgement.
+""" + _YOURS_TO_RUN
 
 
 # ---------------------------------------------------------------- exposure records (v0.294.0)
@@ -2639,8 +2649,8 @@ def _run_exposure_hook(project_dir: str) -> int:
     runtime = os.environ.get("MYCELIUM_RUNTIME", "")
     if runtime in _CANNOT_ASK or (mode and mode not in _ASKS_A_HUMAN):
         print("Mycelium exposure gate: " + text + " Nobody can be asked here, so it is refused; "
-              "end the exposures that are over, or run the session where the person is asked.",
-              file=sys.stderr)
+              "end the exposures that are over, or run the session where the person is asked. "
+              + _YOURS_TO_RUN, file=sys.stderr)
         return 2
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
                                              "permissionDecision": "ask",

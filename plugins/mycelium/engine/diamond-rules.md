@@ -41,10 +41,11 @@ Diamonds operate at different scales of abstraction:
 
 **Note on L4 sub-diamonds**: Complex features within L4 can spawn their own sub-L4 diamonds (e.g., a large feature broken into independently deliverable slices). These are still L4 scale but nested. Atomic tasks within delivery do NOT need their own diamond -- they are simply tasks within the L4's delivery, after its `commit_to_build`.
 
-## What each level RECURS ON — and why only two scales have a catalogue door
+## What each level RECURS ON — and why no scale has a catalogue door
 
-**Read this before proposing a catalogue door for L0, L1, L4 or L5.** Added v0.242.3 after an agent
-enumerated the doors, found two, and filed the asymmetry as a probable defect — twice, in one
+**Read this before proposing a catalogue door for any scale.** Added v0.242.3, when L2 and L3 still
+had catalogue doors (v0.301.0 removed both, below), after an agent enumerated the doors, found two,
+and filed the asymmetry as a probable defect — twice, in one
 session, the second time after a blind reviewer had already corrected the first attempt. The
 reasoning existed; it was not on this page.
 
@@ -325,13 +326,14 @@ definition_of_done:
 - **killed**: Abandoned with documented reason. Canvas data preserved with "killed" marker.
 
 ### Stale Diamond Detection
-A diamond is stale when:
-- No progress for 30+ days without a documented blocker
-- No decision recorded in 2+ weeks without documented reason
-- Its children are all complete but the parent hasn't progressed
+**What runs, and what does not.** One mechanism proposes a diamond for a ruling: at session start, `scripts/next_item.py` (`_unassessed`) names an open diamond that has never been ruled on, or that has new evidence since its last ruling (a count of research notes and canvas evidence sources; a ruling recorded before 0.251.0 is compared by file times). A diamond with no new evidence since its last ruling is never proposed, however long it has stood. That is deliberate: the framework triggers on evidence, not on a date advancing (`scripts/check_confidence_managed.py`, "NO TIME THRESHOLD", dropped a 30-day threshold that missed the 20-day case it was built for). **No script measures how long a diamond has gone without a decision, and none checks whether a parent has stalled after its children closed.** The signs below are for a person, or an agent running the monthly cleanup, to look for by reading `diamonds/active.yml`; nothing computes them.
+
+A diamond may be stale when:
+- No decision has been recorded for two weeks or more, and no reason or blocker is documented (a month or more is the clear case)
+- Its children are all complete but the parent has recorded no decision since
 
 ### Cleanup Process
-1. Run `/diamond-assess` to identify stale diamonds
+1. Run `/diamond-assess`, and read each open diamond's last recorded decision against the signs above (the skill does not compute them)
 2. For each stale diamond: decide to continue, complete, archive, or kill
 3. **Complete**: DoD met — move to `completed_diamonds` with `completed_at` and a `dod_verdict` carrying `signal_observed` and `verified_by`. The schema rejects a completion without them, so this cannot be asserted in passing.
 4. **Archive**: Stopped WITHOUT meeting the DoD — move to `archived_diamonds` in active.yml. Canvas data stays. Choosing archive over complete is a real answer; reaching for it because the verdict is awkward to write is the thing the split exists to expose.

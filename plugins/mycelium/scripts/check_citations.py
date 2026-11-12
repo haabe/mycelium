@@ -41,7 +41,16 @@ _ANNOTATED = re.compile(
     # is the behaviour this check exists to produce, and flagging it teaches authors that
     # disclosing a weakness is punished. One live line read "DISPUTED — use ranking only
     # [anecdotal/contested]" and was reported anyway.
-    r"DISPUTED|contested|unverified|unsourced|not established|use ranking only|anecdotal",
+    r"DISPUTED|contested|unverified|unsourced|not established|use ranking only|anecdotal|"
+    # Added after DL-1341 (dogfood 2026-09-19): a field opening "RETRACTED 2026-09-19, SAME DAY
+    # IT WAS WRITTEN" beside a just-registered claim was reported, because CORRECTED does not
+    # substring-match RETRACTED. The same false-positive class as the 2026-09-01 run, back through
+    # a synonym; the cheapest green would have been deleting the word RETRACTED. RETRACT covers
+    # RETRACTED, RETRACTION and RETRACTING. RECANT and MISQUOT are the two other disclosure words
+    # that say a claim was ruled on and mean nothing else. SUPERSEDED was considered and left out:
+    # canvas prose says a plan or a version was superseded far more often than a citation, and a
+    # word that general would hide a real repeat of a ruled-on claim in the same block.
+    r"RETRACT|RECANT|MISQUOT",
     re.IGNORECASE)
 
 

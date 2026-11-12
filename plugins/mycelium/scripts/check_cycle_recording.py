@@ -71,7 +71,11 @@ ABSENT-INPUT DISCIPLINE (anti-pattern #9 — fail loud, but only on real gaps)
       the exact defect the check is named for. Reached only on the subject
       scan: when the repository has version tags and no new minor line was
       tagged in the window, that is a measured zero and is reported as `ok`
-      with the number of tags read.
+      with the number of tags read. On the subject scan itself, a window whose
+      subjects name only PATCH versions is also a measured zero and reads `ok`
+      with the count of those subjects; `no-releases-matched` is kept for a
+      window where no subject names any version (and for --release-pattern,
+      which says nothing about how patches are written).
     - Cycles exist, releases exist, arc short  -> exit 0 with the count.
     - Arc at or over threshold                 -> exit 1.
 
@@ -136,6 +140,17 @@ MINOR_RELEASE_RE = re.compile(r"(?:^|\bv)(\d+)\.(\d+)\.0\b")
 # this check can tell, and is counted from its commit subjects as before.
 VERSION_TAG_RE = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
 
+# Any release version in a commit subject, patch included, with the same anchoring
+# as MINOR_RELEASE_RE: a `v` token anywhere, or an unprefixed version opening the
+# subject. Used ONLY to tell a measured zero from a blind one on the subject scan
+# of a repository without version tags. Subjects naming v0.310.1 .. v0.310.7 since
+# the last cycle mean releases were read and none was minor, which is an ordinary
+# pass; before this, that window returned `no-releases-matched` and session-start
+# told the user the check could not see their releases (dogfood 2026-10-03).
+# Not applied under --release-pattern: a custom pattern says how THIS project writes
+# minor releases, and nothing says how it writes patches.
+ANY_VERSION_SUBJECT_RE = re.compile(r"(?:^|\bv)(\d+)\.(\d+)\.(\d+)\b")
+
 
 def _git(project_dir: Path, *args: str) -> str:
     """Run git, raising RuntimeError on failure rather than returning ''.
@@ -198,12 +213,27 @@ def newest_cycle_completion(cycle_file: Path):
     return newest
 
 
-def minor_releases_since(project_dir: Path, since_iso, pattern: re.Pattern):
-    """Return (releases, commits_scanned). `since_iso` None means whole history."""
+def _subjects_since(project_dir: Path, since_iso):
+    """Commit subjects since `since_iso` (None means whole history), blanks dropped."""
     args = ["log", "--format=%s"]
     if since_iso:
         args.append(f"--since={since_iso}")
-    subjects = [line for line in _git(project_dir, *args).splitlines() if line.strip()]
+    return [line for line in _git(project_dir, *args).splitlines() if line.strip()]
+
+
+def _version_subjects(subjects) -> int:
+    """How many subjects name a release version of any kind (patch included)."""
+    return sum(1 for subject in subjects if ANY_VERSION_SUBJECT_RE.search(subject))
+
+
+def minor_releases_since(project_dir: Path, since_iso, pattern: re.Pattern, subjects=None):
+    """Return (releases, commits_scanned). `since_iso` None means whole history.
+
+    `subjects` lets the caller pass a list it already read, so the release count and
+    the version-subject count come from one `git log`.
+    """
+    if subjects is None:
+        subjects = _subjects_since(project_dir, since_iso)
 
     # Count each release ONCE. A release commit can be followed by others that
     # name the same version ("v0.95.0 + v0.95.1" and later "fixes v0.95.0"), and
@@ -284,9 +314,13 @@ def scan_releases(repo: Path, since_iso, pattern: re.Pattern, *, subjects_forced
     if tags:
         return {"releases": minor_releases_from_tags(repo, since_iso, tags), "commits_scanned": 0,
                 "release_source": "tags", "tags_scanned": len(tags)}
-    releases, commits_scanned = minor_releases_since(repo, since_iso, pattern)
+    subjects = _subjects_since(repo, since_iso)
+    releases, commits_scanned = minor_releases_since(repo, since_iso, pattern, subjects)
+    # None, not 0, under a forced pattern: "not looked for" must not read as "none seen".
+    version_subjects = None if subjects_forced else _version_subjects(subjects)
     return {"releases": releases, "commits_scanned": commits_scanned,
-            "release_source": "commit-subjects", "tags_scanned": 0}
+            "release_source": "commit-subjects", "tags_scanned": 0,
+            "version_subjects": version_subjects}
 
 
 def _source_label(found: dict, *, subjects_forced: bool) -> str:
@@ -398,30 +432,37 @@ def _report_no_matches(as_json, commits_scanned, since_label, pattern) -> int:
     return 0
 
 
-def _report_none_tagged(scan: dict, as_json: bool) -> int:
-    """Version tags exist and none is a minor release in the window: a measured zero.
+def _report_measured_zero(scan: dict, as_json: bool) -> int:
+    """A release record was read and holds no minor release in the window: a measured zero.
 
-    NOT the `no-releases-matched` state. That one means "the pattern may never have
-    matched, I cannot tell"; here the repository's own release record was read and
-    holds nothing new, which is the ordinary pass.
+    Two ways to get here. Version tags exist and no new minor line was tagged (0.319.2);
+    or, in a repository without version tags, commit subjects in the window name
+    release versions and every one is a patch. NOT the `no-releases-matched` state.
+    That one means "the pattern may never have matched, I cannot tell"; here releases
+    were seen and none was minor, which is the ordinary pass.
     """
-    tags_scanned = scan["tags_scanned"]
+    payload = {
+        "status": "ok",
+        "releases": 0,
+        "threshold": scan["threshold"],
+        "threshold_source": scan["threshold_source"],
+        "since": scan["since_label"],
+        "release_source": scan.get("release_source", "tags"),
+        "release_tokens": [],
+        "tags_scanned": scan.get("tags_scanned", 0),
+        "commits_scanned": scan.get("commits_scanned", 0),
+    }
+    seen = scan.get("version_subjects")
+    if seen:
+        payload["version_subjects"] = seen
     if as_json:
-        print(json.dumps({
-            "status": "ok",
-            "releases": 0,
-            "threshold": scan["threshold"],
-            "threshold_source": scan["threshold_source"],
-            "since": scan["since_label"],
-            "release_source": "tags",
-            "release_tokens": [],
-            "tags_scanned": tags_scanned,
-            "commits_scanned": 0,
-        }, indent=2))
+        print(json.dumps(payload, indent=2))
     else:
+        patches = (f" {seen} commit subject(s) name a patch release, and patches earn no cycle."
+                   if seen else "")
         print(
             f"check_cycle_recording: OK — 0 minor release(s) since {scan['since_label']}, "
-            f"under threshold {scan['threshold']} ({scan['threshold_source']})."
+            f"under threshold {scan['threshold']} ({scan['threshold_source']}).{patches}"
         )
     return 0
 
@@ -476,8 +517,8 @@ def report(scan: dict, *, as_json: bool) -> int:
 
     release_source = scan.get("release_source", "commit-subjects")
     if not releases:
-        if release_source == "tags":
-            return _report_none_tagged(scan, as_json)
+        if release_source == "tags" or scan.get("version_subjects"):
+            return _report_measured_zero(scan, as_json)
         return _report_no_matches(as_json, commits_scanned, since_label, pattern)
     if newest is None:
         return _report_never_recorded(
@@ -507,10 +548,10 @@ def report(scan: dict, *, as_json: bool) -> int:
         print(
             f"check_cycle_recording: FAIL — {len(releases)} minor releases since "
             f"{since_label}, threshold {threshold} ({threshold_source}).\n"
-            f"  A `meta-dogfood` cycle is owed. Run /mycelium:retrospective to record it.\n"
+            f"  A cycle record is owed. Run /mycelium:retrospective to record it.\n"
             f"  Releases: {shown}\n"
             f"  This check does NOT write the record — where the arc begins and ends is a\n"
-            f"  judgement, and the effort estimate is the one calibration field it must carry."
+            f"  judgement, and the record carries what the arc was expected to take."
         )
     else:
         print(

@@ -4,6 +4,75 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-11-12.
 
+## v0.336.0 - Checks say what they actually look at, and the theory pages match their sources
+
+**2026-11-12.** The second and third releases' worth from the triage of the maintainer's upstream-candidates list,
+shipped together: checks and refusals that said more or less than they did, and skill and theory text that drifted
+from its sources.
+
+**What a check reports**
+- **A Monitor command is checked when the turn ends.** The shell-state guard compares the files that switch a gate
+  off before and after each shell command; a command the Monitor tool starts gets no after-check from Claude Code,
+  so its changes were never compared. A Stop handler now compares every snapshot left open, and files the person
+  approved meanwhile are taken in so Stop does not undo them. The contract sentence that said "every shell command"
+  is corrected.
+- **The gate's own preflight run no longer spends the background checks.** `gate.sh` renews a missing stamp by
+  running `preflight.sh` with its output discarded, and that run delivered the session's background checks to
+  nowhere and removed their marker. The gate's run now writes the stamp and stops.
+- **The closing path reads a door-opened diamond.** A diamond opened through a catalogue door carries
+  `object_ref`, which the closing path ignored, so it printed "NOTHING ON RECORD". It now reads it, and matches a
+  diamond id as a whole id: a short id such as `l2` no longer matches any link that contains it. The pending
+  evidence row now says the gate is ruled by hand, instead of naming a trigger the script never checked.
+- **The purpose-stance gate scoped to one diamond blocks only on that diamond's solutions** (its front runner or
+  the solution its `object_ref` names); others print a WARN.
+- **The open item offers what the ledger accepts.** "run, rule, snooze, drop" is now one table mapped to the
+  ledger's values, so the offer and `advisory_ledger.py` cannot drift. The item says "was last ruled on" where it
+  said "assessed", which it never measured.
+- **The undersized-test ask is a yes/no question**, with the reason drafted for the owner.
+- **The exposure-change advisory leaves a row** in its fires log, like the other advisory hooks.
+- **Release counting on an untagged repo** reads "ok, 0 minor releases" when every version subject is a patch,
+  not "cannot measure".
+- **Citations marked retracted, recanted or misquoted count as annotated.**
+- **The upstream-candidates check** treats every status but the closed ones as open, for LANDED and for the
+  different-builder rule; **gate parity** reads every `scripts/*.py` named in CI, not only `check_*`;
+  **retirement candidates** print under "named by nothing that runs (unwired, not necessarily dead)".
+- **The key-shape advisory warns when a write leaves more evidence sources than source classes** in a block.
+- **Refusals name their ways out.** A refused delivery names the prototype-folder exit first, a refused release
+  says the person may run the deploy themselves, and the shell-safety footer no longer says "in this project
+  before" in projects where it never was.
+- **Tests for 45 mutation survivors** in six checks; the seeded sample now kills 130 of 132 (was 84%).
+
+**What the skills and theory pages say**
+- interview files "will users pay" under value, not viability, and states the shape of `who`; skills that record
+  or contact other people carry a consent step; launch-tier asks leavers why; dora-check's rework rate says when
+  its keyword method lost its input (under 2% of commits matching); define-done asks whether the opposite of the
+  outcome is a choice someone could make; the stale-diamond text says what runs; the cycle-owed lines no longer
+  carry the framework project's cycle class to every adopter; devils-advocate's Technique 7 evidence is current.
+- Theory citations checked against their sources: Lauchengco's four fundamentals named; Wardley's survivorship
+  caveat on the x-axis and the cycle line; Team Topologies' cognitive-load claim, evidence base and second-edition
+  platform grouping; Accelerate's construct, which leaves change-fail rate out; Sinek's five just-cause criteria
+  (advisory); Allen's litmus test and need taxonomy in user-needs-map, and the rule that an attribution fix is
+  checked against the source, not only the error; G-P7 no longer sources corrections to Hoskins's friction log;
+  the theory-fidelity ranking is no longer called "correct" on unsourced numbers; theory rows follow the move from
+  phases to decisions.
+
+- **Alternatives considered.**
+  - *Monitor commands:* comparing at the next shell command instead of at Stop (it broke the parallel-commands
+    case); keeping a Monitor snapshot open past Stop (it would undo the person's own terminal edits).
+  - *Gate preflight:* making preflight's deliveries idempotent instead (each of three deliveries would need its
+    own once-only record; the gate's run needs only the stamp).
+  - *Closing-path evidence row:* building a real check (there is no reader to reuse: the gate is a hand-set status
+    with no date, so a check needs two new definitions; listed for the maintainer).
+  - *Open item:* offering the ledger's own verbs to the person (it changes what every user sees, and "run" is not
+    a ruling).
+  - *Gate parity:* adding `validate_canvas.py` to the local gate set (pre-push already runs it first with a
+    checked interpreter; waived with that reason).
+  - *Consent step:* a `consent:` canvas key (a new field under the four-step rule; written as a step instead).
+  - *Theory text:* rewriting earlier errata rows (appended to them, as errata's own convention says).
+  - Not built, each needing a choice and listed for the maintainer: a per-diamond record for BVSSH and bias input
+    rows, a marker for hooks that record nothing on purpose, known debt for the different-builder rule, and the
+    `platform` value in the team-shape schema.
+
 ## v0.335.0 - The hooks run on the Python macOS ships, and nine checks stop misreading what they see
 
 **2026-11-12.** The first release from a triage of 85 open entries in the maintainer's upstream-candidates list,

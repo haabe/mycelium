@@ -247,3 +247,58 @@ def test_owed_false_on_one_touch(scripts_path):
         ],
     )
     assert c.owed([t], TODAY) == []
+
+
+# ------------------------------------------------------------------ exit codes and the text report
+# Mutation sample 2026-10-11 (seed 20260910): the clean-path exit 0 turned into 1 survived on the
+# no-file, clean and flagged paths of the text report, the inverted `if not flagged` survived, and
+# so did dropping the age from the REPLY OWED line. Each is a line no test read.
+
+
+def _main(c, tmp_path, monkeypatch, *extra):
+    monkeypatch.setattr(sys, "argv", ["x", "--project-dir", str(tmp_path), "--today",
+                                      "2026-08-07", *extra])
+    return c.main()
+
+
+def _tasks_file(tmp_path, direction):
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True)
+    (d / "human-tasks.yml").write_text(
+        "pending_tasks:\n"
+        "  - id: ht-one\n"
+        "    status: pending\n"
+        "    touch_log:\n"
+        '      - date: "2026-07-25"\n'
+        f"        direction: {direction}\n"
+    )
+
+
+def test_no_task_file_exits_0_and_says_which_in_json(scripts_path, tmp_path, monkeypatch, capsys):
+    import json as _json
+
+    c = _import(scripts_path)
+    assert _main(c, tmp_path, monkeypatch) == 0
+    assert capsys.readouterr().out == ""
+    assert _main(c, tmp_path, monkeypatch, "--json") == 0
+    assert _json.loads(capsys.readouterr().out)["status"] == "no_task_file"
+
+
+def test_a_clean_project_exits_0_and_says_ok(scripts_path, tmp_path, monkeypatch, capsys):
+    c = _import(scripts_path)
+    _tasks_file(tmp_path, "outbound")
+    assert _main(c, tmp_path, monkeypatch) == 0
+    out = capsys.readouterr().out
+    assert "OK: no reply owed across 1 task(s)." in out  # after any NOTE lines
+    assert "REPLY OWED" not in out
+
+
+def test_an_owed_reply_is_reported_with_its_age_and_still_exits_0(scripts_path, tmp_path,
+                                                                    monkeypatch, capsys):
+    """Report-only: the finding is in the text, and the exit stays 0."""
+    c = _import(scripts_path)
+    _tasks_file(tmp_path, "inbound")
+    assert _main(c, tmp_path, monkeypatch) == 0
+    out = capsys.readouterr().out
+    assert "REPLY OWED on 1 task(s): ht-one (13d)." in out
+    assert "OK: no reply owed" not in out

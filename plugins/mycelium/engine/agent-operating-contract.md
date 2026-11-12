@@ -77,7 +77,7 @@ After completing ANY batch of changes, before reporting done: (1) **Verify** —
 
 **WHY THIS IS A HARD RULE AND NOT ADVICE.** Measured 2026-08-31: of 38 fields whose name asserts a machine-checkable promise, **six had no consumer of any kind** — and one of them, `unlocked_at`, was written by an agent HOURS EARLIER *in the release that fixed exactly this defect*. The same day, three further instances appeared inside their own remediation: a registry that laundered its own contents, a gate that passed on empty input, and a checker shipped with no caller. **Care demonstrably does not survive one afternoon.** Asked what he had intended by these fields, the founder answered: *"All fields are written by an agent, not me... These I have no knowledge of."* They are agent-invented fields no human ever ruled on. That is what this rule exists to stop.
 
-**Evidence writes carry `source_classes` (HARD RULE).** Any canvas write that adds `provenance.evidence_sources` must add the parallel `source_classes` array in the same edit. Classify at write time, when you know where the source came from; NEVER backfill it in bulk afterwards by inferring the class from the source string. `source_classes` feeds the Source Ratio and Source Independence checks, so a wrong class inflates the external-evidence ratio — the exact Goodhart trap the field exists to prevent, and a retroactive sweep is where that happens. Measured on the dogfood canvas 2026-08-03: 34 of 47 in-scope provenance objects carry no classes, and only 2 of their 144 sources state one unambiguously. Coverage rises as the canvas grows; it is not recoverable by a script.
+**Evidence writes carry `source_classes` (HARD RULE).** Any canvas write that adds `provenance.evidence_sources` must add the parallel `source_classes` array in the same edit. Classify at write time, when you know where the source came from; NEVER backfill it in bulk afterwards by inferring the class from the source string. `source_classes` feeds the Source Ratio and Source Independence checks, so a wrong class inflates the external-evidence ratio — the exact Goodhart trap the field exists to prevent, and a retroactive sweep is where that happens. Measured on the dogfood canvas 2026-08-03: 34 of 47 in-scope provenance objects carry no classes, and only 2 of their 144 sources state one unambiguously. Coverage rises as the canvas grows; it is not recoverable by a script. Since 0.336.0 a canvas write that leaves more sources than classes in a block it added or changed is named to you at the write (`key-shape-guard.sh`, advisory).
 
 **Scripted multi-file edits — validate every anchor BEFORE writing any file (HARD RULE).** A `write; then assert` script turns a bad assertion into a half-applied edit, which is worse than no assertion because the tree is now in a state nobody described. Use `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/safe_replace.py"` (or import `apply_edits`) for any scripted edit touching more than one file or more than one anchor: it validates every anchor, reports every failure at once, and writes nothing unless all of them match. Pass the expected occurrence `count` rather than asserting it afterwards from memory. Never assume two "mirror" files carry verbatim text — anchor per file.
 
@@ -124,7 +124,9 @@ its home (founder ruling 2026-09-11).
 convenient answer; "workflow" is what anyone who wants a finding to travel will type. A scenario has
 to name the other builder and the other product, and a scenario that cannot be written is the
 answer. `check_upstream_candidates.py` refuses a candidate surfaced on or after 2026-09-11 that has
-no `different_builder:` sentence; earlier candidates are not backfilled, because backfilling is the
+no `different_builder:` sentence and is still open (any status other than shipped, declined,
+withdrawn, retracted, resolved-by-design or no-longer-reproduces: a closed candidate has no decision
+left for the sentence to change); earlier candidates are not backfilled, because backfilling is the
 filler trap in bulk.
 
 ## Guard state is human-owned
@@ -138,8 +140,11 @@ it; the ask is the user confirming their own answer, and it costs one keypress. 
 the ask with Bash, a variable, or a different path: the hooks read those too (0.196.0, after the
 2026-09-11 adversarial pass found every off-switch inside the agent's write set). Until 0.321.1
 that last clause was not true of a shell write through a variable, which no hook could read and
-which went through unasked. Since 0.321.1 those files are compared before and after every shell
-command: a change the person was not asked about is put back, and the person is told.
+which went through unasked. Since 0.321.1 those files are compared before and after a shell
+command: a change the person was not asked about is put back, and the person is told. Claude Code
+runs no after-hook for a command the Monitor tool starts, so since 0.336.0 such a command is
+compared at the end of the turn instead; what it changes after that turn has ended is not
+compared.
 
 The same holds for a Mycelium switch in a Claude Code settings file (0.322.6):
 `.claude/settings.json`, `.claude/settings.local.json` and `~/.claude/settings.json`. A

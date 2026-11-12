@@ -162,6 +162,28 @@ def test_a_line_that_already_caveats_the_claim_is_not_flagged(tmp_path):
         assert _mod().scan(p)[0] == [], caveat
 
 
+def test_a_retraction_beside_a_registered_claim_is_not_reported(tmp_path):
+    """DL-1341 (dogfood 2026-09-19): a field opening "RETRACTED 2026-09-19, SAME DAY IT WAS
+    WRITTEN" was reported as an unannotated occurrence one minute after its author registered the
+    claim. CORRECTED and WITHDRAWN were recognised; RETRACTED, the most explicit disclosure word
+    available, was not. Its siblings RETRACTION, RECANTED and MISQUOTED are covered too."""
+    reg = ('schema_version: 1\nentries:\n  - id: x\n    match: ["42% of teams"]\n'
+           '    verdict: misattributed\n    verbatim: no primary\n')
+    for word in ("RETRACTED 2026-09-19, SAME DAY IT WAS WRITTEN", "Retraction",
+                 "RECANTED", "MISQUOTED"):
+        p = _project(tmp_path / word.split()[0].strip(","),
+                     f"notes: |\n  {word}: 42% of teams ship faster.\n", register=reg)
+        assert _mod().scan(p)[0] == [], word
+
+
+def test_a_retraction_also_covers_the_rest_of_its_block(tmp_path):
+    """Block-level, like every other annotation: the word opens the field and the claim sits on a
+    later line of the same prose block."""
+    p = _project(tmp_path, "notes: >-\n  RETRACTED 2026-09-19, SAME DAY IT WAS WRITTEN.\n"
+                           "  The field said 42% of teams ship faster; the source is a paraphrase.\n")
+    assert _mod().scan(p)[0] == []
+
+
 def test_detection_survives_the_widened_suppression(tmp_path):
     """The risk of widening the annotation vocabulary is going blind. An UNcaveated claim must
     still be reported."""

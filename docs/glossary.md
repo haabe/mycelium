@@ -10,7 +10,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Anti-pattern** — A known failure mode the framework has seen and documents in `../plugins/mycelium/harness/anti-patterns.md`. Detection rules let the agent flag the shape early. See `../plugins/mycelium/harness/anti-patterns.md` for the catalog.
 
-**Build to learn vs build to earn** — Patton/Cagan distinction. Discovery work is built to learn (the artifact may be discarded once the learning lands); delivery work is built to earn (it has to ship and run). In Mycelium these are the two modes, read off a diamond's decisions: discovery until it records `commit_to_build`, delivery after (see **Mode**). See [theories.md#build-to-learn-vs-earn](theories.md).
+**Build to learn vs build to earn** — Patton/Cagan distinction. Discovery work is built to learn (the artifact may be discarded once the learning lands); delivery work is built to earn (it has to ship and run). In Mycelium they follow the scale, not the mode: L0-L3 build to learn and L4-L5 build to earn, and an L3 that has committed to build and releases a learning build still delivers to learn (`../plugins/mycelium/engine/diamond-rules.md`). A diamond's mode, discovery or delivery, is read off its decisions instead: discovery until it records `commit_to_build`, delivery after (see **Mode**). See [theories.md#build-to-learn-vs-earn](theories.md).
 
 **Canvas** — The collection of YAML files in `.claude/canvas/` that hold all product knowledge. The canvas IS the spec — the prototype-IS-the-spec discipline (Cagan) applied to product knowledge, not just code. Each canvas file is committed to git as documentation-as-code.
 

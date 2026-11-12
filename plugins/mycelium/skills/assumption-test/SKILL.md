@@ -94,6 +94,16 @@ test put `costly_test_reason:` (why it is worth its cost, at least a sentence) a
 reporting it. The agent does not grant itself this: the override is the decision owner's, and a
 proposal to run a heavier or lighter test is put to them with the cost and the risk stated.
 
+**For a lighter test, ask a question, not for a reason.** Do not ask the owner to write
+`light_test_reason`: the decision class, the test weight and the axes are this skill's terms, not
+theirs (canvas-health 2026-10-02: asked to accept an UNDERSIZED test with a reason, the founder
+said "the task is too abstract for me to write a reason"). What only the owner can supply is a
+product judgement, so draft the reason yourself from the test file and put one question to them
+that a yes or a no answers: "<what ships> ships on <the evidence this test gives>; if <what would
+make you change it back> happens, it goes back. Fine?" On a yes, write your draft to
+`light_test_reason` with their answer quoted in it, and their role to `light_test_by`. On a no, or
+no answer, set neither and choose a heavier test.
+
 ### Assessment (internal, cheapest — hours)
 
 | Test Type | Effort | Signal Quality | When to Use |

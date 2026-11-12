@@ -266,3 +266,77 @@ def test_runtime_dirs_report_manifest_presence_and_absent_dirs_say_nothing(tmp_p
     assert any("NO hooks.json" in x and "codex" in x for x in lines)
     assert any("present" in x and "cursor" in x for x in lines)
     assert _mod().runtime_manifests(tmp_path / "none") == []
+
+
+# --- mutation sample 2026-10-11 (seed 20260910): lines no test constrained ----------------
+# The clean paths' severity 0 (as 1), the window edges (`<` as `<=`, twice), the event name falling
+# back to hookName (`or` as `and`), a non-hook attachment skipped (`or` as `and`), and a missing
+# timestamp leaving last_seen unset (`and` as `or`). Two survivors are equivalent and have no test:
+# `ts > last_seen` and `ts > last_cancelled` as `>=` assign the same value when the two are equal.
+
+def _utc():
+    from datetime import timezone
+    return timezone.utc
+
+
+def test_the_clean_answers_carry_severity_0():
+    m = _mod()
+    sev, lines = m.report({}, 7, "SessionStart")
+    assert sev == 0 and "no hook outcomes recorded" in lines[0]
+    ok = {"SessionStart | x": {"ok": 3, "cancelled": 0, "error": 0, "last_cancelled": None,
+                               "timeout_ms": None, "last_seen": None}}
+    sev, lines = m.report(ok, 7, "SessionStart")
+    assert sev == 0 and lines[0].startswith("hook-delivery: OK")
+
+
+def test_a_transcript_written_at_the_window_edge_is_read(tmp_path):
+    from datetime import datetime
+    m = _mod()
+    proj, home = tmp_path / "proj", tmp_path / "home"
+    proj.mkdir()
+    f = _transcript(home, proj, "s1", [_att("hook_success", "SessionStart", "c")])
+    edge = datetime.fromtimestamp(f.stat().st_mtime, tz=_utc())
+    assert m.scan(m.transcript_dir(proj, home), edge)["SessionStart | c"]["ok"] == 1
+
+
+def test_a_gate_block_at_the_window_edge_is_counted(tmp_path):
+    from datetime import datetime
+    project = tmp_path / "p"
+    _block_log(project, [{"ts": "2026-09-14T10:00:00+00:00", "reason": "stale-stamp",
+                          "session_id": "s1"}])
+    line = _mod().gate_blocks(project, datetime(2026, 9, 14, 10, tzinfo=_utc()))
+    assert line.startswith("gate-block: 1 block(s) in 1 session(s)")
+
+
+def test_with_no_hook_event_the_key_falls_back_to_the_hook_name(tmp_path):
+    m = _mod()
+    proj, home = tmp_path / "proj", tmp_path / "home"
+    proj.mkdir()
+    a = {"type": "hook_success", "hookName": "SessionStart:startup", "command": "c"}
+    _transcript(home, proj, "s1", [json.dumps({"timestamp": "2026-09-10T05:00:00Z",
+                                               "attachment": a})])
+    from datetime import datetime
+    per = m.scan(m.transcript_dir(proj, home), datetime(2000, 1, 1, tzinfo=_utc()))
+    assert list(per) == ["SessionStart:startup | c"]
+
+
+def test_an_attachment_that_is_not_a_hook_outcome_is_skipped(tmp_path):
+    m = _mod()
+    proj, home = tmp_path / "proj", tmp_path / "home"
+    proj.mkdir()
+    _transcript(home, proj, "s1", [
+        json.dumps({"note": "mentions hook_success", "attachment": {"type": "file"}}),
+        json.dumps({"note": "mentions hook_success", "attachment": "hook_success"}),
+        _att("hook_success", "Stop", "c"),
+    ])
+    from datetime import datetime
+    per = m.scan(m.transcript_dir(proj, home), datetime(2000, 1, 1, tzinfo=_utc()))
+    assert list(per) == ["Stop | c"] and per["Stop | c"]["ok"] == 1
+
+
+def test_an_outcome_with_no_timestamp_leaves_last_seen_unset():
+    m = _mod()
+    row = {"ok": 0, "cancelled": 0, "error": 0, "last_cancelled": None, "timeout_ms": None,
+           "last_seen": None}
+    m._tally(row, {}, {"type": "hook_success"})
+    assert row["ok"] == 1 and row["last_seen"] is None

@@ -117,7 +117,7 @@ Mycelium integrates 30+ frameworks. Some of them disagree. This file names the k
 
 **The disagreement**: All three are ways to express "what we believe a user needs," but they operate at different levels:
 - **Lean UX**: outcome-level. *"We believe Outcome X for User Y if Change Z."*
-- **JTBD**: motivation-level. *"When [situation], I want to [motivation], so I can [outcome]."*
+- **JTBD**: motivation-level. *"When [situation], I want to [motivation], so I can [outcome]."* (The statement format is Mycelium's convention; it is not in Christensen's *Competing Against Luck*.)
 - **BDD**: behavior-level. *"Given [precondition], When [action], Then [observable result]."*
 
 **Context criteria for choosing**:

@@ -19,9 +19,11 @@ _log() {
   mycelium_log_fire ".claude/state/bash-state-guard-fires.jsonl" "$1" 2>/dev/null || true
 }
 
-if [ "$MODE" = "post" ]; then
-  # The verdict, if any, is JSON on stdout; it goes to the agent as is.
-  VERDICT=$(printf '%s' "$INPUT" | python3 "$PLUGIN_ROOT/scripts/bash_state_guard.py" post 2>/dev/null)
+if [ "$MODE" = "post" ] || [ "$MODE" = "stop" ]; then
+  # The verdict, if any, is JSON on stdout; it goes to the agent as is. `stop` (Stop, v0.336.0)
+  # compares the snapshots of this session whose after half never ran: Claude Code runs the
+  # before hooks on a command the Monitor tool starts, and no PostToolUse for it.
+  VERDICT=$(printf '%s' "$INPUT" | python3 "$PLUGIN_ROOT/scripts/bash_state_guard.py" "$MODE" 2>/dev/null)
   if [ -n "$VERDICT" ]; then
     printf '%s\n' "$VERDICT"
     _log fired

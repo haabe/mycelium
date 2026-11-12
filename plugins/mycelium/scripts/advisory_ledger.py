@@ -47,7 +47,7 @@ STATE. `.claude/state/advisory-ledger.jsonl`, append-only events:
   {"kind":"seen","session":S,"date":D,"ids":{id:count|null}}
   {"kind":"settled","session":S,"date":D,"results":{id:"cleared"|"still_firing"}}
   {"kind":"muted","id":I,"date":D,"streak_days":N,"since":D0}
-  {"kind":"ruled","id":I,"date":D,"ruling":"keep"|"fix"|"drop","note":...}
+  {"kind":"ruled","id":I,"date":D,"ruling":"keep"|"fix"|"drop"|"snooze","note":...}
 
 SPEAKS. A ledger line that does not parse is reported and skipped, never silently discarded; a
 missing project directory prints N/A and exits 0.
@@ -546,7 +546,7 @@ def main(argv=None) -> int:
             print(line)
         return 0
     if not args.id or not args.ruling:
-        print("advisory ledger: rule needs --id and --ruling keep|fix|drop")
+        print(f"advisory ledger: rule needs --id and --ruling {'|'.join(RULINGS)}")
         return 2
     msg = rule(root, args.id, args.ruling, args.note, args.today, args.until)
     print(msg)

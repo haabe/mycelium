@@ -920,3 +920,101 @@ def test_current_hash_refuses_when_the_intent_moved(tmp_path, monkeypatch, capsy
     assert m.main() == 1
     assert "cannot be translated" in capsys.readouterr().out
     assert m.current_hash_if_unmoved({"why": "x"}) is None
+
+
+# ---------------------------------------------------------------------------
+# --diamond-id SCOPED THE DIAMONDS AND NOT THE SOLUTIONS (dogfood 2026-10-16). l3-opp-087's
+# commit_to_build ran `--strict --diamond-id l3-opp-087` and exited 1 on sol-085d, under another
+# L3's opportunity, and on six siblings the replay did not pick. One contradiction left anywhere
+# in the tree blocked every diamond's commit_to_build and release.
+# ---------------------------------------------------------------------------
+
+_CLEAN = {"pp-001": {"verdict": "preserves", "note": "no account needed"}}
+_CONTRADICTS = {"pp-001": {"verdict": "contradicts", "note": "requires login"}}
+
+
+def _two_diamonds(canvas, m, *, front_runner="sol-001a"):
+    """opp-001 is clean except an unchosen sibling with no stance; opp-002 holds a contradiction
+    nobody overrode. One L3 on each, both committed to build, each with a clean stance."""
+    _opted_in(canvas, m)
+    (canvas / "opportunities.yml").write_text(yaml.safe_dump({"opportunities": [
+        {"id": "opp-001", "solutions": [{"id": "sol-001a", "purpose_stance": _CLEAN},
+                                        {"id": "sol-001b"},
+                                        {"id": "sol-001c", "status": "killed"}]},
+        {"id": "opp-002", "solutions": [{"id": "sol-002a", "purpose_stance": _CONTRADICTS}]},
+    ]}, sort_keys=False))
+    l3a = {"id": "l3-a", "scale": "L3", "phase": "develop", "object_ref": "opp-001",
+           "purpose_stance": _CLEAN}
+    if front_runner:
+        l3a["front_runner"] = front_runner
+    _diamonds(canvas, l3a,
+              {"id": "l3-b", "scale": "L3", "phase": "develop", "object_ref": "opp-002",
+               "front_runner": "sol-002a", "purpose_stance": _CLEAN})
+
+
+def test_the_solution_block_is_scoped_to_the_diamond_being_moved(canvas, monkeypatch, capsys):
+    """RED ON 0.334.1: moving the clean diamond failed on the other one's contradiction."""
+    m = _mod()
+    _two_diamonds(canvas, m)
+    assert m.purpose_stance_findings(canvas, include_advisory=False, diamond_id="l3-a") == []
+    monkeypatch.setattr(sys, "argv",
+                        ["x", "--canvas-dir", str(canvas), "--strict", "--diamond-id", "l3-a"])
+    assert m.main() == 0
+    out = capsys.readouterr().out
+    assert "WARN: sol-002a" in out and "CONTRADICTION" in out
+    assert "WARN: sol-001b" in out  # the unchosen sibling still reports
+    assert "FAIL" not in out
+
+
+def test_the_diamond_whose_solution_contradicts_still_blocks(canvas, monkeypatch, capsys):
+    m = _mod()
+    _two_diamonds(canvas, m)
+    blocking = m.purpose_stance_findings(canvas, include_advisory=False, diamond_id="l3-b")
+    assert blocking and all("sol-002a" in f for f in blocking)
+    monkeypatch.setattr(sys, "argv",
+                        ["x", "--canvas-dir", str(canvas), "--strict", "--diamond-id", "l3-b"])
+    assert m.main() == 1
+    out = capsys.readouterr().out
+    assert "FAIL: sol-002a" in out and "WARN: sol-001b" in out
+
+
+def test_with_no_front_runner_the_live_set_under_its_opportunity_blocks(canvas):
+    """An L3 that has not chosen builds from its whole live set, as scale_locks reads it."""
+    m = _mod()
+    _two_diamonds(canvas, m, front_runner=None)
+    blocking = m.purpose_stance_findings(canvas, include_advisory=False, diamond_id="l3-a")
+    assert [f for f in blocking if f.startswith("sol-001b")]
+    assert not [f for f in blocking if "sol-002a" in f or "sol-001c" in f]
+
+
+def test_an_l4_blocks_on_the_solution_its_object_ref_names(canvas):
+    m = _mod()
+    _two_diamonds(canvas, m)
+    _diamonds(canvas, {"id": "l4-b", "scale": "L4", "phase": "deliver",
+                       "object_ref": "opportunities.yml#sol-002a", "purpose_stance": _CLEAN})
+    blocking = m.purpose_stance_findings(canvas, include_advisory=False, diamond_id="l4-b")
+    assert blocking and all(f.startswith("sol-002a") for f in blocking)
+
+
+def test_unscoped_every_solution_still_blocks(canvas):
+    """The whole-canvas sweep is unchanged: no --diamond-id, every solution blocking-eligible."""
+    m = _mod()
+    _two_diamonds(canvas, m)
+    blocking = m.purpose_stance_findings(canvas, include_advisory=False)
+    assert [f for f in blocking if f.startswith("sol-002a")]
+    assert [f for f in blocking if f.startswith("sol-001b")]
+
+
+def test_a_diamond_id_that_names_nothing_blocks_on_no_solution(canvas):
+    m = _mod()
+    _two_diamonds(canvas, m)
+    assert m.diamond_solutions(canvas, canvas.parent / "diamonds" / "active.yml", "nope") == set()
+    assert m.diamond_solutions(canvas, canvas / "missing.yml", "l3-a") == set()
+
+
+def test_the_reference_parser_works_without_scale_locks(monkeypatch):
+    """A partial install (no scale_locks) parses a reference the same way."""
+    m = _mod()
+    monkeypatch.setattr(m, "_sl", None)
+    assert m._ref_key("opportunities.yml#sol-002, swap") == "sol-002"
+    assert m._ref_key(None) == "" and m._ref_key({"x": 1}) == "" and m._ref_key("#") == ""

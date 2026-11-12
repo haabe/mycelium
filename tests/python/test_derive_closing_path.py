@@ -291,3 +291,134 @@ def test_write_closes_on_refuses_a_render_that_would_not_parse(tmp_path, monkeyp
     else:
         raise AssertionError("expected ParseError")
     assert path.read_text() == before
+
+
+# --- object_ref is what a door-opened diamond works on (dogfood 2026-10-28) -------------------
+# /mycelium:ost-builder's doors open an L2 with object_ref = the outcome and an L3 with
+# object_ref = its target opportunity, and neither carries rolls_up_to. The script read neither,
+# so every door-opened diamond headlined NOTHING ON RECORD while the opportunity held the test.
+
+DOOR_OPPS = """desired_outcomes:
+- id: faster-onboarding
+opportunities:
+- id: opp-012
+  status: open
+  rolls_up_to: faster-onboarding
+  what_would_move_it: 'the founder ruling on the 2026-11-01 read'
+  solutions:
+  - id: sol-012a
+    status: candidate
+    assumptions:
+    - id: a-012a-1
+      statement: door-opened leaf is seen
+      verdict: null
+      test_design: five-person hallway test
+- id: opp-099
+  status: open
+  rolls_up_to: elsewhere
+  solutions:
+  - id: sol-099a
+    status: candidate
+    assumptions:
+    - id: a-099a-1
+      statement: unrelated leaf
+      verdict: null
+"""
+
+
+def _door(scale, object_ref):
+    ref = f"  object_ref: {object_ref}\n" if object_ref else ""
+    return (f"active_diamonds:\n- id: dmd-x\n  scale: {scale}\n{ref}"
+            "  theory_gates_status:\n    four_risks: pending\n")
+
+
+def test_an_l2_opened_on_an_outcome_reads_the_opportunities_under_it(tmp_path, capsys):
+    """RED ON 0.334.1: 0 open opportunities cite it."""
+    _project(tmp_path, _door("L2", "faster-onboarding"), DOOR_OPPS)
+    rc, out = _run(tmp_path, capsys, "dmd-x")
+    assert "1 open opportunity cite it" in out
+    assert "a-012a-1" in out and "a-099a-1" not in out
+    assert "nothing on record moves" not in out
+
+
+def test_an_l3_opened_on_its_target_reads_that_opportunity(tmp_path, capsys):
+    _project(tmp_path, _door("L3", "opportunities.yml#opp-012"), DOOR_OPPS)
+    rc, out = _run(tmp_path, capsys, "dmd-x")
+    assert "1 open opportunity cite it" in out and "a-012a-1" in out
+    assert "rulings already asked" in out and "opp-012" in out
+
+
+def test_an_l4_on_a_solution_reads_the_opportunity_holding_it(tmp_path, capsys):
+    _project(tmp_path, _door("L4", "sol-012a"), DOOR_OPPS)
+    rc, out = _run(tmp_path, capsys, "dmd-x")
+    assert "1 open opportunity cite it" in out and "a-012a-1" in out and "a-099a-1" not in out
+
+
+def test_object_ref_in_a_sub_opportunity_is_found(tmp_path, capsys):
+    opps = ("opportunities:\n- id: opp-1\n  status: open\n  sub_opportunities:\n"
+            "  - id: opp-1-1\n    status: open\n    solutions:\n    - id: sol-x\n"
+            "      assumptions:\n      - id: a-x-1\n        statement: nested\n")
+    _project(tmp_path, _door("L3", "opp-1-1"), opps)
+    rc, out = _run(tmp_path, capsys, "dmd-x")
+    assert "1 open opportunity cite it" in out and "a-x-1" in out
+
+
+def test_neither_field_links_nothing_and_a_closed_target_is_not_read(tmp_path, capsys):
+    """Negative controls: no object_ref and no rolls_up_to; an L3 whose target is closed; an L3
+    whose object_ref is an outcome id (an L2's shape), which names no opportunity."""
+    for active in (_door("L3", None), _door("L3", "faster-onboarding")):
+        _project(tmp_path, active, DOOR_OPPS)
+        rc, out = _run(tmp_path, capsys, "dmd-x")
+        assert "0 open opportunities cite it" in out and "a-012a-1" not in out
+    _project(tmp_path, _door("L3", "opp-012"), DOOR_OPPS.replace("status: open", "status: closed", 1))
+    rc, out = _run(tmp_path, capsys, "dmd-x")
+    assert "0 open opportunities cite it" in out
+
+
+def test_the_summary_line_says_owed_rulings_are_not_nothing(tmp_path, capsys):
+    """RED ON 0.334.1: a diamond whose detail listed an owed ruling headlined NOTHING ON RECORD."""
+    opps = ("opportunities:\n- id: opp-5\n  status: open\n  diamond_ref: dmd-x\n"
+            "  what_would_move_it: 'the founder ruling on the pricing read'\n")
+    _project(tmp_path, _door("L3", None), opps)
+    assert _mod().main(["--project-dir", str(tmp_path), "--all"]) == 0
+    out = capsys.readouterr().out
+    assert "NOTHING ON RECORD" not in out
+    assert "only rulings already asked move a pending gate (1 owed" in out
+    _project(tmp_path, _door("L3", None), "opportunities: []\n")
+    _mod().main(["--project-dir", str(tmp_path), "--all"])
+    assert "NOTHING ON RECORD" in capsys.readouterr().out
+
+
+# --- the evidence row says what is checked (dogfood 2026-10-15) ------------------------------
+
+def test_the_evidence_row_says_it_is_ruled_by_hand_and_watches_nothing(tmp_path, capsys):
+    """RED ON 0.334.1: the row read 'an external source landed on a canvas entry this diamond
+    cites', a condition no code checks. The gate is the hand-set field; the row now says so,
+    and the same with an external source on a linked entry (nothing reads it against the gate)."""
+    active = ("active_diamonds:\n- id: dmd-x\n  scale: L5\n  theory_gates_status:\n"
+              "    evidence: pending\n")
+    opps = ("opportunities:\n- id: opp-7\n  status: open\n  diamond_ref: dmd-x\n  provenance:\n"
+            "    evidence_type: anecdotal\n    evidence_sources: [ht-129 rung report]\n"
+            "    source_classes: [external_human]\n")
+    for o in ("opportunities: []\n", opps):
+        _project(tmp_path, active, o)
+        rc, out = _run(tmp_path, capsys, "dmd-x")
+        row = next(ln for ln in out.splitlines() if ln.startswith("evidence (pending)"))
+        assert "an external source landed" not in row
+        assert "ruled by hand" in row and "theory_gates_status.evidence" in row
+        assert "/mycelium:diamond-progress dmd-x" in row and "no source is watched" in row
+
+
+def test_a_diamond_id_matches_whole_ids_only():
+    """A short id must not match link text that merely contains it (integration 2026-11-12):
+    "l2" is inside "l2-trust" and "d" is inside nearly everything."""
+    m = _mod()
+    doc = {"opportunities": [
+        {"id": "o1", "status": "open", "diamond_ref": "l2-trust-on-install"},
+        {"id": "o2", "status": "open", "diamond_ref": "l2"},
+        {"id": "o3", "status": "open", "canvas_refs": ["diamonds/active.yml#l2"]},
+        {"id": "o4", "status": "open", "diamond_ref": "l2-trust-on-install-b"},
+    ]}
+    assert [o["id"] for o in m._opps_for(doc, "l2")] == ["o2", "o3"]
+    assert [o["id"] for o in m._opps_for(doc, "l2-trust-on-install")] == ["o1"]
+    assert m._opps_for(doc, "d") == []

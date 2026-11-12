@@ -82,7 +82,7 @@ test_every_instrumented_hook_names_a_literal_state_path() {
     # invisible to it -- the hook would log and still read as unmeasured.
     local missing=""
     for h in shell-safety-guard ci-signal correction-attribution-guard \
-             codex-postfailure-shim reflexion-gate install-runtime-hooks; do
+             codex-postfailure-shim reflexion-gate install-runtime-hooks exposure-change; do
         grep -q "\.claude/state/$h-fires\.jsonl" "$PLUGIN_ROOT/hooks/$h.sh" || missing="$missing $h"
     done
     assert_eq "" "$missing" "every instrumented hook carries its literal state path"

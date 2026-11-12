@@ -187,3 +187,84 @@ def test_a_value_mapping_with_a_pointer_or_reason_reads_as_its_number():
     assert m._numeric({"value": 0, "manual": "why"}) == 0.0
     assert m._numeric({"value": True}) is None
     assert m._numeric({"stars": 1}) is None
+
+
+# ---------------------------------------------------------------- predicates and boundaries
+# Mutation sample 2026-10-11 (seed 20260910): six survivors here, each a line no test sat on. The
+# depth limit (`>` as `>=`, and `depth + 1` as `depth - 1` in both walks, dict and list), the
+# review date that falls on today (`<` as `<=`), the age that equals the limit (`>` as `>=`), and
+# the two report predicates (`not (overdue or pending)`, `stale or undated`) taken one branch at
+# a time.
+
+def _nested(node, depth: int, as_list: bool = False):
+    """`node` placed `depth` levels down, through dicts or through lists."""
+    for _ in range(depth):
+        node = [node] if as_list else {"x": node}
+    return node
+
+
+def _write(tmp_path, doc):
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "north-star.yml").write_text(yaml.safe_dump(doc, sort_keys=False))
+    return d
+
+
+def test_a_target_at_the_depth_limit_is_read_and_one_below_it_is_not(tmp_path):
+    m = _mod()
+    target = {"name": "deep", "target_value": 10, "current_value": 4, "as_of": "2026-09-01"}
+    today = datetime.date(2026, 9, 14)
+    for as_list in (False, True):
+        for depth, seen in ((m._MAX_DEPTH, 1), (m._MAX_DEPTH + 1, 0)):
+            d = _write(tmp_path / f"{as_list}-{depth}", _nested(dict(target), depth, as_list))
+            measured, unmeasured, na = m.scan(d)
+            assert len(measured) + len(unmeasured) + len(na) == seen, (as_list, depth)
+            fresh, stale, undated = m.scan_freshness(d, today, 30)
+            assert len(fresh) + len(stale) + len(undated) == seen, (as_list, depth)
+
+
+def test_an_age_equal_to_the_limit_is_fresh_and_one_more_day_is_stale(tmp_path):
+    m = _mod()
+    node = {"name": "m", "target_value": 1, "as_of": "2026-08-15"}
+    assert m.freshness(node, "c", datetime.date(2026, 9, 14), 30)[0] == "fresh"   # 30 days
+    assert m.freshness(node, "c", datetime.date(2026, 9, 15), 30)[0] == "stale"   # 31 days
+
+
+def test_a_review_date_of_today_is_pending_not_overdue(tmp_path):
+    m = _mod()
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "opportunities.yml").write_text(
+        "desired_outcomes:\n"
+        "  - {id: today, metric: x, north_star_input_ref: off_north_star, review_by: '2026-09-15'}\n")
+    overdue, pending = m.overdue_root_reviews(canvas, datetime.date(2026, 9, 15))
+    assert overdue == [] and [r[1] for r in pending] == ["today"]
+
+
+def test_the_root_review_block_prints_for_either_list_and_not_for_neither(capsys):
+    m = _mod()
+    row = ("opportunities", "r1", "off_north_star root, review_by 2026-09-01")
+    m._print_root_reviews([], [])
+    assert capsys.readouterr().out == ""
+    m._print_root_reviews([row], [])
+    out = capsys.readouterr().out
+    assert "Off-outcome roots" in out and "OVERDUE    [opportunities] r1" in out
+    m._print_root_reviews([], [row])
+    out = capsys.readouterr().out
+    assert "Off-outcome roots" in out and "pending    [opportunities] r1" in out
+    assert "Resolve the root" not in out
+
+
+def test_the_restamp_advice_prints_for_stale_alone_and_for_undated_alone(tmp_path, monkeypatch):
+    advice = "A metric that cannot go overdue never will."
+    stale = _write(tmp_path / "s", {"name": "Old", "target_value": 5,
+                                    "current_value": {"v": 1, "as_of": "2020-01-01"}})
+    rc, out = _main(monkeypatch, stale, "--today", "2026-09-14")
+    assert rc == 0 and "1 STALE" in out and "0 undated" in out and advice in out
+    undated = _write(tmp_path / "u", {"name": "Adoption", "target_value": 10, "current_value": 3})
+    rc, out = _main(monkeypatch, undated, "--today", "2026-09-14")
+    assert rc == 0 and "0 STALE" in out and "1 undated" in out and advice in out
+    fresh = _write(tmp_path / "f", {"name": "New", "target_value": 5,
+                                    "current_value": {"v": 1, "as_of": "2026-09-10"}})
+    rc, out = _main(monkeypatch, fresh, "--today", "2026-09-14")
+    assert rc == 0 and advice not in out

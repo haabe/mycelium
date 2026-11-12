@@ -296,7 +296,10 @@ elif status == 'release-repo-missing':
 " 2>/dev/null || echo "")
   case "$CYCLE_STATE" in
     owed:*)
-      REMINDERS="${REMINDERS}${CYCLE_STATE#owed:} minor releases have shipped since the last recorded cycle — a meta-dogfood cycle is owed (/mycelium:retrospective). Effort accuracy is its one required calibration field. "
+      # "a cycle record is owed", not "a meta-dogfood cycle": every adopter whose own
+      # product ships minor releases reads this line, and meta-dogfood is the dogfood project's
+      # own word for its framework cycles. advisory_ledger.py keys on the first clause only.
+      REMINDERS="${REMINDERS}${CYCLE_STATE#owed:} minor releases have shipped since the last recorded cycle — a cycle record is owed (/mycelium:retrospective). It carries what the arc was expected to take, so the estimate can be checked against what it took. "
       ;;
     cannotmeasure:*)
       # NOT a demand and NOT a pass. The check looks for version tags and, when the
@@ -305,7 +308,7 @@ elif status == 'release-repo-missing':
       # means "not covering you". Worded without framework vocabulary on purpose:
       # a reader who has never recorded a cycle should still understand what the
       # check could not do, and is not being asked to do anything.
-      REMINDERS="${REMINDERS}Work-recording check could not measure here: it found no version tags in THIS repo and no release commits (vX.Y.0) in its history. If this project's releases ship from a different repo, the check is not covering you — set release_repo under cycle_recording_arc in .claude/canvas/thresholds.yml, or record progress another way. "
+      REMINDERS="${REMINDERS}Work-recording check could not measure here: it found no version tags in THIS repo and no commit naming a release version (vX.Y.Z, patch or minor) since the last recorded cycle. If this project's releases ship from a different repo, the check is not covering you — set release_repo under cycle_recording_arc in .claude/canvas/thresholds.yml, or record progress another way. "
       ;;
     norepo:*)
       # 0.310.0. A configured release_repo is a path on one machine; on another it

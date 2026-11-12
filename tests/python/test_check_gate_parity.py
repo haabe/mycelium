@@ -256,3 +256,53 @@ def test_a_gate_missing_locally_is_left_to_the_name_check():
     """Two findings for one cause would double-report; missing is name-parity's business."""
     workflow = "        run: python3 plugins/mycelium/scripts/check_foo.py --strict\n"
     assert cgp.strict_mismatches(workflow, "check_other.py\n") == []
+
+
+# --- gates not named check_* (widened after gate-parity-only-matches-scripts-named-check) ----
+# validate.yml runs validate_canvas.py, ingest_warnings.py and release_gaps.py. The patterns
+# matched only `check_*.py`, so validate_canvas.py sat in CI, in neither the local set nor a
+# waiver, while this check printed OK.
+
+WORKFLOW_WITH_A_VALIDATOR = WORKFLOW + """\
+      - name: Run canvas schema + trace validation
+        run: python3 plugins/mycelium/scripts/validate_canvas.py
+"""
+
+
+def test_a_ci_gate_not_named_check_is_found_when_missing(tmp_path):
+    """RED BEFORE THE FIX: the invocation pattern required `check_`, so this gate was
+    invisible and parity read ok over it."""
+    root = _tree(tmp_path, WORKFLOW_WITH_A_VALIDATOR, GATE_SET)
+    result = cgp.evaluate(root)
+    assert result["status"] == "fail"
+    assert result["missing"] == ["validate_canvas.py"]
+    assert result["ci_count"] == 3
+
+
+def test_a_gate_not_named_check_can_be_waived_with_a_reason(tmp_path):
+    gate_set = GATE_SET + "!waived validate_canvas.py the pre-push hook runs it as its first layer\n"
+    result = cgp.evaluate(_tree(tmp_path, WORKFLOW_WITH_A_VALIDATOR, gate_set))
+    assert result["status"] == "ok"
+    assert "validate_canvas.py" in result["waived"]
+
+
+def test_a_gate_not_named_check_can_be_declared(tmp_path):
+    result = cgp.evaluate(_tree(tmp_path, WORKFLOW_WITH_A_VALIDATOR, GATE_SET + "validate_canvas.py\n"))
+    assert result["status"] == "ok"
+
+
+def test_flag_parity_also_reads_gates_not_named_check():
+    """release_gaps.py runs with flags in both places; a --strict on one side only must show."""
+    workflow = "        run: python3 plugins/mycelium/scripts/release_gaps.py --strict\n"
+    out = cgp.strict_mismatches(workflow, "release_gaps.py\n")
+    assert len(out) == 1 and out[0].startswith("release_gaps.py")
+
+
+def test_the_real_repos_non_check_ci_steps_are_each_declared_or_waived():
+    """The decision for each, read from the set: a waiver must carry a real reason."""
+    text = (REPO / "plugins" / "mycelium" / "scripts" / "local-gate-set.txt").read_text()
+    declared, waived = cgp.parse_gate_set(text)
+    for gate in ("validate_canvas.py", "ingest_warnings.py", "release_gaps.py"):
+        assert gate in declared or gate in waived, gate
+        if gate in waived:
+            assert len(waived[gate].strip()) > 20, gate

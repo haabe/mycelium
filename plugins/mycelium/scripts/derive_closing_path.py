@@ -13,7 +13,9 @@ asking for it.
 
 WHAT IT DERIVES, per diamond, from three files:
   GATES     `theory_gates_status` entries that are not `pass` (pending, fail, pass-with-risk).
-  LEAVES    under opportunities that roll up to or cite the diamond: candidate/proposed/open leaves
+  LEAVES    under opportunities that roll up to or cite the diamond, or that its `object_ref`
+            names (an L2's outcome; an L3's opportunity; the opportunity holding an L4's
+            solution): candidate/proposed/open leaves
             with an assumption lacking a verdict, and whether a test is named for it (the input the
             Four Risks and Cynefin gates wait on).
   TASKS     open human tasks whose `diamond_ref` names the diamond, with their `horizon`: the dated
@@ -152,25 +154,72 @@ def _rolls_up_to_prose(d: dict) -> list[str]:
     return [v.strip() for v in vals if isinstance(v, str) and v.strip() and " " in v.strip()]
 
 
+# WHAT A DIAMOND WORKS ON IS ITS `object_ref` (v0.300.0, DL-1367): a desired outcome for an L1 or
+# L2, the target opportunity for an L3, the solution for an L4 or L5. The doors in
+# /mycelium:ost-builder open an L2 and an L3 with `object_ref` and no `rolls_up_to`, and no
+# opportunity names a diamond id, so through v0.334.1 this script read every door-opened diamond as
+# linked to nothing. Dogfood 2026-10-28: five diamonds headlined "NOTHING ON RECORD moves a pending
+# gate" while two of them had a dated next step on the opportunity their object_ref names.
+_OUTCOME_REF_SCALES = ("L1", "L2")
+
+
+def _is_open_opp(o) -> bool:
+    return isinstance(o, dict) and str(o.get("status", "open")).lower() == "open"
+
+
 def _diamond_outcomes(d: dict) -> set[str]:
-    """Outcomes the diamond rolls up to, read from its top level and its definition_of_done.
-    A tree rooted on outcomes ("one root, one tree") links opportunities to a diamond only
-    through these; nothing there carries a diamond id."""
+    """Outcomes the diamond rolls up to, read from its top level and its definition_of_done,
+    and for an L1 or L2 its `object_ref`. A tree rooted on outcomes ("one root, one tree")
+    links opportunities to a diamond only through these; nothing there carries a diamond id."""
     vals = [d.get("rolls_up_to"), (d.get("definition_of_done") or {}).get("rolls_up_to")]
+    if str(d.get("scale") or "").upper() in _OUTCOME_REF_SCALES:
+        vals.append(d.get("object_ref"))
     return {k for k in (_outcome_key(v) for v in vals if isinstance(v, str)) if k}
 
 
-def _opps_for(opps_doc, did: str, outcomes: set[str] | None = None) -> list[dict]:
+def _object_opps(opps_doc, d: dict) -> list[dict]:
+    """The open opportunity an L3, L4 or L5's `object_ref` names, or the one holding the solution
+    it names, read the way the L3 lock reads it (scale_locks.State.find_opportunity: an
+    opportunity id first, then a solution id, sub-opportunities included)."""
+    if str(d.get("scale") or "").upper() in _OUTCOME_REF_SCALES:
+        return []
+    key = sl._ref_key(d.get("object_ref"))  # noqa: SLF001 - the one reference parser, not a copy
+    if not key:
+        return []
+    every, stack = [], list(opps_doc.get("opportunities") or [])
+    while stack:
+        o = stack.pop(0)
+        if isinstance(o, dict):
+            every.append(o)
+            stack.extend(o.get("sub_opportunities") or [])
+    def holds(o: dict) -> bool:
+        return any(isinstance(s, dict) and str(s.get("id", "")) == key
+                   for s in o.get("solutions") or [])
+
+    hit = [o for o in every if str(o.get("id", "")) == key] or [o for o in every if holds(o)]
+    return [o for o in hit[:1] if _is_open_opp(o)]
+
+
+def _opps_for(opps_doc, did: str, outcomes: set[str] | None = None,
+              diamond: dict | None = None) -> list[dict]:
     """Open opportunities that cite the diamond by id in a link key, OR roll up to an outcome
-    the diamond itself rolls up to. Without the second branch an outcome-rooted tree reads as
-    0 of 0 leaves for every diamond, which the dogfood repo hit the day this script shipped."""
+    the diamond itself rolls up to, OR are the one its `object_ref` names (an L3 or below).
+    Without the second branch an outcome-rooted tree reads as 0 of 0 leaves for every diamond,
+    which the dogfood repo hit the day this script shipped; without the third, so does every
+    diamond opened through a door."""
     out = []
     for o in opps_doc.get("opportunities") or []:
-        if not isinstance(o, dict) or str(o.get("status", "open")).lower() != "open":
+        if not _is_open_opp(o):
             continue
         links = yaml.dump({k: v for k, v in o.items() if k in LINK_KEYS}, allow_unicode=True)
         by_outcome = bool(outcomes) and _outcome_key(o.get("rolls_up_to")) in outcomes
-        if did in links or by_outcome:
+        # Whole-id match: a bare substring test let a short id ("d", "l2") match any link
+        # text containing it, so unrelated opportunities were counted as this diamond's.
+        cited = re.search(r"(?<![\w-])" + re.escape(did) + r"(?![\w-])", links) is not None
+        if cited or by_outcome:
+            out.append(o)
+    for o in _object_opps(opps_doc, diamond or {}):
+        if not any(x is o for x in out):
             out.append(o)
     return out
 
@@ -352,7 +401,7 @@ def derive(root: Path, did: str, today: str | None = None) -> dict | None:
     opps_path, tasks_path = canvas / "opportunities.yml", canvas / "human-tasks.yml"
     outcomes = _diamond_outcomes(d)
     dod = _dod_inputs(d)
-    opps = _opps_for(load_yaml(opps_path) if opps_path.exists() else {}, did, outcomes)
+    opps = _opps_for(load_yaml(opps_path) if opps_path.exists() else {}, did, outcomes, d)
     tasks = _open_tasks_for(
         load_yaml(tasks_path) if tasks_path.exists() else {},
         did,
@@ -428,8 +477,17 @@ def _recorded_gate_row(g: str, v, r: dict) -> str:
     if g == "cynefin":
         return f"{g} ({v}) | assumption-test evidence on record for a complex domain | agent | -"
     if g == "evidence":
+        # SAY WHAT IS CHECKED, NOT WHAT WOULD BE NICE TO CHECK. Through v0.334.1 this row
+        # read "an external source landed on a canvas entry this diamond cites", in the column of
+        # conditions, while no code looked for one: the gate is `theory_gates_status.evidence`,
+        # set by hand, and scale_locks reads only that field. Dogfood 2026-10-15: external
+        # sources landed on l5-market's entries for ten days and the founder and the agent both
+        # read the unchanged row as "nothing has landed".
+        did = r["diamond"].get("id", "?")
         return (
-            f"{g} ({v}) | an external source landed on a canvas entry this diamond cites "
+            f"{g} ({v}) | ruled by hand: theory_gates_status.evidence moves only when someone "
+            f"weighs the evidence on record and rules (/mycelium:diamond-progress {did}); no "
+            "source is watched for it, so a source landing does not change this row "
             "| human + agent | -"
         )
     return f"{g} ({v}) | nothing on record names an input for this gate | - | -"
@@ -867,6 +925,8 @@ def build_closes_on(  # noqa: C901, PLR0912, PLR0915 — one derivation, three i
     for k in PRESERVED_KEYS:
         if prev and k in prev:
             entry[k] = prev[k]
+    # Read by controller_line, never rendered into closes_on: a ruling is not a watched input.
+    entry["owed_rulings"] = len(r["owed"])
     return entry, prev
 
 
@@ -1028,7 +1088,14 @@ def all_diamond_ids(root: Path) -> list[str]:
 def controller_line(
     did: str, entry: dict, prev: dict | None, changed: bool, stamped: list[str]
 ) -> str:
-    """One line per diamond: a receipt, or a parked proposal when something fired."""
+    """One line per diamond: a receipt, or a parked proposal when something fired.
+
+    `entry["owed_rulings"]` (never stored) counts the rulings already asked on the diamond's
+    opportunities. They are not
+    watched inputs (nothing fires when one is made), but they do move a gate, and the detail view
+    already lists them and holds back its "nothing on record" line when there are any. Through
+    v0.334.1 this line ignored them, so a diamond whose detail listed an owed ruling still
+    headlined NOTHING ON RECORD, and session start counted it among the unmoved."""
     new_fired = [
         f
         for f in entry["fired"]
@@ -1043,7 +1110,13 @@ def controller_line(
     parts.append("stored" if changed else "unchanged since last derivation")
     if stamped:
         parts.append(f"readers stamped on {', '.join(stamped)}")
-    if not entry["inputs"]:
+    owed = int(entry.get("owed_rulings") or 0)
+    if not entry["inputs"] and owed:
+        parts.append(
+            f"only rulings already asked move a pending gate ({owed} owed; "
+            f"derive_closing_path.py --diamond-id {did} lists them): say owed, do not re-ask"
+        )
+    elif not entry["inputs"]:
         parts.append("NOTHING ON RECORD moves a pending gate; that is the finding")
     return "; ".join(parts) + "."
 

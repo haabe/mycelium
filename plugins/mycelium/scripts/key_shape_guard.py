@@ -36,6 +36,18 @@ and warns on stderr the same way; the edit goes ahead there too. It reads the ta
 to find stem collisions, so a file that does not exist or does not parse contributes no
 collisions, only the regex half.
 
+EVIDENCE SOURCES WITHOUT THEIR CLASSES (v0.336.0). The operating contract's HARD RULE says a
+canvas write that adds `provenance.evidence_sources` adds the parallel `source_classes` array in
+the same edit, and until 0.336.0 nothing checked it at write time: `check_source_class_fidelity.py`
+reports unequal arrays at session start, after the reason for each class is gone. So the same
+write is also read as the file it leaves: the target's text with the Edit or MultiEdit applied
+(a Write is its content), parsed. A mapping with an `evidence_sources` list that this write
+added or changed, and that carries fewer `source_classes` than sources, is named. Not named, as
+the fidelity check does not: one class for every source, written as the singular `source_class`
+or as a one-item `source_classes` list, and a block with `alignment_reviewed`. A write whose
+result does not parse is not read for this; the session-start sweep still is. Advisory like the
+rest: the write goes ahead.
+
 Contract: exit 0 silent = nothing to say. exit 0 + JSON additionalContext = warn. Logs one
 line per fire to `.claude/state/key-shape-guard-log.jsonl` through the absence guard's
 writer, so the action rate and the re-write ratio are computable the same way.
@@ -193,6 +205,97 @@ def key_findings(keys: list[str], spellings: dict[str, set[str]] | None = None) 
     return out
 
 
+_PROVENANCE_MESSAGE = (
+    "MYCELIUM PROVENANCE CHECK (advisory): this write leaves evidence_sources without a "
+    "source_classes entry for each.\n"
+    "{quoted}\n"
+    "  Evidence writes carry `source_classes` (HARD RULE, agent-operating-contract): add one "
+    "class per source in this same edit, in the same order, while you know where each source "
+    "came from. Do not infer a class from the source's text afterwards. Where every source is "
+    "the same class, the singular `source_class` says so. The write goes ahead; "
+    "`check_source_class_fidelity.py` reports what is still unequal."
+)
+
+
+def _after_text(tool_name: str, tool_input: dict, before: str) -> str | None:
+    """The target file's text as this write leaves it; None when it cannot be worked out."""
+    if tool_name == "Write":
+        v = tool_input.get("content")
+        return v if isinstance(v, str) else None
+    edits = ([tool_input] if tool_name == "Edit" else tool_input.get("edits")
+             if tool_name == "MultiEdit" else None)
+    if not isinstance(edits, list):
+        return None
+    text = before
+    for e in edits:
+        old, new = (e.get("old_string"), e.get("new_string")) if isinstance(e, dict) else (0, 0)
+        if not isinstance(old, str) or not isinstance(new, str) or old not in text:
+            return None
+        text = text.replace(old, new) if e.get("replace_all") else text.replace(old, new, 1)
+    return text
+
+
+def _blocks(node, ident: str = "", depth: int = 0) -> list[tuple[str, str, int, int]]:
+    """(id, signature, sources, classes) for each mapping holding an `evidence_sources` list
+    whose classes fall short of it, in the fidelity check's terms."""
+    out: list[tuple[str, str, int, int]] = []
+    if depth > _MAX_DEPTH:
+        return out
+    if isinstance(node, dict):
+        ident = str(node.get("id") or ident)
+        sources, classes = node.get("evidence_sources"), node.get("source_classes")
+        if isinstance(sources, list):
+            n = len(classes) if isinstance(classes, list) else 0
+            one_class = node.get("source_class") is not None or n == 1
+            if n < len(sources) and not one_class and not node.get("alignment_reviewed"):
+                sig = json.dumps([sources, classes], sort_keys=True, default=str)
+                out.append((ident or "a block", sig, len(sources), n))
+        for v in node.values():
+            out += _blocks(v, ident, depth + 1)
+    elif isinstance(node, list):
+        for v in node:
+            out += _blocks(v, ident, depth + 1)
+    return out
+
+
+def provenance_findings(before: str, after: str) -> list[str]:
+    """One line per provenance block short of classes that `after` holds and `before` did not
+    (as the same sources and classes). Empty when `after` does not parse."""
+    try:
+        doc = yaml.safe_load(after)
+    except yaml.YAMLError:
+        return []  # the session-start sweep reads the file once it parses
+    try:
+        had = {sig for _, sig, _, _ in _blocks(yaml.safe_load(before) if before else None)}
+    except yaml.YAMLError:
+        had = set()
+    return [f"{ident}: {n_src} evidence_sources, {n_cls} source_classes"
+            for ident, sig, n_src, n_cls in _blocks(doc) if sig not in had]
+
+
+def provenance_for(payload: dict) -> list[str]:
+    """`provenance_findings` for a hook payload: a write into .claude/canvas or diamonds."""
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return []
+    path = tool_input.get("file_path")
+    if not isinstance(path, str) or not _WATCHED_PATH.search(path):
+        return []
+    try:
+        before = Path(path).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        before = ""  # a new file: everything in it is this write's
+    after = _after_text(str(payload.get("tool_name") or ""), tool_input, before)
+    return provenance_findings(before, after) if after is not None else []
+
+
+def provenance_message(hits: list[str]) -> str:
+    quoted = "\n".join(f"    > {h}" for h in hits[:_NAMED])
+    if len(hits) > _NAMED:
+        quoted += f"\n    ... and {len(hits) - _NAMED} more in this write."
+    return _PROVENANCE_MESSAGE.format(quoted=quoted)
+
+
 def scan_for(payload: dict) -> list[str]:
     tool_input = payload.get("tool_input")
     if not isinstance(tool_input, dict):
@@ -211,17 +314,24 @@ def main() -> int:
         payload = json.load(sys.stdin)
     except Exception:                      # noqa: BLE001 — must never break a write
         return 0
-    hits = scan_for(payload)
-    if not hits:
+    if not isinstance(payload, dict):
+        return 0
+    hits, short = scan_for(payload), provenance_for(payload)
+    if not hits and not short:
         return 0
     tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
-    _log("key-shape-guard", len(hits), hits[0], hashlib.sha256(hits[0].encode()).hexdigest()[:10], {
-        "file": os.path.basename(str(tool_input.get("file_path") or "")),
-        "session": str(payload.get("session_id") or ""),
-        "text": _payload_text(str(payload.get("tool_name") or ""), tool_input)})
+    first = (hits or short)[0]
+    _log("key-shape-guard", len(hits) + len(short), first,
+         hashlib.sha256(first.encode()).hexdigest()[:10], {
+             "file": os.path.basename(str(tool_input.get("file_path") or "")),
+             "session": str(payload.get("session_id") or ""),
+             "text": _payload_text(str(payload.get("tool_name") or ""), tool_input)})
+    said = [message(hits)] if hits else []
+    if short:
+        said.append(provenance_message(short))
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
-        "additionalContext": message(hits)}}))
+        "additionalContext": "\n\n".join(said)}}))
     return 0
 
 

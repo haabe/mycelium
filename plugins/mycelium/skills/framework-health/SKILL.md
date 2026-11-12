@@ -254,7 +254,11 @@ For every skill, hook and check it prints the last evidence of use from the reco
 already writes (a dated decision-log or corrections mention, a read-log row, the newest row of the
 state file the hook writes, the gate list) and who reads it (another skill, an engine doc, a hook, a
 runtime manifest, the gate set). **A candidate is a mechanism with no fire in the window and no
-reader.** Three things to report beside the list, because each bounds what it means: the hooks that
+reader.** The report prints them under "named by nothing that runs (unwired, not necessarily
+dead)": "no reader" means nothing sends an agent to the mechanism, which is not the same as nobody
+needing it (dogfood 2026-10-11: `harms-check` and `friction-log` were listed twice, and both were
+unwired, not unneeded). Report each candidate as "wire it in where its own text says it belongs, or
+retire it", never as dead. Three things to report beside the list, because each bounds what it means: the hooks that
 write no record and so cannot be measured (the first fix there is a record, not retirement); the
 "quiet but read" rows, which are not candidates and are listed so a reader can disagree; and that no
 runtime records a skill invocation, so a skill used and never written about is invisible here. The
@@ -328,7 +332,7 @@ Period: [date range]
 
 Before producing new findings, **rule on the previous run's** — per `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#prior_findings_first`. For each: CLOSED (name what closed it), STILL-OPEN (carry it forward with a horizon), or DECLINED (a reason AND a re-open trigger). If there is no prior run, say so and continue.
 
-**Scoring goes first because it is the boring half.** A periodic instrument that produces findings and never scores its old ones accumulates a ranking nobody reads — `theory-audit-2026-04-17.md` ranked its gaps correctly and sat unconsumed for four months. Anything placed after the interesting work is what a long session drops.
+**Scoring goes first because it is the boring half.** A periodic instrument that produces findings and never scores its old ones accumulates a ranking nobody reads — `theory-audit-2026-04-17.md` ranked its gaps and sat unconsumed for four months. Anything placed after the interesting work is what a long session drops.
 
 **A finding ranked HIGH must leave this skill with a home** — tag or create an opportunity on the framework-side root of the OST (`opportunities.yml`, `rolls_up_to`), or decline it with a re-open trigger. Scoring alone does not close the loop: it fires only when someone runs this skill again, so on a slow cadence findings still sleep. An opportunity is read by instruments on their own schedule. Not `human-tasks.yml` — that canvas is scoped to offline HUMAN work (interviews, outreach), and an engineering finding filed there is a category error.
 

@@ -7,7 +7,8 @@ a variable or a command substitution was allowed in silence, while README.md tol
 agent cannot write those files and the operating contract told the agent the hooks read such
 writes too.
 
-WHAT HOLDS NOW. `bash-state-guard.sh` compares those files before and after every shell command.
+WHAT HOLDS NOW. `bash-state-guard.sh` compares those files before and after a shell command (one
+whose after half never runs, at Stop: test_a_monitor_command_is_compared_at_stop.py).
 One that the command created, changed or removed, and that the person was not asked about, is put
 back, and the person and the agent are told (maintainer's ruling, 2026-10-11: "Put it back and tell
 me"). Every test drives the real hook, both halves, around a write the test itself performs: what

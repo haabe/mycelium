@@ -30,7 +30,7 @@
         },
         "source_note": {
           "type": "string",
-          "description": "NOT YET IMPLEMENTED, stated rather than silently skipped: Sinek's five criteria for a Just Cause (The Infinite Game) are not encoded here, because that book is not on disk in this project and the criteria were not verified at the primary source. What IS encoded is the structure the model requires and one check taken verbatim from a transcript in the corpus. Encode the five criteria when someone has read them; do not reconstruct them from memory."
+          "description": "Free-text note on where the bearing came from. Sinek's five criteria for a Just Cause (The Infinite Game, 2019, since read at the source: for something, inclusive, service oriented, resilient, idealistic) are a read-through in skills/purpose-properties/SKILL.md Step 6, not fields here. What this schema encodes is the structure the model requires and one check taken verbatim from a transcript in the corpus. Sinek allows more than one Just Cause; this object holds one, and whether it should hold several is not settled."
         }
       },
       "additionalProperties": true

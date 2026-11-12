@@ -38,6 +38,8 @@ Ask these in order. The teaching is in the **sequencing** (problem → signal �
 
    **Name the problem in words, never by an id alone.** The owner reads the bar weeks later without the canvas open, and an id carries nothing they can check against. Dogfood 2026-10-08: the owner could not interpret an L2 outcome that cited only its opportunity's id ("I cannot interpret the 'what changes', because I don't know what opp-080 says"), and once it was rewritten in words: "this kind of clarity must be a given in the way that these definitions are developed."
 
+   **Then ask: "Write the opposite of this outcome. Would anyone choose it?"** An outcome whose opposite is absurd on its face makes no choice: "home cooks get better meals with less effort" has the opposite "worse meals with more effort", which nobody would pick, so the bar rules out no work and every later diamond can be argued to serve it. If the opposite is absurd, narrow one part at a time (who, what changes, how) until the opposite is something a reasonable builder might pick: "home cooks who cook most days and run out of ideas" has real alternatives (people who never cook, confident cooks). Keep both wordings, the first and the narrowed one, as an entry in the bar's `log[]`. This is advisory, never a block: the person judges whether the opposite is absurd, and a directional outcome that already rules something out passes as written. *Source: Roger Martin's test for a real choice ("is the opposite stupid on its face?"), as presented on the Product Growth podcast (2026-10-14). Devils-advocate's "What if the OPPOSITE is true?" asks whether an assumption is false, which is a different question.*
+
 **2. "What's the ONE thing you'd SEE them DO that proves it?"** → `signal` (One Metric That Matters — one, not many).
    - ✗ *"it feels better."*
    - ✓ *"they came back for a second session."*
@@ -176,6 +178,7 @@ The exact prompt phrasing above is **provisional** — only the why → who → 
 ## Theory Citations
 - Seiden (*Outcomes over Output*): done = a behaviour-change that creates value, not a feature shipped.
 - Cagan (*Inspired*): problem-and-whom first; measurement problems are clarity problems.
+- Roger Martin, as presented on the Product Growth podcast (2026-10-14): a choice whose opposite is stupid on its face is no choice; step 1's opposite question.
 - Amplitude (*North Star Playbook*): shipped AND has impact.
 - Adzic (*Impact Mapping*) / Microsoft Research: contribution-not-summation laddering; why→who→how→what.
 - 4DX (McChesney) / Lean Analytics (Croll & Yoskovitz): lead-low / lag-high; One Metric That Matters.

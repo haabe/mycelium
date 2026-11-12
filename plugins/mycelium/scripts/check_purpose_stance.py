@@ -542,8 +542,18 @@ def _one_stance(sid: str, pid: str, entry, known_decisions: set | None = None) -
 
 def _stance_findings(canvas_dir: Path, binding: list[dict],
                      grandfathered: set,
-                     known_decisions: set | None = None) -> list[str]:
+                     known_decisions: set | None = None,
+                     scope: set | None = None) -> tuple[list[str], list[str]]:
     """Every solution, against every binding property. Silence is the finding.
+    Returns (blocking, advisory); with `scope` None every finding is blocking.
+
+    SCOPED TO THE DIAMOND BEING MOVED, when `scope` is a set of solution ids. Until then
+    `--diamond-id` scoped only the diamond half: every solution in the tree still blocked, so
+    one unresolved contradiction or one unstanced idea anywhere blocked every diamond's
+    commit_to_build and release. Dogfood 2026-10-16: l3-opp-087's commit_to_build failed on
+    sol-085d, under another L3's opportunity, and on six siblings the replay did not pick. With a
+    scope, only those solutions block; every other one reports at the never-fail tier, as other
+    diamonds already did.
 
     EXCEPT for solutions that existed when the property list was derived. A solution
     written before the properties existed could not have declared a stance against
@@ -559,13 +569,15 @@ def _stance_findings(canvas_dir: Path, binding: list[dict],
     """
     opportunities = _load(canvas_dir / "opportunities.yml")
     if not isinstance(opportunities, dict):
-        return []
+        return [], []
     ids = [p.get("id") for p in binding]
-    out: list[str] = []
+    blocking: list[str] = []
+    advisory: list[str] = []
     for opp_id, sol in _iter_solutions(opportunities):
         sid = sol.get("id", "<no id>")
         if sid in grandfathered:
             continue
+        out = blocking if scope is None or sid in scope else advisory
         stance = sol.get("purpose_stance")
         if not isinstance(stance, dict):
             out.append(
@@ -577,7 +589,45 @@ def _stance_findings(canvas_dir: Path, binding: list[dict],
             continue
         for pid in ids:
             out.extend(_one_stance(sid, pid, stance.get(pid), known_decisions))
-    return out
+    return blocking, advisory
+
+
+#: Solution statuses that are out of the set (scale_locks.build_solutions' list).
+_DEAD_SOLUTION = frozenset({"killed", "archived", "discarded", "dropped", "parked"})
+
+
+def _ref_key(ref) -> str:
+    """`opportunities.yml#sol-002, swap` -> `sol-002`: scale_locks' one parser for a reference."""
+    if _sl is not None:
+        return _sl._ref_key(ref)  # noqa: SLF001 - the one reference parser, not a copy
+    if ref is None or isinstance(ref, (dict, list)):
+        return ""
+    words = str(ref).split("#")[-1].split(",")[0].split()
+    return words[0] if words else ""
+
+
+def diamond_solutions(canvas_dir: Path, diamonds_path: Path, diamond_id: str) -> set:
+    """THE SOLUTIONS A DIAMOND'S DECISION IS ABOUT, by id: the ones it names, as `front_runner`
+    (an L3 at commit_to_build) or `object_ref` (an L4 names the solution it delivers); with
+    neither naming a solution, the live solutions under the opportunity its `object_ref` names,
+    which is the set an L3 that has not chosen yet builds from (scale_locks' build_solutions and
+    delivered_solutions read it the same way). Empty when the diamond names no solution and no
+    opportunity: then only its own stance blocks."""
+    diamonds = _load(diamonds_path)
+    found = [d for d in _iter_diamonds(diamonds) if d.get("id") == diamond_id] \
+        if isinstance(diamonds, dict) else []
+    opportunities = _load(canvas_dir / "opportunities.yml")
+    if not found or not isinstance(opportunities, dict):
+        return set()
+    dm = found[0]
+    sols = [(str(o), s) for o, s in _iter_solutions(opportunities)]
+    named = {_ref_key(dm.get("front_runner")), _ref_key(dm.get("object_ref"))} - {""}
+    hit = {str(s.get("id")) for _o, s in sols if str(s.get("id")) in named}
+    if hit:
+        return hit
+    ref = _ref_key(dm.get("object_ref"))
+    return {str(s.get("id")) for o, s in sols if ref and o == ref
+            and str(s.get("status", "")).lower() not in _DEAD_SOLUTION}
 
 
 def default_diamonds_path(canvas_dir: Path) -> Path:
@@ -610,13 +660,15 @@ def purpose_stance_findings(canvas_dir: Path, diamonds_file: Path | None = None,
     if binding:
         grandfathered = set(pp.get("grandfathered") or [])
         known = decision_ids(default_decision_log(canvas_dir))
-        out.extend(_stance_findings(canvas_dir, binding, grandfathered, known))
         dpath = diamonds_file or default_diamonds_path(canvas_dir)
+        scope = diamond_solutions(canvas_dir, dpath, diamond_id) if diamond_id else None
+        sol_block, sol_advisory = _stance_findings(canvas_dir, binding, grandfathered, known,
+                                                   scope)
         blocking, advisory = _diamond_stance_findings(
             dpath, binding, grandfathered, diamond_id, known)
-        out.extend(blocking)
+        out.extend(sol_block + blocking)
         if include_advisory:
-            out.extend(advisory)
+            out.extend(sol_advisory + advisory)
     return out
 
 
@@ -732,10 +784,12 @@ def main() -> int:
     ap.add_argument(
         "--diamond-id",
         default=None,
-        help="the diamond being transitioned. Scopes the BLOCK tier to it, so a "
-        "transition is never failed by a different diamond's missing stance. Omit for a "
-        "whole-canvas sweep, where every diamond that has committed to build is "
-        "blocking-eligible.",
+        help="the diamond being transitioned. Scopes the BLOCK tier to it and to the "
+        "solutions it names (front_runner, or the solution its object_ref names; with "
+        "neither, the live solutions under the opportunity its object_ref names), so a "
+        "transition is never failed by a different diamond's or solution's missing stance. "
+        "Omit for a whole-canvas sweep, where every solution and every diamond that has "
+        "committed to build is blocking-eligible.",
     )
     ap.add_argument(
         "--strict",

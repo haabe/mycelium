@@ -62,6 +62,15 @@ From interviews, observations, support tickets, and behavioral data, extract dis
 - Each need must cite at least one evidence source
 - Separate needs from solutions: "I need to know my order status" not "I need email notifications"
 
+**Test each need with Allen's litmus question**: *"If the thing you're building never gets
+delivered, who suffers—and how? If there's no meaningful consequence, it probably wasn't a real
+need."* A statement that fails it is probably not a need; say so rather than score it.
+
+**Sort the needs by how you know them.** Allen, crediting Wardley, uses three kinds:
+**Expressed Wants**, **Expected Needs** and **Hypothesised Needs**. He warns that organisations over-invest in
+expected needs *"while ignoring the hypothesised needs that could provide a competitive
+advantage."* Before leaving this step, check that the list is not made only of expected needs.
+
 ### 3. Score Needs (Importance vs Satisfaction)
 
 *Source: **Ulwick** (Outcome-Driven Innovation) for the opportunity algorithm and the
@@ -99,12 +108,16 @@ For each need:
 >
 > **So this instrument needs a SAMPLE.** One person assigning 8 from judgement is not "80% of
 > surveyed users rated this 4 or 5". With fewer than ~10 respondents, **use the ranking and do not
-> report the bands** — Ulwick's own bands (>15 extreme opportunity, <10 overserved) only mean
-> anything on percentage-derived inputs.
+> report the bands** — Ulwick's own bands (>15 extreme opportunity, <10 unattractive in most
+> markets) only mean anything on percentage-derived inputs. A score below 10 is not "overserved":
+> overserved is a different test in his book, satisfaction rated above importance (step 4).
 
 ### 4. Classify Need States
 
-*Source: Ulwick (ODI) opportunity landscape.*
+*Source: Ulwick (ODI) opportunity landscape, for Met, Underserved and Overserved. **Unrecognized is not
+his.** He argues against assuming latent needs, needs customers cannot articulate: "So let's not
+assume customers have latent needs" (*Jobs to be Done: Theory to Practice*). The state is kept here
+as Mycelium's own, and its source is not established.*
 
 - **Met**: Current solutions adequately address this (satisfaction >= 7)
 - **Underserved**: Need exists, current solutions are poor (importance high, satisfaction low)

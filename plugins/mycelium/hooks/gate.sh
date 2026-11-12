@@ -204,7 +204,9 @@ if [ "$NEEDS_RENEWAL" -eq 1 ]; then
     # JSON or not at all, and a runtime that parses stdout must not be handed a sentence. It was
     # harmless while this branch only ran where CLAUDE_PLUGIN_ROOT is set; since 0.322.3 the gate
     # finds its own preflight on every runtime. What the gate needs from it is the stamp.
-    bash "$PREFLIGHT" >/dev/null 2>&1 || {
+    # MYCELIUM_PREFLIGHT_STAMP_ONLY: the stamp is all this run is for, and the once-only
+    # deliveries preflight makes at a prompt would be spent here unread (0.336.0).
+    MYCELIUM_PREFLIGHT_STAMP_ONLY=1 bash "$PREFLIGHT" >/dev/null 2>&1 || {
       _gate_block_log "stale-stamp"
       echo '{"message": "Mycelium preflight required. Read corrections.md and run validation before code changes."}' >&2
       exit 2

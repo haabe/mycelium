@@ -379,6 +379,12 @@
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/next-item-repeat.sh\"",
             "timeout": 5,
             "statusMessage": "Mycelium next-item repeat"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh\" stop",
+            "timeout": 15,
+            "statusMessage": "Mycelium shell-state check (a command whose after-check never ran)"
           }
         ]
       }

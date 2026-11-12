@@ -9,7 +9,7 @@ metadata:
 
 # Jobs to be Done Mapping
 
-People "hire" products to get jobs done. Map ALL three dimensions. Source: Christensen.
+People "hire" products to get jobs done. Map ALL three dimensions. Source: Christensen, for the theory and the three dimensions; the job statement format below is not his.
 
 ## Preflight: Read target canvas file(s) before any Write/Edit
 
@@ -35,6 +35,9 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 
 ## Job Statement Format
 "When [situation], I want to [motivation], so I can [expected outcome]"
+
+This format is Mycelium's convention, not a quotation of Christensen: a search of *Competing
+Against Luck* for three phrasings of it found none.
 
 ## Three Dimensions (all required)
 
