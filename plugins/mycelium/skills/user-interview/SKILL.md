@@ -44,6 +44,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    - **Leave out the names of other people they mention** (a colleague, a manager, a client) unless that person agreed. Write the role instead.
    - **Write what they agreed to as one line of the post-interview snapshot** (notes kept or not, verbatim words or paraphrase only, named or not), so a later reader knows what may be quoted. Keeping real names out of git is a storage rule (agent-operating-contract.md, "Plain language first"); use a pseudonym in the canvas when the person did not agree to be named.
    - **The agent drafts; the person sends.** Any message to the interviewee (the ask, a follow-up, a thank-you) is drafted by the agent and sent by the human. Sending an external message is a human-approved action in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md` (authority map: "Send external message / outreach").
+6. **Write the interview guide and every drafted message to a file, and say where (contract rule 13).** The guide (the consent line from step 5 and the questions with their `[target â†’ ...]` tags) and each message the person will send (the ask, a follow-up, a thank-you; in async drip mode, each pair of questions) are used after this session, and the chat is gone by then. Write them to `.claude/handoffs/<YYYY-MM-DD>-<slug>.md` when you produce them (the date written; the slug a few words naming the interview, lower case, joined by hyphens), and name that path in the reply. If `/mycelium:handoff` already wrote a brief file for this interview, add to that file instead of starting a second one. Showing them only in the reply loses them: in an end-to-end run on the installed plugin, messages drafted for the founder to send were shown in the chat twice and written to no file (`${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md`, rule 13).
 
 ## Question Design Rules
 
@@ -146,6 +147,7 @@ async slows badly.
 second practitioner's account can corroborate or split the N=1 this mode rests on.
 
 ## Output
+- Write the interview guide and drafted messages to `.claude/handoffs/<YYYY-MM-DD>-<slug>.md` (Pre-Interview step 6)
 - Update .claude/canvas/opportunities.yml with new evidence
 - Update .claude/canvas/user-needs.yml
 - Update .claude/canvas/jobs-to-be-done.yml
