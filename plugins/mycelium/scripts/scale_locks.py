@@ -72,6 +72,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _assessment_lib as _assess
+import _hook_input
 import _secret_mask
 
 try:
@@ -1846,7 +1847,9 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
         said = ""  # never said: say it now
     # At most twice a sitting (v0.252.1): at its first prompt, and at its first go-live prompt. A
     # go-live stretch runs many sessions; the same line on every such prompt is read past.
-    golive = bool(_GO_LIVE.search(str(payload.get("prompt") or "")))
+    # Only the words the builder typed: a subagent's report that mentions a deploy is not a
+    # prompt about going live (2026-11-12, _hook_input.builder_text).
+    golive = bool(_GO_LIVE.search(_hook_input.builder_text(str(payload.get("prompt") or ""))))
     first_prompt = said.split("#")[0] != sitting
     if not first_prompt and (not golive or said.endswith("#golive")):
         return ""

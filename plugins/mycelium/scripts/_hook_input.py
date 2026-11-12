@@ -18,6 +18,7 @@ WHAT A HOOK GETS (stdlib only):
   bash_write_targets(cmd, dir)    -> BashScan(targets, opaque, mentions)
   is_guard_state(rel)             -> the off-switch file this path names, or None
   guard_state_check(...)          -> `ask` the human when a tool call writes an off-switch
+  builder_text(prompt)            -> str a UserPromptSubmit prompt minus the harness's own turns
   decision(kind, reason)          -> prints the PreToolUse JSON and exits 0
   fail_closed(name)               -> decorator: any exception is a deny that names it
 
@@ -306,6 +307,69 @@ def bash_write_targets(cmd: str, project_dir: str) -> BashScan:
             continue
         _scan_segment(seg, cwd_rel, project_dir, scan)
     return scan
+
+
+# ---------------------------------------------------------------- prompts
+# WHAT THE BUILDER TYPED (2026-11-12). A UserPromptSubmit hook gets every turn that arrives as
+# a prompt, and some of those are the harness speaking: a subagent's hand-back, a background
+# task's notification, the echo of a local command. discovery_trigger_guard read a subagent's
+# report quoting a sourced sentence as the builder claiming something about people, seven
+# times in one round (dogfood, 2026-10-02), and an advisory that fires on machine turns is
+# tuned out before it meets a human one. Every UserPromptSubmit script that reads the words of
+# a prompt reads them through builder_text().
+#
+# The frames are recognised by their fixed wrappers, at column zero, as Claude Code delivers
+# them (read from the dogfood transcripts, 2026-11-12): a hand-back is
+#   Another Claude session sent a message:
+#   <agent-message from="...">
+#   [Subagent hand-back] ... The report follows:
+#     <the report, every line indented by the harness>
+#   </agent-message>
+#
+#   That "other Claude session" is an agent ... (one closing line)
+# and a notification is a <task-notification> ... </task-notification> block. The harness
+# indents every line of a report, so a frame-like line at column zero inside one is not a
+# frame; that is why the patterns are anchored there. These are the runtime's markers, not
+# Mycelium's, and can change without notice: tests/python/test_hook_input.py holds one
+# fixture per marker.
+_MACHINE_BLOCKS = (
+    re.compile(
+        r"^(?:Another Claude session sent a message:[ \t]*\n)?<agent-message\b[^\n]*\n"
+        r".*?^</agent-message>[ \t]*(?:\n\s*That \"other Claude session\"[^\n]*)?",
+        re.MULTILINE | re.DOTALL,
+    ),
+    re.compile(r"^<task-notification>.*?^</task-notification>[ \t]*$", re.MULTILINE | re.DOTALL),
+    # Echoes of what ran locally: the output of a slash command or a `!` shell command, and
+    # the caveat line that says so. The builder's own words for a slash command
+    # (<command-args>) are kept.
+    re.compile(
+        r"<(local-command-caveat|local-command-stdout|local-command-stderr|bash-input|"
+        r"bash-stdout|bash-stderr)>.*?</\1>",
+        re.DOTALL,
+    ),
+)
+#: A frame whose close is not there (truncated, or a wrapper with no closing line, like the
+#: system-notification banner): everything from it to the end of the prompt is the
+#: machine's. Text typed BEFORE it is kept; text after it cannot be told apart and is dropped.
+_MACHINE_TO_END = re.compile(
+    r"^(?:Another Claude session sent a message:|<agent-message\b|\[Subagent hand-back\]|"
+    r"<task-notification>|\[SYSTEM NOTIFICATION - NOT USER INPUT\]).*\Z",
+    re.MULTILINE | re.DOTALL,
+)
+
+
+def builder_text(prompt) -> str:
+    """The part of a UserPromptSubmit prompt the builder typed; '' when it is all machine.
+
+    Removes hand-back and notification frames whole, and local-command echo blocks, wherever
+    they sit in the prompt, so typed text before or after a closed frame is still read.
+    """
+    if not isinstance(prompt, str):
+        return ""
+    text = prompt
+    for rx in _MACHINE_BLOCKS:
+        text = rx.sub("", text)
+    return _MACHINE_TO_END.sub("", text).strip()
 
 
 # ---------------------------------------------------------------- output

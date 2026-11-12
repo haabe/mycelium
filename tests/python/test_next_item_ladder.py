@@ -342,3 +342,19 @@ def test_the_settled_flag_speaks_for_the_stop_hook(tmp_path, monkeypatch, capsys
     _stored(root, plugin_version=ni._plugin_version())
     ni.main(["--project-dir", str(root), "--settled"])
     assert capsys.readouterr().out.strip() == "open"
+
+
+def test_a_subagent_report_is_not_the_human_answering(tmp_path, monkeypatch):
+    """2026-11-12: a hand-back arrives as a prompt; a report saying "snooze it" is not the
+    human's ruling, and pointing the agent at the record command would record one."""
+    root = _project(tmp_path)
+    _session(root, "s1", "2026-09-24", monkeypatch)
+    handback = ('Another Claude session sent a message:\n<agent-message from="a1">\n'
+                "[Subagent hand-back] The report follows:\n  I would snooze it until Monday.\n"
+                "</agent-message>")
+    assert ni._prompt_of(json.dumps({"prompt": handback})) == ""
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"prompt": handback})))
+    monkeypatch.setattr("sys.stdout", out)
+    assert ni.main(["--project-dir", str(root), "--prompt-line"]) == 0
+    assert "looks like the user's answer" not in out.getvalue()
