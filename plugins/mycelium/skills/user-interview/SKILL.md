@@ -44,6 +44,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    - **Leave out the names of other people they mention** (a colleague, a manager, a client) unless that person agreed. Write the role instead.
    - **Write what they agreed to as one line of the post-interview snapshot** (notes kept or not, verbatim words or paraphrase only, named or not), so a later reader knows what may be quoted. Keeping real names out of git is a storage rule (agent-operating-contract.md, "Plain language first"); use a pseudonym in the canvas when the person did not agree to be named.
    - **The agent drafts; the person sends.** Any message to the interviewee (the ask, a follow-up, a thank-you) is drafted by the agent and sent by the human. Sending an external message is a human-approved action in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md` (authority map: "Send external message / outreach").
+6. **Write the interview guide and every drafted message to a file, and say where (contract rule 13).** The guide (the consent line from step 5 and the questions with their `[target â†’ ...]` tags) and each message the person will send (the ask, a follow-up, a thank-you; in async drip mode, each pair of questions) are used after this session, and the chat is gone by then. Write them to `.claude/handoffs/<YYYY-MM-DD>-<slug>.md` when you produce them (the date written; the slug a few words naming the interview, lower case, joined by hyphens), and name that path in the reply. If `/mycelium:handoff` already wrote a brief file for this interview, add to that file instead of starting a second one. Showing them only in the reply loses them: in an end-to-end run on the installed plugin, messages drafted for the founder to send were shown in the chat twice and written to no file (`${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md`, rule 13).
 
 ## Question Design Rules
 
@@ -82,6 +83,12 @@ Create immediately after each interview:
 - What the person agreed to (Pre-Interview step 5): notes kept or not, verbatim or paraphrase only, named or not
 - 3-5 key quotes (verbatim where they agreed to it; a paraphrase where they did not)
 - Opportunities identified (needs/pain points/desires)
+- **Acting on it now?** One answer per story, recorded on the opportunity the story is evidence for, as an entry in its `acting_on` list (`source`: the story's id as written in that opportunity's `provenance.evidence_sources`; `answer`; a one-line `detail` saying what showed it):
+  - `under_way`: a project to deal with it was under way at the time, and something made it unavoidable (say what);
+  - `tried_options`: they had tried or weighed options, and can say where each fell short (say which, and where);
+  - `lived_with`: the need is real and they were taking no action. This is a legitimate answer, not a failure: it is the difference the L2's comparison of opportunities needs to see.
+
+  Read for meaning, not for the words (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`). A story that does not show either way gets no entry; do not guess one. Why this exists: an opportunity could reach its L2 bar on interviews alone while every story behind it was a pain people lived with, because a voiced pain and a need someone was working on were recorded alike. Snyder, *The Power of Pull* (Basic Venture, 2026), names what separates them: a project being worked on now, that is unavoidable, a list of options tried or weighed, and their limitations. It is not a money-down requirement, which many builders' users cannot meet. `validate_canvas` counts the answers per opportunity (`COVERAGE (acted on)`), and `/mycelium:ost-builder` carries the counts into the comparison when the L2 chooses its target.
 - Surprises (things you didn't expect)
 - JTBD dimensions observed (functional/emotional/social)
 - Biases to watch for in interpretation
@@ -146,7 +153,8 @@ async slows badly.
 second practitioner's account can corroborate or split the N=1 this mode rests on.
 
 ## Output
-- Update .claude/canvas/opportunities.yml with new evidence
+- Write the interview guide and drafted messages to `.claude/handoffs/<YYYY-MM-DD>-<slug>.md` (Pre-Interview step 6)
+- Update .claude/canvas/opportunities.yml with new evidence, and each story's `acting_on` answer (Post-Interview Snapshot)
 - Update .claude/canvas/user-needs.yml
 - Update .claude/canvas/jobs-to-be-done.yml
 - Update .claude/canvas/scenarios.yml with extracted scenarios (if all three Hoskins elements are present: Motivation, Persona, Simulation)

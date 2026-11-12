@@ -182,6 +182,17 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes �
    "Send external message / outreach", REVIEW rising to BLOCK at fan-out). Say in the brief that
    the human sends it.
 
+4d. **Write the take-away to a file, and say where (contract rule 13).** The brief, the capture
+   template, the pocket card and, for `outreach`, each drafted message are what the human uses
+   after this session, and the chat is gone by then. Write them to
+   `.claude/handoffs/<YYYY-MM-DD>-<slug>.md` when you produce them (the date the brief is written;
+   the slug a few words of the objective, lower case, joined by hyphens), and name that path in
+   the reply. If the file already exists for this task, add to it instead of starting a second
+   one. Showing the brief only in the reply loses it: in an end-to-end run on the installed plugin
+   a call script drafted in one session existed only in the chat, and the next session could not
+   find it (`${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md`, rule 13). Step 5's
+   `human-tasks.yml` entry records the task; this file holds what the human takes into the room.
+
 5. **Write to `.claude/canvas/human-tasks.yml`**:
    - Add a `pending_tasks` entry with all fields populated
    - Set `status: pending`
@@ -201,7 +212,8 @@ When the brief is for an async exchange rather than a meeting, write it as pairs
 message, then three or four pairs of two story-based questions each, then the closing question
 ("that's all from me; any closing thoughts?"). Say in the brief that the next pair goes out only
 after the previous pair is answered, and that the sender chooses the next pair from the answers,
-which is where the follow-up lives. Shape and evidence in `/mycelium:user-interview` § Async drip
+which is where the follow-up lives. Write the messages to the file step 4d names, and add each
+later pair to the same file when you draft it. Shape and evidence in `/mycelium:user-interview` § Async drip
 mode (one practitioner, 9 of 10 completions, self-reported). Needs no scheduling, no calendar
 overlap, no timezone and no video, which for a solo builder is the largest single unit of friction
 the discovery loop removes; it is a second mode, not a replacement for the live brief.
@@ -209,6 +221,7 @@ the discovery loop removes; it is a second mode, not a replacement for the live 
 ## Canvas Output
 
 - Writes to: `.claude/canvas/human-tasks.yml` (pending_tasks section)
+- Writes to: `.claude/handoffs/<YYYY-MM-DD>-<slug>.md` (the brief, capture template, pocket card and any drafted message; step 4d)
 - References: whatever canvas section has the evidence gap
 
 ## Theory Citations
