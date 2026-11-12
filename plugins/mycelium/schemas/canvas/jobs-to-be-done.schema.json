@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/jobs-to-be-done.schema.json",
   "title": "Jobs to be Done Canvas",
-  "description": "Christensen JTBD — functional, emotional, social dimensions. Each job requires provenance because all three dimensions need interview backing.",
+  "description": "Christensen JTBD — functional, emotional, social dimensions. Each job requires provenance because all three dimensions need interview backing. PART 1 OF THE JOB SPEC ONLY (founder ruling 2026-11-12, no new fields): Competing Against Luck's job spec has five parts, and this schema carries the first, the job (situation, motivation, expected outcome) with its functional, emotional and social dimensions. It has no field for the other four: the tradeoffs the customer is willing to make, the full set of competing solutions that must be beaten (doing nothing among them), the obstacles and anxieties that must be overcome, and the experiences of purchase and use that overcome them. A job recorded here is not a full job spec; /mycelium:jtbd-map says so where it writes one.",
   "type": "object",
   "$defs": {
     "dimension_status": {
