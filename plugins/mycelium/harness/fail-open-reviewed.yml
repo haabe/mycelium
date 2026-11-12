@@ -1241,3 +1241,11 @@ reviewed:
     folder (it does: both are in plugins/mycelium/scripts, and its only non-stdlib import, yaml, is
     one this script needs anyway to read human-tasks.yml). If the two are ever shipped apart, this
     narrowing must speak.
+- id: validate_canvas.py@99030fc04d
+  verdict: ACCEPTED 2026-11-12
+  reason: >-
+    `acted_on_coverage` (founder ruling 2026-11-12, the acting_on field) returns None when
+    opportunities.yml cannot be read or parsed. It is a COVERAGE line, not a gate, and the failure
+    does speak: `validate_all_yaml_parses` runs first in main() and reports every canvas file that
+    does not parse, so a broken opportunities.yml fails validation loudly before this line is
+    reached. Same judgement as `validate_canvas.py@1132725329` (review_trigger_coverage).

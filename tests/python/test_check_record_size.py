@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "plugins" / "mycelium" / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+import _scratch_git  # noqa: E402
 import advisory_ledger  # noqa: E402
 import check_record_size as crs  # noqa: E402
 
@@ -29,7 +30,7 @@ def _project(tmp_path: Path) -> Path:
 
 
 def _git(root: Path, *args: str, when: float | None = None) -> None:
-    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
+    env = {**_scratch_git.clean_env(), "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
            "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}
     if when is not None:
         env["GIT_AUTHOR_DATE"] = env["GIT_COMMITTER_DATE"] = f"@{int(when)} +0000"
@@ -40,7 +41,7 @@ def test_a_record_past_the_threshold_is_named_with_its_growth(tmp_path, capsys):
     root = _project(tmp_path)
     log = root / ".claude" / "harness" / "decision-log.md"
     log.write_text("x" * (BIG - 100 * 1024))
-    _git(root, "init", "-q")
+    _scratch_git.init(root)
     _git(root, "add", "-A")
     _git(root, "commit", "-q", "-m", "old", when=time.time() - 40 * 86400)
     log.write_text("x" * BIG)
