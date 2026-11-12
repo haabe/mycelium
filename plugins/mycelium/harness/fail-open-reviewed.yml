@@ -781,13 +781,14 @@ reviewed:
     the failure degrades to the old behaviour rather than to silence about a diamond. A missing file
     is also the normal state before the first diamonds write. Reviewed 2026-09-24, v0.250.0.
 
-- id: diamond_rulings.py@4a1d668fd2
+- id: diamond_rulings.py@cb5e18425d
   verdict: accepted
   reason: >-
     `record` returns {} when diamonds/active.yml cannot be parsed. Silent here and correct: the same
     write runs canvas-schema-check.sh, which names the YAML parse error to the agent in that turn;
     reporting it twice would be two messages about one fault. The previous record is left in place.
-    Reviewed 2026-09-24, v0.250.0.
+    Reviewed 2026-09-24, v0.250.0. Id re-keyed (was @4a1d668fd2) when `_dt.UTC` in the line below
+    the handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
 
 - id: next_item.py@4e0f24035a
   verdict: accepted
@@ -998,13 +999,14 @@ reviewed:
     so no log can land there either and nothing is exposed; the shell half (_hook_prelude.sh) tries
     again at every hook exit. Asserted by test_an_existing_ignore_file_is_never_rewritten and
     test_write_ignore_does_not_create_the_folder. Reviewed 2026-10-10, v0.318.0.
-- id: prune_state_logs.py@b471eb751c
+- id: prune_state_logs.py@e0ae281b3f
   verdict: accepted
   reason: >-
     A `ts`/`at` that does not parse leaves the line's age unknown, and the line is KEPT, not
     dropped. That fails toward keeping data, and PRIVACY.md says so ("A line with no readable date
     stays"). Asserted by test_old_activity_lines_go_and_recent_and_undated_ones_stay. Reviewed
-    2026-10-10, v0.318.0.
+    2026-10-10, v0.318.0. Id re-keyed (was @b471eb751c) when `_dt.UTC` in the line below the
+    handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
 - id: prune_state_logs.py@626212ff45
   verdict: accepted
   reason: >-

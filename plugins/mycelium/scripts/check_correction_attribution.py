@@ -38,7 +38,7 @@ import argparse
 import json
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # These scripts run three ways — as `python3 .../scripts/x.py` from any cwd,
@@ -165,7 +165,7 @@ def write_snapshot(root: Path, st: dict, snapshot_dir: Path | None = None) -> Pa
         return None
     target = snapshot_dir or (root / SNAPSHOT_REL)
     _state_dir.prepare_dir(target)
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     path = target / f"{now:%Y-%m-%d}.json"
     path.write_text(json.dumps({
         "pulled_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),

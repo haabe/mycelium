@@ -242,7 +242,7 @@ def _record(root: Path, reviews: list[dict], rid: str, when: str, note: str) -> 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--project-dir", default=".")
-    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.UTC).date().isoformat())
+    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.timezone.utc).date().isoformat())
     ap.add_argument("--schedule", default=str(SCHEDULE),
                     help="the schedule file (tests point it elsewhere)")
     verb = ap.add_mutually_exclusive_group()

@@ -43,7 +43,7 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -192,7 +192,7 @@ def main() -> int:
         "file": os.path.basename(str(tool_input.get("file_path") or "")),
         "session": str(payload.get("session_id") or ""),
         "text": _payload_text(str(payload.get("tool_name") or ""), tool_input)})
-    today = datetime.now(UTC).date().isoformat()
+    today = datetime.now(timezone.utc).date().isoformat()
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "additionalContext": _MESSAGE.format(quoted=quoted, today=today)}}))

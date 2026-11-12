@@ -41,7 +41,7 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 DEFAULT_WINDOW = 60
@@ -135,7 +135,7 @@ def _last_date_in_state_file(path: Path) -> date | None:
             dates = _ROW_DATE.findall(tail)
             if dates:
                 return date.fromisoformat(max(dates))
-        return datetime.fromtimestamp(path.stat().st_mtime, tz=UTC).date()
+        return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).date()
     except (OSError, ValueError):
         return None
 
@@ -308,7 +308,7 @@ def main() -> int:
         print("check_retirement_candidates: no framework root (needs skills/ and hooks/); "
               "pass --framework-root or set CLAUDE_PLUGIN_ROOT", file=sys.stderr)
         return 2
-    today = date.fromisoformat(args.today) if args.today else datetime.now(UTC).date()
+    today = date.fromisoformat(args.today) if args.today else datetime.now(timezone.utc).date()
     project = Path(args.project_dir)
     if not any((project / rel).exists() for rel in _PROJECT_RECORD):
         print("NOT A PASS: the project has no decision log, corrections file or state "

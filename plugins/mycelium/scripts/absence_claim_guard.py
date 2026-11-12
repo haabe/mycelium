@@ -54,7 +54,7 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -534,7 +534,7 @@ def _log(hook: str, fires: int, first_match: str, signature: str,
         changed = bool(prior and prior.get("first_match")
                        and prior["first_match"] not in text)
         row = {
-            "at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "hook": hook,
             "fires": fires,
             "signature": signature,

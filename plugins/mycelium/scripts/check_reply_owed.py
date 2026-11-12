@@ -191,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
     # datetime.now(tz).date() rather than date.today(): DTZ011 — an untimezoned
     # 'today' silently uses the runner's locale, and a reply-owed age is a real number.
     today = (datetime.date.fromisoformat(args.today) if args.today
-             else datetime.datetime.now(datetime.UTC).date())
+             else datetime.datetime.now(datetime.timezone.utc).date())
     path = Path(args.project_dir) / ".claude" / "canvas" / "human-tasks.yml"
 
     if not path.exists():

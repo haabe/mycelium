@@ -71,7 +71,7 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from itertools import pairwise
 from pathlib import Path
 
@@ -452,7 +452,7 @@ def _log(hook: str, fires: int, first_match: str, signature: str, command: str =
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
         _state_dir.prepare_dir(root)
         row = {
-            "at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "hook": hook,
             "fires": fires,
             "signature": signature,

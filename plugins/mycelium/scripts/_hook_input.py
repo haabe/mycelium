@@ -739,7 +739,7 @@ def _today_date() -> _dt.date:
     """Mycelium's today: MYCELIUM_TODAY when set (a stated date, or a simulated world), else UTC,
     as scale_locks reads it."""
     raw = os.environ.get("MYCELIUM_TODAY", "").strip()
-    utc_today = _dt.datetime.now(tz=_dt.UTC).date()
+    utc_today = _dt.datetime.now(tz=_dt.timezone.utc).date()
     try:
         return _dt.date.fromisoformat(raw[:10]) if raw else utc_today
     except ValueError:
@@ -817,7 +817,7 @@ def _legacy_ack(project_dir: str, kind: str, targets: list[str],
 
 
 def _log_skip_ack(project_dir: str, kind: str, targets: list[str], *, legacy: bool) -> None:
-    row = {"ts": _dt.datetime.now(tz=_dt.UTC).isoformat(timespec="seconds"), "gate": kind,
+    row = {"ts": _dt.datetime.now(tz=_dt.timezone.utc).isoformat(timespec="seconds"), "gate": kind,
            "targets": targets[:10], "legacy": legacy}
     with contextlib.suppress(OSError), (Path(project_dir) / SKIP_ACK_USES_REL).open("a") as fh:
         fh.write(json.dumps(row) + "\n")

@@ -86,7 +86,7 @@ def main() -> int:
         return 2
 
     today = (datetime.date.fromisoformat(args.today) if args.today
-             else datetime.datetime.now(datetime.UTC).date())
+             else datetime.datetime.now(datetime.timezone.utc).date())
     when, age = sweep_age(spec.read_text(encoding="utf-8", errors="ignore"), today)
 
     if when is None:

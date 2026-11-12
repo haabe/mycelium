@@ -636,7 +636,7 @@ def cycle_field_coverage(cycle_file, today=None):
         return []
 
     if today is None:
-        today = datetime.datetime.now(datetime.UTC).date()
+        today = datetime.datetime.now(datetime.timezone.utc).date()
 
     # Observational fields are measured only on records where someone was actually watching.
     observed = _observed_only(closed)

@@ -74,6 +74,13 @@ ignore = [
                 # LICENSE file at the root; 43 duplicated headers would be noise
                 # and are not this project's convention. Ignored as a POLICY
                 # choice, not because the rule is wrong for repos that want it.
+
+    # --- The code runs on older Pythons than target-version says ---
+    "UP017",    # wants `datetime.UTC` for `datetime.timezone.utc`. `datetime.UTC` exists
+                # from Python 3.11 only, and the hooks and scripts run under whatever
+                # `python3` the builder has; macOS ships 3.9. The hooks discard stderr, so
+                # on 3.9 a script using the name logged nothing and said nothing.
+                # tests/python/test_no_py311_only_names.py keeps the name out of the plugin.
 ]
 
 [lint.per-file-ignores]

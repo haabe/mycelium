@@ -363,7 +363,7 @@ def _evidence_files(root: Path) -> list[Path]:
 def _newest_evidence(root: Path) -> str:
     """The newest date any canvas file or research note was written (YYYY-MM-DD), or ''."""
     stamps = [f.stat().st_mtime for f in _evidence_files(root)]
-    return (_dt.datetime.fromtimestamp(max(stamps), tz=_dt.UTC).date().isoformat()
+    return (_dt.datetime.fromtimestamp(max(stamps), tz=_dt.timezone.utc).date().isoformat()
             if stamps else "")
 
 
@@ -1642,7 +1642,8 @@ def main(argv=None) -> int:
     ap.add_argument("--project-dir", type=Path, default=Path("."))
     ap.add_argument("--session", default="unknown")
     ap.add_argument("--today", default=(
-        al.today_iso() if al is not None else _dt.datetime.now(tz=_dt.UTC).date().isoformat()))
+        al.today_iso() if al is not None
+        else _dt.datetime.now(tz=_dt.timezone.utc).date().isoformat()))
     ap.add_argument(
         "--write-state",
         action="store_true",
@@ -1696,7 +1697,7 @@ def main(argv=None) -> int:
         item["shown"], item["first_shown"] = carry(root, prev, item, args.session, args.today)
         first_at = (str(prev.get("first_shown_at") or "") if item["shown"] > 1
                     or same_sitting(prev, item["id"], args.session, args.today) else "")
-        item["first_shown_at"] = first_at or _dt.datetime.now(tz=_dt.UTC).isoformat()
+        item["first_shown_at"] = first_at or _dt.datetime.now(tz=_dt.timezone.utc).isoformat()
         p = root / STATE_REL
         _state_dir.prepare(p)
         p.write_text(

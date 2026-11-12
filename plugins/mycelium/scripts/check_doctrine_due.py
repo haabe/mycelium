@@ -84,7 +84,7 @@ def overdue_predictions(doctrine_doc: object, today: str) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project-dir", default=".")
-    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.UTC).date().isoformat())
+    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.timezone.utc).date().isoformat())
     args = ap.parse_args(argv)
 
     root = Path(args.project_dir)

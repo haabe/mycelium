@@ -378,7 +378,7 @@ def _load(project_dir: str, *rel: str):
 
 def _today() -> str:
     """Mycelium's today: MYCELIUM_TODAY when set (a stated date, or a simulated world), else UTC."""
-    return os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.UTC).date().isoformat()
+    return os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.timezone.utc).date().isoformat()
 
 
 def _as_list(value) -> list:
@@ -1118,7 +1118,8 @@ class State:
                    "everyone is an L4")
             return [msg]
         until = str(ld.get("until") or "").strip()
-        today = os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.UTC).date().isoformat()
+        today = (os.environ.get("MYCELIUM_TODAY")
+                 or _dt.datetime.now(_dt.timezone.utc).date().isoformat())
         if until and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", until[:10]):  # v0.307.3 (P3)
             return [(f"{did}: an end date for its learning delivery as YYYY-MM-DD "
                      f"(`{delivery_key(d, 'until')}` is `{until[:30]}`, which cannot run out)")]
@@ -1596,7 +1597,7 @@ def _release_decision(project_dir: str, what: str) -> tuple[str, str] | None:
 def _log_release(project_dir: str, what: str, labels: list[str], outcome: str) -> None:
     # v0.318.0: masked. `what` is the matched release, which for some hosts spans the arguments
     # between the program and the deploy flag (`vercel --token ... --prod`).
-    row = {"ts": _dt.datetime.now(tz=_dt.UTC).isoformat(timespec="seconds"),
+    row = {"ts": _dt.datetime.now(tz=_dt.timezone.utc).isoformat(timespec="seconds"),
            "release": _secret_mask.mask(what, 80), "exposures": labels, "outcome": outcome}
     with contextlib.suppress(OSError), open(os.path.join(project_dir, EXPOSURE_USES), "a",
                                             encoding="utf-8") as fh:
@@ -1836,7 +1837,7 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
     _swap_exposure_last(project_dir, ok)  # the baseline a write's change is judged against
     if not delivering or ok:
         return ""
-    today = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
+    today = today or _dt.datetime.now(tz=_dt.timezone.utc).date().isoformat()
     sitting = f"{payload.get('session_id') or ''}|{today}"
     path = os.path.join(project_dir, EXPOSURE_SAID)
     try:

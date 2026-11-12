@@ -85,7 +85,7 @@ mycelium_log_fire() {  # $1 relative path, $2 outcome, $3 optional detail
   MYC_OUTCOME="$outcome" MYC_DETAIL="$detail" MYC_SID="${MYCELIUM_SESSION_ID:-}" \
   _mycelium_py "$py" - >> "$target" 2>/dev/null <<'PY' || true
 import datetime, json, os
-ts = datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+ts = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
 row = {"ts": ts, "hook": os.environ.get("MYC_HOOK", ""),
        "outcome": os.environ.get("MYC_OUTCOME", "")}
 d = os.environ.get("MYC_DETAIL") or ""
@@ -149,7 +149,7 @@ except Exception:
 tid = data.get("tool_use_id") if isinstance(data, dict) else None
 if not isinstance(tid, str) or not tid or len(tid) > 128:
     sys.exit(0)
-row = {"ts": datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z"),
+row = {"ts": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
        "tool_use_id": tid, "hook": os.environ.get("MYC_HOOK", "")}
 sid = os.environ.get("MYC_SID") or data.get("session_id") or ""
 if isinstance(sid, str) and sid:

@@ -28,7 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HOOK_ATTACHMENTS = ("hook_cancelled", "hook_success", "hook_error")
@@ -45,7 +45,7 @@ def scan(tdir: Path, since: datetime) -> dict[str, dict]:  # noqa: C901 — one 
     per: dict[str, dict] = {}
     for f in sorted(tdir.glob("*.jsonl")):
         try:
-            mtime = datetime.fromtimestamp(f.stat().st_mtime, tz=UTC)
+            mtime = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc)
         except OSError:
             continue
         if mtime < since:
@@ -149,7 +149,7 @@ def gate_blocks(project: Path, since: datetime) -> str | None:
         reasons[r] = reasons.get(r, 0) + 1
     detail = ", ".join(f"{k} {v}" for k, v in sorted(reasons.items()))
     note = f"; {unreadable} unreadable line(s) skipped" if unreadable else ""
-    days = max(1, (datetime.now(tz=UTC) - since).days)
+    days = max(1, (datetime.now(tz=timezone.utc) - since).days)
     return (f"gate-block: {blocks} block(s) in {len(sessions)} session(s) over {days} day(s)"
             f"{' (' + detail + ')' if detail else ''}{note}. This is the cost side of the "
             f"gate; opp-072 asks whether it exceeds what the gate caught.")
@@ -195,11 +195,12 @@ def main(argv=None) -> int:
     tdir = transcript_dir(args.project_dir, args.claude_home)
     if not tdir.is_dir():
         print(f"hook-delivery: N/A — no transcript directory at {tdir}; no record kept here")
-        line = gate_blocks(args.project_dir, datetime.now(tz=UTC) - timedelta(days=args.days))
+        line = gate_blocks(args.project_dir,
+                           datetime.now(tz=timezone.utc) - timedelta(days=args.days))
         print(line or "gate-block: no gate-block log under .claude/state (plugin older than "
               "0.204.0, or the gate has never blocked here; not the same thing)")
         return 0
-    since = datetime.now(tz=UTC) - timedelta(days=args.days)
+    since = datetime.now(tz=timezone.utc) - timedelta(days=args.days)
     worst, lines = report(scan(tdir, since), args.days, args.contract_hook)
     for line in lines:
         print(line)

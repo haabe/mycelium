@@ -223,7 +223,7 @@ def main(argv=None) -> int:
     ap.add_argument("--project-dir", default=".")
     ap.add_argument("--write", action="store_true", help="write the migrated file (default: show)")
     ap.add_argument("--accept-comment-loss", action="store_true")
-    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.UTC).date().isoformat())
+    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.timezone.utc).date().isoformat())
     args = ap.parse_args(argv)
     root = Path(args.project_dir).resolve()
     path = root / ".claude" / "diamonds" / "active.yml"

@@ -60,7 +60,7 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -464,7 +464,7 @@ def today_iso() -> str:
             return date.fromisoformat(v).isoformat()
         except ValueError:
             pass  # a malformed override is ignored: the real date is always safe
-    return datetime.now(tz=UTC).date().isoformat()
+    return datetime.now(tz=timezone.utc).date().isoformat()
 
 
 def _item_session(root: Path, aid: str) -> str:
@@ -489,7 +489,7 @@ def rule(  # noqa: PLR0913, PLR0917 — a CLI verb with one argument per flag
                 "waits on arrives only once it is done, so nothing would ever ask. Snooze it to a "
                 "date (--until YYYY-MM-DD), or drop it with the reason.")
     ev = {"kind": "ruled", "id": aid, "date": today, "ruling": ruling, "note": note,
-          "ts": datetime.now(tz=UTC).isoformat(timespec="seconds"),
+          "ts": datetime.now(tz=timezone.utc).isoformat(timespec="seconds"),
           "session": _item_session(root, aid)}
     if until:
         ev["until"] = until
