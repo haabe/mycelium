@@ -299,8 +299,26 @@ scales:
       already requires. `pmf.band: not-yet-measurable` is a legitimate state here and must not be
       treated as a failed gate: below a real sample a percentage is not a percentage."
 
-# Confidence scoring rules
+# Confidence scoring: GUIDANCE FOR A JUDGEMENT, NOT A FORMULA.
+#
+# A diamond's `confidence` is a judgement, made by whoever runs /mycelium:diamond-progress step 3.
+# The four weights and the six evidence values below are guidance for that judgement. NO CODE
+# COMPUTES CONFIDENCE FROM THEM: no script or hook in the plugin reads `evidence_weight`,
+# `theory_gate_weight`, `validation_weight`, `peer_review_weight` or `evidence_values`, and nothing
+# checks that a recorded number agrees with them. Read 0.4 / 0.3 / 0.2 / 0.1 as "evidence counts
+# most, then the gates, then validation, then a second reader", not as the definition of the number.
+# Measured on the dogfood record 2026-09-22: two full-ladder runs on the same seed, same framework
+# version, scored the same diamond 0.60 and 0.35 and gave its Evidence gate opposite verdicts. So
+# the number is only as good as the reasons written beside it: name the evidence and the gates that
+# moved it, so a later reader can disagree with the judgement rather than redo it from nothing.
+# Founder ruling 2026-11-12: label it a judgement (the alternative, a script that derives the
+# number from provenance and these weights, was not chosen). If a script ever starts reading these
+# weights, this comment is wrong and must change in the same commit;
+# tests/python/test_confidence_is_a_judgement.py fails until it does.
+# `min_sources` (below) is different: it is a count of evidence sources, and diamond-progress step 3
+# turns it into `effective_min_sources` with the project_type multiplier. It is a floor, not a weight.
 scoring:
+  use: guidance for a judgement; no code computes confidence from these weights
   evidence_weight: 0.4
   theory_gate_weight: 0.3
   validation_weight: 0.2

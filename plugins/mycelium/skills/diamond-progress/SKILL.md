@@ -232,8 +232,16 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    made a web page public under its L3 on reviews scoped to five testers; the same rules hold a
    course pilot, a concierge service, a hardware loan or a staged app beta.
 
-3. **Calculate confidence**:
-   - Apply scoring rules from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`.
+3. **Judge confidence, then compare it to the effective threshold**:
+   - **Confidence is a judgement, and you are the one making it.** The `scoring` block in
+     `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml` (evidence 0.4, theory gates 0.3,
+     validation 0.2, peer review 0.1, and the six `evidence_values`) is guidance for that
+     judgement: evidence counts most, then the gates, then validation, then a second reader. No
+     code computes confidence from those weights and nothing checks a number against them, so do
+     not present the result as calculated. Two runs on the same record have scored the same
+     diamond 0.60 and 0.35 (dogfood, 2026-09-22). Write the number with the reasons that set it:
+     which evidence, which gates, and what would move it, so the next reader can disagree with
+     the judgement instead of re-deriving it. Founder ruling 2026-11-12.
    - Look up `project_type` and `dogfood` from `.claude/diamonds/active.yml`.
    - **If `project_type` is empty or absent, ask before ruling (v0.328.0):**
      "Before I rule: is this a solo hobby, a solo product, or a team product?"
