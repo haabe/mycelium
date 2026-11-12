@@ -790,8 +790,8 @@ reviewed:
     `record` returns {} when diamonds/active.yml cannot be parsed. Silent here and correct: the same
     write runs canvas-schema-check.sh, which names the YAML parse error to the agent in that turn;
     reporting it twice would be two messages about one fault. The previous record is left in place.
-    Reviewed 2026-09-24, v0.250.0. Id re-keyed (was @4a1d668fd2) when `_dt.UTC` in the line below
-    the handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
+    Reviewed 2026-09-24, v0.250.0. Id re-keyed (was @4a1d668fd2) when the 3.11-only UTC name in
+    the line below the handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
 
 - id: next_item.py@4e0f24035a
   verdict: accepted
@@ -1008,8 +1008,8 @@ reviewed:
     A `ts`/`at` that does not parse leaves the line's age unknown, and the line is KEPT, not
     dropped. That fails toward keeping data, and PRIVACY.md says so ("A line with no readable date
     stays"). Asserted by test_old_activity_lines_go_and_recent_and_undated_ones_stay. Reviewed
-    2026-10-10, v0.318.0. Id re-keyed (was @b471eb751c) when `_dt.UTC` in the line below the
-    handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
+    2026-10-10, v0.318.0. Id re-keyed (was @b471eb751c) when the 3.11-only UTC name in the line
+    below the handler became `_dt.timezone.utc`; the handler is otherwise unchanged.
 - id: prune_state_logs.py@626212ff45
   verdict: accepted
   reason: >-
