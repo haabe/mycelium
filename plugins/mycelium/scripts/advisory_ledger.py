@@ -154,6 +154,7 @@ SIGNATURES: list[tuple[str, str]] = [
         r"(?P<count>\d+) shipped diamond\(s\) have a measure but no completed_at",
     ),
     ("brownfield-entry", r"BROWNFIELD ENTRY:"),
+    ("records-past-one-read", r"RECORDS PAST ONE READ: (?P<count>\d+) record file"),
 ]
 _COMPILED = [(i, re.compile(p)) for i, p in SIGNATURES]
 

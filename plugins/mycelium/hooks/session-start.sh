@@ -627,6 +627,25 @@ if [ -n "$DOCCHK" ]; then
     REMINDERS="${REMINDERS}${DOC_LINE} "
   fi
 fi
+# RECORDS PAST ONE READ (founder ruling 2026-11-12, "Size warning only"). The committed records
+# grow without bound, and one past what the Read tool returns whole is read in slices or by
+# search, so the agent can miss what it did not reach. One implementation, in
+# scripts/check_record_size.py (threshold and its source there); this hook only relays the line,
+# which is printed only when a record is past it. Report only: nothing is moved.
+SIZECHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_record_size.py" ]; then
+  SIZECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_record_size.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_record_size.py" ]; then
+  SIZECHK="$_MYCELIUM_ROOT/scripts/check_record_size.py"
+fi
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}record-size "; SIZECHK=""; }
+if [ -n "$SIZECHK" ]; then
+  SIZE_LINE=$(python3 "$SIZECHK" --project-dir "$PROJECT_DIR" --advisory 2>/dev/null \
+    | grep '^RECORDS PAST ONE READ' || echo "")
+  if [ -n "$SIZE_LINE" ]; then
+    REMINDERS="${REMINDERS}${SIZE_LINE} "
+  fi
+fi
 
 # ============================================================
 # CHECK 1e-iii: Scheduled reviews past their cadence (v0.329.0)

@@ -30,6 +30,19 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - For each **recommended** canvas file: does it exist? Flag as gap if missing.
    - Report: `N/M required files present, K recommended files missing`
 
+2b. **Check record size** (founder ruling 2026-11-12, "Size warning only"): run
+   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_record_size.py" --project-dir .` It names every
+   canonical record (`.claude/canvas/*.yml`, `.claude/diamonds/*.yml`, `.claude/memory/*.md`,
+   `.claude/harness/*.md` and `*.yml`: the decision log, corrections, human tasks, cycle history
+   and their siblings) larger than 256 KB, the size past which the Read tool refuses to return a
+   file whole (the script's docstring says where that number comes from), with its size and its
+   growth over the last 30 days from git. Report the line as it is, under Warnings when any file
+   is named. It is report-only: do not move, trim or archive anything because of it; whether a
+   record is split is the person's decision. For every named file, a claim that it holds or lacks
+   something rests on a search of the whole file, never on the slice that was read. A file under
+   the threshold can still be cut by the Read tool's token limit, so a clean line is not proof
+   every record reads whole. Session start relays the same line when a file is past it.
+
 3. **Check `_meta` blocks**:
    - For each existing canvas file, check for `_meta:` block
    - Flag missing `_meta` blocks
