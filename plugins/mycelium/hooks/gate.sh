@@ -226,11 +226,80 @@ if [ -f "$CORRECTIONS_FILE" ] && [ -f "$STAMP_FILE" ]; then
 
   STAMP_HASH=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["corrections_hash"])' "$STAMP_FILE" 2>/dev/null || echo "")
 
+  # WHAT CLEARS THIS IS A READ OF THE FILE (after 0.334.1). Until then a mismatch refused the call,
+  # told the agent to "re-read corrections and re-run preflight", and deleted the stamp, so the
+  # next call of any kind found no stamp, ran preflight itself and passed: the refusal cleared on a
+  # blind retry, checked no read, and refused the very preflight command it asked for (dogfood
+  # 2026-10-11 and 10-12). Now the gate asks the read log (read-log.sh, PostToolUse on Read and
+  # on shell reads) whether corrections.md was read after it last changed. If it was, the stamp
+  # takes the new hash and the call goes on. If not, the call is refused, the stamp is kept, and
+  # the refusal holds until the file is read; a shell command that reads the file is let through,
+  # since on a runtime with no Read tool it is the only way to read it. The next prompt's
+  # preflight also re-stamps, as before. A project with no read log, or a check that cannot run,
+  # keeps the old behaviour, and the message says that the read could not be seen.
   if [ "$CURRENT_HASH" != "unknown" ] && [ -n "$STAMP_HASH" ] && [ "$CURRENT_HASH" != "$STAMP_HASH" ]; then
-    _gate_block_log "corrections-hash"
-    echo '{"message": "corrections.md changed since last preflight. Re-read corrections and re-run preflight."}' >&2
-    rm -f "$STAMP_FILE"
-    exit 2
+    _G3_SEEN="$(python3 -c '
+import datetime, json, os, sys, tempfile
+project, cfile, stamp, new_hash = sys.argv[1:5]
+log = os.path.join(project, ".claude", "state", "read-log.jsonl")
+if not os.path.isfile(log):
+    print("nolog")
+    sys.exit(0)
+changed = os.stat(cfile).st_mtime
+target = os.path.realpath(cfile)
+with open(log, "rb") as fh:
+    fh.seek(0, 2)
+    fh.seek(max(0, fh.tell() - 262144))
+    tail = fh.read().decode("utf-8", "replace").splitlines()
+seen = False
+for line in reversed(tail):
+    try:
+        row = json.loads(line)
+        fp = str(row.get("file_path") or "")
+        ts = datetime.datetime.fromisoformat(str(row.get("ts") or "").replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        continue
+    full = fp if os.path.isabs(fp) else os.path.join(project, fp)
+    if fp and os.path.realpath(full) == target and ts.timestamp() >= changed:
+        seen = True
+        break
+if not seen:
+    print("unread")
+    sys.exit(0)
+with open(stamp) as fh:
+    d = json.load(fh)
+d["corrections_hash"] = new_hash
+st = os.stat(stamp)
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(stamp), prefix=".mycelium-stamp.", suffix=".tmp")
+with os.fdopen(fd, "w") as fh:
+    json.dump(d, fh, indent=2)
+os.utime(tmp, (st.st_atime, st.st_mtime))
+os.replace(tmp, stamp)
+print("read")
+' "$PROJECT_DIR" "$CORRECTIONS_FILE" "$STAMP_FILE" "$CURRENT_HASH" 2>/dev/null || echo "error")"
+    _G3_READS_IT=0
+    if [ "$HI_TOOL" = "Bash" ] && [[ "$HI_CONTENT" == *corrections.md* ]] \
+       && [[ "$HI_CONTENT" =~ ^[[:space:]]*(cat|head|tail|sed|less|more|grep|rg|awk|nl|bat|wc)[[:space:]] ]]; then
+      _G3_READS_IT=1
+    fi
+    case "$_G3_SEEN" in
+      read) ;;
+      unread)
+        if [ "$_G3_READS_IT" -eq 0 ]; then
+          _gate_block_log "corrections-hash"
+          echo '{"message": "Mycelium gate: .claude/memory/corrections.md changed after it was last read. Read it (the Read tool, or a shell read such as `cat .claude/memory/corrections.md`), then retry this call. A read logged after the change is what clears this; re-running preflight does not."}' >&2
+          exit 2
+        fi
+        ;;
+      *)
+        if [ "$_G3_READS_IT" -eq 0 ]; then
+          _gate_block_log "corrections-hash"
+          echo '{"message": "Mycelium gate: .claude/memory/corrections.md changed since the last preflight, and the gate cannot see whether it was read since: there is no read log at .claude/state/read-log.jsonl, or it could not be checked. Read the file, then retry this call; the retry runs preflight and goes through."}' >&2
+          rm -f "$STAMP_FILE"
+          exit 2
+        fi
+        ;;
+    esac
   fi
 fi
 

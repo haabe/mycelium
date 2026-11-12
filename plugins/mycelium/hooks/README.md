@@ -22,7 +22,7 @@ Total hook overhead: ~6,000 tokens/session (negligible vs typical 50K-200K sessi
 **Type**: `command` (5s timeout)
 **Enforces**:
 - G-P5: Preflight stamp freshness (corrections.md read recently)
-- G-P5: Corrections.md hash consistency (re-read if changed)
+- G-P5: Corrections.md hash consistency (re-read if changed). After a change the gate refuses calls until the read log (`read-log.sh`) shows the file was read after it changed; a shell command that reads the file is let through. Re-running preflight does not clear it; the next prompt's preflight does. A project with no read log keeps the older behaviour: one refusal, then the retry runs preflight and passes
 - G-S1: Secret detection. Since v0.323.0: a scan of what a `git commit` or `git push` would take (`scripts/commit_scan.py`, gitleaks when installed, Mycelium's own short list otherwise), and a regex scan of the text of every shell command. A file write is no longer scanned
 
 **Logs (v0.204.0)**: every block on the stamp or hash path appends one JSON line (`ts`, `hook`, `reason` = `stale-stamp` | `corrections-hash`, `session_id`) to `.claude/state/gate-block-log.jsonl`, gitignored with the rest of `state/`. `scripts/check_hook_delivery.py` reports blocks per session beside hook delivery, so "does the gate cost more than it catches" (opp-072) is a count.
