@@ -4,7 +4,7 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-11-13.
 
-## v0.337.1 - One corrections count in every hook, and the tests run on macOS
+## v0.337.1 - One corrections count in every hook
 
 **2026-11-13.** Three things found wrong by a review of the plugin and of the maintainer's dogfood project.
 
@@ -20,10 +20,6 @@
   (`corrections_counter`). A ledger written before this is carried over on the next run: entries dated after
   the day the ledger was written are credited, older ones are not. On the dogfood project that moves the line
   from 64 to 47.
-- **CI runs the bash and Python tests on macOS as well as Ubuntu.** The hooks branch on BSD tools and run
-  under the system `python3`. No CI job ran the Mac half of those branches, and the test that imports every
-  hook-reached module under a Python older than 3.10 was skipped in CI, because the Ubuntu image has no such
-  Python. The new job is one of the jobs `validate` requires.
 - **Pages that said what is no longer so.** `AGENTS.md` and `/mycelium:start` said 45 skills (there are 63, and
   neither now states a number). The hooks page was headed "5-Layer", listed six, and said hooks are registered
   in `.claude/settings.json`; in plugin form they are registered in the plugin's `hooks/hooks.json`. The
@@ -42,12 +38,14 @@
     the dogfood project) in one step, and the line would read zero for work nobody did.
   - *Carry over the old credit and nothing else*: it leaves out the corrections written since the ledger, which
     are the ones the old count wrongly ignored.
-  - *A Python 3.9 job on Ubuntu*: the suite itself needs a newer Python; what must run under 3.9 is the code the
-    hooks reach, and the existing test does that wherever an old Python is present.
 
 - **Not in this release.** `stop-check.sh` counts decision-log entries by `### ` heading; nothing defines what
   a decision entry is, so that count is left as it is. `manifest.yml` still describes a legacy copy that
   Check 28 keeps in step; removing the copy is its own change.
+  A CI job that runs the bash and Python tests on macOS was added in this change and taken out again. On
+  its first run 47 of 86 bash test files failed under the bash 3.2 that macOS ships, 45 of them because
+  `tests/validate-template.sh` does not parse there. Every hook and plugin shell script parses under 3.2.
+  Until the suite runs on that bash, no CI job runs the half of each hook branch that a Mac takes.
 
 ## v0.337.0 - Twenty of the maintainer's rulings: solo releases, a default second view, and records that say what they are
 
