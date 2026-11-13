@@ -100,11 +100,11 @@ test_standing_question_is_last_not_first() {
 
 test_counts_only_branch_emits_valid_json() {
     # The counts-only branch was the one hand-interpolated JSON object in the hook
-    # tree until 0.221.0. One ### heading in corrections.md makes the count non-zero without
+    # tree until 0.221.0. One dated heading in corrections.md makes the count non-zero without
     # setting a warning.
     local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/memory"
-    printf '### a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
+    printf '### 2026-01-01: a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
     local out; out=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
     rm -rf "$tmp"
     assert_contains "$out" "1 corrections" "counts-only branch fired (guards against a vacuous pass on empty stdout)"
@@ -116,11 +116,11 @@ test_counts_are_said_once_per_change() {
     # (E2E run 20). Said again only when a count changes.
     local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/memory"
-    printf '### a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
+    printf '### 2026-01-01: a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
     local first second third
     first=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
     second=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
-    printf '### a correction\n\nbody\n### another\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
+    printf '### 2026-01-01: a correction\n\nbody\n## 2026-01-02: another\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
     third=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
     rm -rf "$tmp"
     assert_contains "$first" "1 corrections" "first Stop says the count"

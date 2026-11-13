@@ -51,6 +51,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _corrections_lib
 import _state_dir
 
 LOG_REL = ".claude/state/reflexion-log.jsonl"
@@ -63,23 +64,46 @@ CORRECTIONS_REL = ".claude/memory/corrections.md"
 # whoever reads the log next week.
 MIN_REASON_LEN = 8
 
-# `### ` headings outside fenced code — the template carries an example heading
-# inside a ``` fence that must not be counted, same rule stop-check.sh uses.
+# An entry is what `_corrections_lib.ENTRY_RE` says it is: a dated heading of depth 2 to 4, or
+# a dated bold bullet. Lines inside a fenced block are left out first, because an example
+# entry shown in a ``` fence is not a correction.
+#
+# This script counted `### ` headings only. A correction written as `## <date>: ...` or as
+# a dated bullet credited nothing, so the outstanding count only rose in a project that
+# writes its entries that way. `COUNTER` is written to the ledger beside the baseline so a
+# baseline taken with the old count can be told from one taken with this one.
 _FENCE = re.compile(r"^```")
 _HEADING = re.compile(r"^### ")
+COUNTER = "entries"
 
 
-def count_corrections(path: Path) -> int:
+def _outside_fences(path: Path) -> list[str]:
     if not path.is_file():
-        return 0
-    n, in_code = 0, False
+        return []
+    out, in_code = [], False
     for line in path.read_text(errors="replace").splitlines():
         if _FENCE.match(line):
             in_code = not in_code
             continue
-        if not in_code and _HEADING.match(line):
-            n += 1
-    return n
+        if not in_code:
+            out.append(line)
+    return out
+
+
+def count_corrections(path: Path) -> int:
+    return _corrections_lib.count("\n".join(_outside_fences(path)))
+
+
+def _count_headings(path: Path) -> int:
+    """The count this script used before `COUNTER` existed. Read only to carry an old
+    baseline over, in `status`."""
+    return sum(1 for line in _outside_fences(path) if _HEADING.match(line))
+
+
+def _count_dated_after(path: Path, day: str) -> int:
+    """Entries whose own date is later than `day` (YYYY-MM-DD)."""
+    dates = _corrections_lib.entry_dates("\n".join(_outside_fences(path)))
+    return sum(1 for d in dates if d > day)
 
 
 def _read_jsonl(path: Path) -> list[dict]:
@@ -99,14 +123,18 @@ def _read_jsonl(path: Path) -> list[dict]:
 
 def _load_ledger(path: Path) -> dict:
     if not path.is_file():
-        return {"credited": 0, "corrections_baseline": None, "pruned_fired": 0}
+        return {"credited": 0, "corrections_baseline": None, "corrections_counter": None,
+                "baseline_day": "", "pruned_fired": 0}
     try:
         d = json.loads(path.read_text())
     except (OSError, ValueError):
-        return {"credited": 0, "corrections_baseline": None, "pruned_fired": 0}
+        return {"credited": 0, "corrections_baseline": None, "corrections_counter": None,
+                "baseline_day": "", "pruned_fired": 0}
     return {
         "credited": int(d.get("credited", 0)),
         "corrections_baseline": d.get("corrections_baseline"),
+        "corrections_counter": d.get("corrections_counter"),
+        "baseline_day": str(d.get("rebaselined_at") or d.get("created_at") or "")[:10],
         # Lines prune_state_logs.py removed for age (v0.318.0) still count as fired, or trimming
         # old answered failures would hide new unanswered ones.
         "pruned_fired": int(d.get("pruned_fired", 0)),
@@ -139,6 +167,19 @@ def status(project_dir: Path) -> dict:
         # correction never credited anything and the counter only ever rose.
         # Caught by the test that adds an entry and expects the count to fall.
         baseline = corrections_now
+    # A baseline with no counter named was taken with the heading count. Comparing it with
+    # the entry count would credit every entry the old count never saw, in one step. So
+    # credit what was written since the baseline was taken and nothing older: the entries
+    # dated after the day the ledger was written, and never fewer than the heading count
+    # had already credited. A ledger with no day on it carries over the heading credit only.
+    stale_counter = not fresh_baseline and ledger["corrections_counter"] != COUNTER
+    if stale_counter:
+        credited_since = max(
+            0, _count_headings(project_dir / CORRECTIONS_REL) - int(baseline))
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", ledger["baseline_day"]):
+            credited_since = max(credited_since, _count_dated_after(
+                project_dir / CORRECTIONS_REL, ledger["baseline_day"]))
+        baseline = max(0, corrections_now - credited_since)
     corrections_since = max(0, corrections_now - int(baseline))
 
     # SUPPRESSED ROWS ARE NOT LEARNING DEBT (added 2026-08-03). reflexion-gate
@@ -169,6 +210,7 @@ def status(project_dir: Path) -> dict:
         "corrections_baseline": int(baseline),
         "pruned_fired": ledger["pruned_fired"],
         "_baseline_is_fresh": fresh_baseline,
+        "_baseline_counter_is_stale": stale_counter,
     }
 
 
@@ -178,13 +220,25 @@ def persist_baseline_if_new(project_dir: Path, st: dict) -> None:
     Without this the ledger never exists, so every run re-derives the baseline
     from the current corrections count and no correction is ever credited.
     """
+    path = project_dir / LEDGER_REL
+    if st.get("_baseline_counter_is_stale"):
+        # Keep everything the ledger holds; move the baseline to the entry count and say so.
+        try:
+            held = json.loads(path.read_text())
+        except (OSError, ValueError):
+            return
+        held["corrections_baseline"] = st["corrections_baseline"]
+        held["corrections_counter"] = COUNTER
+        _state_dir.prepare(path)
+        path.write_text(json.dumps(held, indent=2) + "\n")
+        return
     if not st.get("_baseline_is_fresh"):
         return
-    path = project_dir / LEDGER_REL
     _state_dir.prepare(path)
     path.write_text(json.dumps({
         "credited": 0,
         "corrections_baseline": st["corrections_now"],
+        "corrections_counter": COUNTER,
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }, indent=2) + "\n")
 
@@ -215,6 +269,7 @@ def rebaseline(project_dir: Path) -> int:
     path.write_text(json.dumps({
         "credited": st["fired"],
         "corrections_baseline": st["corrections_now"],
+        "corrections_counter": COUNTER,
         "pruned_fired": st["pruned_fired"],
         "rebaselined_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }, indent=2) + "\n")

@@ -12,7 +12,7 @@ When this skill runs, follow the flow below. The skill is designed so a first-ti
 
 ## Step 1: Welcome (~30 seconds of context, then move on)
 
-Output a short welcome before doing anything. Do NOT skip this — the install-to-here gap is the friction point this skill exists to address. The user just installed a 45-skill framework and has no context yet.
+Output a short welcome before doing anything. Do NOT skip this — the install-to-here gap is the friction point this skill exists to address. The user just installed a framework with dozens of skills and has no context yet.
 
 > "Welcome to Mycelium.
 >

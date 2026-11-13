@@ -58,9 +58,9 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Position** — Where a diamond is, said by what it has decided: no decision yet, target set, committed to build, released, closed. An L0 has stated its purpose or not yet.
 
-**Pre-task protocol** — The mandatory context-loading sequence the agent must perform before any implementation task. Defined in CLAUDE.md.
+**Pre-task protocol** — The mandatory context-loading sequence the agent must perform before any implementation task. Defined in `plugins/mycelium/engine/agent-operating-contract.md`.
 
-**Pre-ship protocol (G-P-pre)** — The mandatory pre-commit gap analysis the agent must surface visibly before substantive work ships. Defined in CLAUDE.md.
+**Pre-ship protocol (G-P-pre)** — The mandatory pre-commit gap analysis the agent must surface visibly before substantive work ships. Defined in `plugins/mycelium/engine/agent-operating-contract.md`.
 
 **Process cliff** — The point in a session where Mycelium's structure starts feeling heavier than the value it adds. The Hoskins take-home surfaced this at the 75% mark. Lightweight discovery-to-delivery continuation mode is the ongoing fix.
 
