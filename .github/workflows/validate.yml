@@ -303,11 +303,46 @@ jobs:
       - name: Run the bash check tests (G-V12 coverage proofs)
         run: bash tests/bash/run.sh
 
+  macos:
+    # The hooks branch on BSD tools (`md5` against `md5sum`, `stat -f` against `stat -c`) and
+    # run under whatever `python3` is first on the builder's PATH. Until 2026-11-13 every job
+    # here ran on Ubuntu, so the half of each branch a Mac takes was run by no CI job, and the
+    # runtime half of tests/python/test_hooks_run_on_python_3_9.py was skipped in CI: it needs
+    # a Python older than 3.10, which a macOS runner has at /usr/bin/python3 and the Ubuntu
+    # image does not. No coverage here; the Ubuntu pytest job measures it.
+    name: bash and python tests on macOS
+    needs: fast
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install CI dependencies
+        run: pip install -r requirements-ci.txt
+
+      - name: Say which system Python the 3.9 test will find
+        run: /usr/bin/python3 --version || true
+
+      - name: Run the bash check tests
+        run: bash tests/bash/run.sh
+
+      - name: Run the Python tests (parallel)
+        run: pytest tests/python/ -q -n auto
+
   validate:
     # The single check main's ruleset requires. It runs even when a job before it failed or was
     # skipped, and is green only when every one of them succeeded.
     name: validate
-    needs: [fast, pytest, bash-suite]
+    needs: [fast, pytest, bash-suite, macos]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -317,9 +352,11 @@ jobs:
           FAST: ${{ needs.fast.result }}
           PYTEST: ${{ needs.pytest.result }}
           BASH_SUITE: ${{ needs.bash-suite.result }}
+          MACOS: ${{ needs.macos.result }}
         run: |
-          echo "fast=$FAST pytest=$PYTEST bash-suite=$BASH_SUITE"
-          test "$FAST" = success && test "$PYTEST" = success && test "$BASH_SUITE" = success
+          echo "fast=$FAST pytest=$PYTEST bash-suite=$BASH_SUITE macos=$MACOS"
+          test "$FAST" = success && test "$PYTEST" = success && test "$BASH_SUITE" = success \
+            && test "$MACOS" = success
 
       # Note: standalone ruff and shellcheck checks are not run here — Check 17
       # in validate-template.sh runs both with the correct baseline-aware

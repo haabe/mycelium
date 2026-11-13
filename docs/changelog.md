@@ -2,7 +2,52 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-11-12.
+**Last updated**: 2026-11-13.
+
+## v0.337.1 - One corrections count in every hook, and the tests run on macOS
+
+**2026-11-13.** Three things found wrong by a review of the plugin and of the maintainer's dogfood project.
+
+- **Session start, the session-end summary and the reflexion count now count corrections the way the prompt
+  line does.** `preflight.sh` was corrected on 2026-08-09 to count what `_corrections_lib.py` calls an entry: a
+  dated heading of depth 2 to 4, or a dated bold bullet. `session-start.sh`, `stop-check.sh` and
+  `reconcile_reflexions.py` still counted `### ` headings only. On the dogfood project one session read "244
+  corrections logged" at its start and "447 corrections in memory" at every prompt, from the same file.
+- **A correction written as `## <date>` or as a dated bullet now answers a reflexion.**
+  `reconcile_reflexions.py` credits a correction against the command failures that prompted one. It did not see
+  those two shapes, so in a project that writes its entries that way the "unreconciled reflexions" line only
+  rose. The ledger (`.claude/state/reflexion-ledger.json`) now names the counter its baseline was taken with
+  (`corrections_counter`). A ledger written before this is carried over on the next run: entries dated after
+  the day the ledger was written are credited, older ones are not. On the dogfood project that moves the line
+  from 64 to 47.
+- **CI runs the bash and Python tests on macOS as well as Ubuntu.** The hooks branch on BSD tools and run
+  under the system `python3`. No CI job ran the Mac half of those branches, and the test that imports every
+  hook-reached module under a Python older than 3.10 was skipped in CI, because the Ubuntu image has no such
+  Python. The new job is one of the jobs `validate` requires.
+- **Pages that said what is no longer so.** `AGENTS.md` and `/mycelium:start` said 45 skills (there are 63, and
+  neither now states a number). The hooks page was headed "5-Layer", listed six, and said hooks are registered
+  in `.claude/settings.json`; in plugin form they are registered in the plugin's `hooks/hooks.json`. The
+  glossary pointed at `CLAUDE.md` for the pre-task and pre-ship protocols, which live in
+  `engine/agent-operating-contract.md`.
+
+- **Tests.** `test_correction_count_agreement.py` now runs each of the three hooks' patterns against the shared
+  fixture, and fails a hook that counts another way. `test_reconcile_reflexions.py` covers the two entry shapes,
+  an undated heading, and the carry-over of an old ledger with and without a day on it.
+
+- **Alternatives considered.**
+  - *One shared shell function for the count*: it needs a new sourced file in every hook, and a hook whose
+    source line fails would count nothing. Three copies held together by one test is what `preflight.sh`
+    already did.
+  - *Compare the old baseline with the new count*: it would credit every entry the old count never saw (203 on
+    the dogfood project) in one step, and the line would read zero for work nobody did.
+  - *Carry over the old credit and nothing else*: it leaves out the corrections written since the ledger, which
+    are the ones the old count wrongly ignored.
+  - *A Python 3.9 job on Ubuntu*: the suite itself needs a newer Python; what must run under 3.9 is the code the
+    hooks reach, and the existing test does that wherever an old Python is present.
+
+- **Not in this release.** `stop-check.sh` counts decision-log entries by `### ` heading; nothing defines what
+  a decision entry is, so that count is left as it is. `manifest.yml` still describes a legacy copy that
+  Check 28 keeps in step; removing the copy is its own change.
 
 ## v0.337.0 - Twenty of the maintainer's rulings: solo releases, a default second view, and records that say what they are
 

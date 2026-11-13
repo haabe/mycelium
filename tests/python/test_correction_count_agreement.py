@@ -172,6 +172,52 @@ def test_preflight_banner_agrees_with_the_library(project_with_fixture):
     )
 
 
+#: Every hook that prints or compares a corrections count. Each carries its own copy of the
+#: ERE, because bash cannot import the library; this list is what holds the copies together.
+COUNTING_HOOKS = ("preflight.sh", "session-start.sh", "stop-check.sh")
+
+_HOOK_COUNT_LINE = re.compile(r"CORRECTIONS_COUNT=\$\(grep -cE '([^']+)' ")
+
+
+def _hook_pattern(name: str) -> str:
+    text = (HOOK.parent / name).read_text(encoding="utf-8")
+    found = _HOOK_COUNT_LINE.findall(text)
+    assert len(found) == 1, (
+        f"{name} must count corrections with exactly one `grep -cE '<pattern>'` assignment "
+        f"to CORRECTIONS_COUNT; found {len(found)}. A hook that counts another way is a "
+        "counter this test cannot hold to the library."
+    )
+    return found[0]
+
+
+def _grep_count(pattern: str, path: Path) -> int:
+    result = subprocess.run(
+        ["grep", "-cE", pattern, str(path)],
+        check=False, capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode in (0, 1), result.stderr
+    return int(result.stdout.strip() or 0)
+
+
+@pytest.mark.parametrize("name", COUNTING_HOOKS)
+def test_every_counting_hook_agrees_with_the_library(name):
+    """session-start.sh and stop-check.sh counted `### ` headings until 2026-11-13.
+
+    preflight.sh was corrected on 2026-08-09 and this file was written to hold it. The other
+    two hooks were not in it, so one session printed 244 at its start and 447 at every
+    prompt, from the same file.
+    """
+    assert _grep_count(_hook_pattern(name), FIXTURE) == EXPECTED, (
+        f"{name} counts the fixture differently from _corrections_lib ({EXPECTED}). "
+        "Its ERE has drifted from ENTRY_RE."
+    )
+
+
+def test_a_heading_only_count_disagrees_on_the_fixture():
+    """The check above can fail: the pattern the two hooks used does not reach EXPECTED."""
+    assert _grep_count(r"^### ", FIXTURE) != EXPECTED
+
+
 def test_preflight_still_distinguishes_absent_from_empty(tmp_path):
     """Widening the pattern must not collapse the three honest states.
 

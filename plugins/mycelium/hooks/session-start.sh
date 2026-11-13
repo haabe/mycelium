@@ -892,15 +892,17 @@ fi
 # ============================================================
 # CHECK 3: Corrections count (awareness)
 # ============================================================
-# Count ### headings OUTSIDE code blocks (the template includes an example
-# heading inside a ```...``` fence that must not be counted as a real correction)
+# The same pattern preflight.sh counts with, which must stay equivalent to ENTRY_RE in
+# scripts/_corrections_lib.py. tests/python/test_correction_count_agreement.py runs this hook
+# against the shared fixture and compares the number it prints with the library's count.
+# This hook counted `### ` headings only, so an entry written as `## <date>` or as a dated
+# bullet was not counted, and the line here disagreed with preflight's in the same session.
 CORRECTIONS_COUNT=0
 if [ -f "$PROJECT_DIR/.claude/memory/corrections.md" ]; then
-  CORRECTIONS_COUNT=$(awk '
-    /^```/ { in_code = !in_code; next }
-    !in_code && /^### / { count++ }
-    END { print count+0 }
-  ' "$PROJECT_DIR/.claude/memory/corrections.md" 2>/dev/null || echo 0)
+  # grep -c prints the count and exits 1 on no match, so `|| true`, never `|| echo 0`.
+  CORRECTIONS_COUNT=$(grep -cE '^#{2,4}[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}|^-[[:space:]]+\*\*[^*]*\([0-9]{4}-[0-9]{2}-[0-9]{2}[a-z]?[,)][^*]*\*\*' "$PROJECT_DIR/.claude/memory/corrections.md" 2>/dev/null || true)
+  CORRECTIONS_COUNT=${CORRECTIONS_COUNT//[^0-9]/}
+  CORRECTIONS_COUNT=${CORRECTIONS_COUNT:-0}
 fi
 
 # ============================================================

@@ -82,6 +82,79 @@ def test_adding_a_correction_credits_the_balance(tmp_path):
     assert _settle(p)["outstanding"] == 2, "a new correction must credit"
 
 
+def test_an_entry_of_any_recorded_shape_credits_the_balance(tmp_path):
+    """Until 2026-11-13 only a `### ` heading credited. A project that writes its entries
+    as `## <date>` or as dated bullets added corrections and saw the count only rise."""
+    p = _project(tmp_path, corrections=1, fired=3)
+    assert _settle(p)["outstanding"] == 3
+    with (p / rr.CORRECTIONS_REL).open("a") as fh:
+        fh.write("\n## 2026-07-26: a second-level entry\nbody\n")
+        fh.write("\n- **A bullet entry (2026-07-27, class)**: body\n")
+    assert _settle(p)["outstanding"] == 1
+
+
+def test_an_undated_heading_does_not_credit(tmp_path):
+    """`### Prevention rule` is a section inside an entry, not an entry."""
+    p = _project(tmp_path, corrections=1, fired=2)
+    _settle(p)
+    with (p / rr.CORRECTIONS_REL).open("a") as fh:
+        fh.write("\n### Prevention rule\nbody\n")
+    assert _settle(p)["outstanding"] == 2
+
+
+def test_a_baseline_from_the_heading_count_is_carried_over_without_new_credit(tmp_path):
+    """A ledger written before `corrections_counter` existed holds a heading count.
+
+    The file below has 2 `### ` entries and 3 `## ` entries: the old count read 2, this one
+    reads 5. Comparing the old baseline (2) with the new count (5) would credit 3 entries
+    that were written before the ledger and answered nothing.
+    """
+    p = _project(tmp_path, corrections=2, fired=4)
+    with (p / rr.CORRECTIONS_REL).open("a") as fh:
+        fh.write("".join(f"## 2026-06-{i + 1:02d}: older {i}\nbody\n\n" for i in range(3)))
+    (p / rr.LEDGER_REL).write_text(json.dumps(
+        {"credited": 0, "corrections_baseline": 2, "pruned_fired": 0}))
+
+    st = _settle(p)
+    assert st["outstanding"] == 4, "entries the old count never saw must not credit"
+    held = json.loads((p / rr.LEDGER_REL).read_text())
+    assert held["corrections_counter"] == rr.COUNTER
+    assert held["corrections_baseline"] == 5
+    assert held["pruned_fired"] == 0
+
+    with (p / rr.CORRECTIONS_REL).open("a") as fh:
+        fh.write("\n## 2026-07-26: written after the carry-over\nbody\n")
+    assert _settle(p)["outstanding"] == 3
+
+
+def test_entries_dated_after_the_old_baseline_day_are_credited_at_the_carry_over(tmp_path):
+    """The old count missed `## ` entries written AFTER the ledger: those are owed credit.
+
+    Two `### ` entries (July) and three `## ` entries (June) predate the ledger of
+    2026-07-10; two `## ` entries are dated after it. The heading count credited none of
+    the five `## ` entries. The carry-over credits the two later ones and not the three
+    older ones.
+    """
+    p = _project(tmp_path, corrections=2, fired=5)
+    with (p / rr.CORRECTIONS_REL).open("a") as fh:
+        fh.write("".join(f"## 2026-06-{i + 1:02d}: older {i}\nbody\n\n" for i in range(3)))
+        fh.write("## 2026-07-11: later one\nbody\n\n## 2026-07-12: later two\nbody\n")
+    (p / rr.LEDGER_REL).write_text(json.dumps(
+        {"credited": 0, "corrections_baseline": 2, "pruned_fired": 0,
+         "rebaselined_at": "2026-07-10T09:00:00Z"}))
+    assert _settle(p)["outstanding"] == 3
+    assert _settle(p)["outstanding"] == 3, "the credit is given once"
+
+
+def test_credit_the_heading_count_had_given_survives_the_carry_over(tmp_path):
+    """One `### ` entry was added after the old baseline: that credit is kept, once."""
+    p = _project(tmp_path, corrections=3, fired=4)
+    (p / rr.LEDGER_REL).write_text(json.dumps(
+        {"credited": 0, "corrections_baseline": 2, "pruned_fired": 0}))
+    assert _settle(p)["outstanding"] == 3
+    assert _settle(p)["outstanding"] == 3, "the second run reads the carried baseline"
+
+
 def test_dismissal_with_a_reason_credits_the_balance(tmp_path):
     p = _project(tmp_path, corrections=1, fired=2)
     _settle(p)
