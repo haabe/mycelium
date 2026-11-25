@@ -22,6 +22,12 @@ with what its pages say), and replayed on the released code before it was change
 - **Not shown.** How much time the second scan adds in a large repository; it scans what is staged, not the
   history. Whether any installed project had a secret committed through this route is not known.
 
+- **One test helper, no product change.** `tests/python/test_gate_secret_scan.py` builds a folder of links to
+  every system tool except grep. It asked whether a link was already there with a test that says no for a link
+  whose target does not exist, then failed making it a second time. CI's runner image now has such a link in
+  both `/usr/bin` and `/bin`, so the suite went red on this release's first run for a reason unrelated to the
+  change. The helper now also asks whether the name is a link.
+
 **Alternatives considered.** Keep the exemption and require an installed, executable `hooks/pre-commit`: lost,
 because the agent can write that file too, and a hook that names the scanner need not run it. Make the two files
 ones the agent must ask about: lost, because it would put a question in front of ordinary work on a file most
