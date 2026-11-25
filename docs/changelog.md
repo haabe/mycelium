@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-11-25.
 
+## v0.337.3 - The scan reads a commit or a push however it is spelled
+
+**2026-11-25.** One thing found wrong by a second blind read, of 0.337.2 (three new readers; two of them named
+it), and replayed on the released code before it was changed.
+
+- **The scan before the agent's commit or push reads more spellings.** It answered only when the command spelled
+  `git commit` or `git push` where a command starts, with `sudo`, `command`, `time`, `exec` or `nohup` in front.
+  The replay: with a token-shaped value staged, `git commit` was refused and `/usr/bin/git commit`,
+  `env git commit` and `timeout 60 git commit` got no answer; with the same value in an unpushed commit,
+  `git push` was refused and the same three spellings of a push got no answer. A missed commit was scanned after
+  the command. A missed push was not scanned at all. The pattern now reads `git` by path, and behind `doas`,
+  `builtin`, `env`, `timeout`, `nice`, `ionice`, `xargs`, `stdbuf`, `caffeinate`, `noglob`, `setsid`, `unbuffer`
+  and `chronic` with whatever options stand between the word and `git`.
+- **What no pattern can read is now said on the pages.** A command that commits or pushes inside itself (a
+  release script, a make target, `npm version`, a git alias) does not show it in its text. Such a commit is
+  scanned after the command and you are told; such a push is not scanned, so one command that commits and pushes
+  can send a key before anything has looked. The README said "cannot be committed or pushed" with no limit, and
+  the system card said a missed commit was caught "afterwards and at the push", which holds only for a later
+  push spelled as `git push`. The README has two new sentences after the one about your own commits (the
+  maintainer's choice, 2026-11-25); PRIVACY, the system card and the hooks README say the same in their own
+  words. A test holds the limit, so a later change to it has to change the pages too.
+- **What changes for you.** A command such as `sudo echo git push` is now read as a push and scanned. A scan
+  refuses only on a finding, so the cost is the scan's time.
+- **Not shown.** `gh pr create`, which can push a branch, is not read as a push; whether it pushes without
+  asking when the agent runs it was not tested. A git alias is not resolved. The after-command scan of a
+  script's commit was not replayed in this round; its test is from 0.323.0.
+
+**Alternatives considered.** While a key is staged or sits in an unpushed commit, refuse every shell command of
+the agent's except plain git ones, so no script can commit or push it: lost for this release, on the
+maintainer's choice of 2026-11-25, because a false alarm from the scanner would then stop the agent's shell
+until the person waved it through. Leave the README as it was and fix only the spellings: lost, same choice,
+because the sentence would stay wider than the code. Run every agent command with git pointed at a Mycelium
+hooks folder, so git itself scans: not taken up, because it would switch off the repository's own hooks.
+
 ## v0.337.2 - The commit scan has no switch
 
 **2026-11-25.** One thing found wrong by a blind read of 0.337.1 (three readers comparing what the plugin does
