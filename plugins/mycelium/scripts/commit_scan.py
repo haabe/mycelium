@@ -13,7 +13,8 @@ WHAT IT DOES. Three moments, one scanner (gitleaks when it is installed):
      stand in for this scan.
   2. After any shell command of the agent's: commits the command itself made, by any route, are
      scanned (`bash_state_guard.py` calls `made_commits` and `scan_commits`). Mycelium does not
-     rewrite a commit; it says what it found, and the push is where it is stopped.
+     rewrite a commit; it says what it found, and a later `git push` is where it is stopped.
+     A push the same command makes inside itself has gone by then (see `_GIT` below).
   3. Before the agent's `git push`: every commit on a local branch that is on no remote is
      scanned. A finding refuses the push.
 With no scanner installed the same three moments run Mycelium's own short list
@@ -50,14 +51,27 @@ FOUND = 42          # gitleaks' exit code for "found", set by --exit-code so an 
 TIMEOUT = 45        # seconds for one scan; past it the scan "could not run"
 MAX_FALLBACK = 2_000_000   # characters of added lines the fallback list reads
 MAX_NAMED = 8       # findings named in one refusal; the rest are counted
-#: `git commit` or `git push` where a command starts: at the beginning, after a separator, an
-#: opening bracket or quote, or a shell keyword; with variable assignments and a wrapper word in
-#: front. The words inside a longer argument ("remember to git commit") do not count. A form this
-#: misses is still scanned: after the command for a commit, and at the push.
+#: Where a command starts: at the beginning, after a separator, an opening bracket or quote, or
+#: a shell keyword; with variable assignments in front.
+_START = r"(?:^|[;&|(`\n\"']|\$\(|\b(?:then|do|else)\s)\s*(?:\w+=\S+\s+)*"
+#: A word that runs the command named after it. Its own options and values (`timeout 60`,
+#: `sudo -u me`, `env A=b`) are whatever words stand between it and `git` in the same simple
+#: command, so `sudo echo git push` is read as a push too: that errs toward scanning, and a scan
+#: refuses only on a finding.
+_WRAPPERS = ("sudo|doas|command|builtin|time|exec|nohup|env|timeout|nice|ionice|xargs|stdbuf|"
+             "caffeinate|noglob|setsid|unbuffer|chronic")
+#: `git commit` or `git push` where a command starts, with `git` by name or by path
+#: (`/usr/bin/git`) and a wrapper word in front. The words inside a longer argument ("remember
+#: to git commit") do not count.
+#: WHAT THIS CANNOT READ, and no pattern can: a command that commits or pushes INSIDE itself (a
+#: release script, a make target, `npm version`, a git alias). Such a commit is scanned after the
+#: command (`made_commits`) and the person is told; such a push has gone before anything looked.
+#: Until 0.337.3 the pattern also missed `git` by path and behind `env`, `timeout`, `nice` and
+#: `xargs`, and the comment here said a missed form "is still scanned ... at the push", which
+#: was not true of a missed push (blind read of 0.337.2, 2026-11-25, replayed).
 _GIT = re.compile(
-    r"(?:^|[;&|(`\n\"']|\$\(|\b(?:then|do|else)\s)\s*(?:\w+=\S+\s+)*"
-    r"(?:(?:sudo|command|time|exec|nohup)\s+)*"
-    r"git((?:\s+(?:-[cC]\s+\S+|--[\w-]+(?:=\S+)?))*)\s+(commit|push)\b")
+    _START + r"(?:(?:" + _WRAPPERS + r")\s+(?:[^\s;&|]+\s+)*?)?"
+    r"(?:[^\s;&|\"'`]*/)?git((?:\s+(?:-[cC]\s+\S+|--[\w-]+(?:=\S+)?))*)\s+(commit|push)\b")
 _SEPARATOR = re.compile(r"\r?\n|&&|\|\||;|\|")
 #: commit options that take the next word as their value, so that word is not a path or a flag
 _TAKES_VALUE = {"-m", "-F", "-C", "-c", "-t", "--message", "--file", "--reuse-message",

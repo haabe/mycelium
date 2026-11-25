@@ -161,6 +161,54 @@ def test_the_commit_is_found_in_the_forms_it_is_typed(project, command):
     assert decision(commit(project, command)) == "deny"
 
 
+SPELLINGS = ["/usr/bin/git {verb}", "env git {verb}", "env LANG=C git {verb}",
+             "timeout 60 git {verb}", "timeout -k 5 60 git {verb}", "nice -n 10 git {verb}",
+             "sudo -u me git {verb}", "xargs git {verb}", "bash -c 'git {verb}'",
+             "command /usr/bin/git {verb}"]
+
+
+@pytest.mark.parametrize("spelling", SPELLINGS)
+def test_a_commit_spelled_by_path_or_behind_a_wrapper_word_is_scanned(project, spelling):
+    """RED BEFORE 0.337.3. The pattern read `git` by name behind five wrapper words; `git` by
+    path and `env`, `timeout`, `nice`, `xargs` in front got no answer (blind read of 0.337.2,
+    2026-11-25, replayed)."""
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    assert decision(commit(project, spelling.format(verb="commit -m work"))) == "deny"
+
+
+@pytest.mark.parametrize("spelling", SPELLINGS)
+def test_a_push_spelled_by_path_or_behind_a_wrapper_word_is_scanned(project, spelling):
+    """RED BEFORE 0.337.3, and the half that mattered: a missed commit is scanned afterwards, a
+    missed push has gone."""
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    git(project, "commit", "-q", "-m", "oops")
+    out = gate(project, "Bash", {"command": spelling.format(verb="push origin main")})
+    assert decision(out) == "deny" and "push is refused" in reason(out)
+
+
+@pytest.mark.parametrize("spelling", SPELLINGS)
+def test_control_such_a_spelling_of_a_clean_commit_or_push_is_not_refused(project, spelling):
+    assert decision(commit(project, spelling.format(verb="commit -m work"))) == "allow"
+    out = gate(project, "Bash", {"command": spelling.format(verb="push origin main")})
+    assert decision(out) == "allow"
+
+
+@pytest.mark.parametrize("command", ["make release", "npm version patch", "./scripts/release.sh",
+                                     "git ci -m work"])
+def test_a_command_that_commits_or_pushes_inside_itself_is_not_seen_beforehand(project, command):
+    """THE LIMIT, HELD AS A TEST SO IT CANNOT BE FORGOTTEN: no pattern over the command's text
+    can know what a script, a make target or a git alias does. Such a commit is scanned after
+    the command (the test further down); such a push is not seen. If this test goes red because
+    one of these is now refused, the pages that state the limit need the same change."""
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    assert decision(commit(project, command)) == "allow"
+    assert cs.what_it_runs(command) == {"commit": False, "wider": False, "no_verify": False,
+                                        "push": False}
+
+
 def test_control_a_command_that_only_mentions_the_words_is_not_scanned(project):
     (project / "config.py").write_text(LINE + "\n")
     git(project, "add", "config.py")
@@ -423,6 +471,12 @@ def test_control_an_ordinary_edit_is_not_asked_about(project):
     ("git commit -m x && git push", {"commit": True, "wider": False, "no_verify": False, "push": True}),
     ("git status", {"commit": False, "wider": False, "no_verify": False, "push": False}),
     ("legit commit", {"commit": False, "wider": False, "no_verify": False, "push": False}),
+    ("mygit push", {"commit": False, "wider": False, "no_verify": False, "push": False}),
+    ("gitk push", {"commit": False, "wider": False, "no_verify": False, "push": False}),
+    ("git status; echo git push", {"commit": False, "wider": False, "no_verify": False, "push": False}),
+    ("/opt/homebrew/bin/git push", {"commit": False, "wider": False, "no_verify": False, "push": True}),
+    ("timeout 60 git commit -am x", {"commit": True, "wider": True, "no_verify": False, "push": False}),
+    ("sudo echo git push", {"commit": False, "wider": False, "no_verify": False, "push": True}),
 ])
 def test_what_a_command_does_with_git(command, expect):
     assert cs.what_it_runs(command) == expect
@@ -618,6 +672,9 @@ def test_the_readme_says_where_a_key_is_stopped():
     assert ("A key the agent has written into a file cannot be committed or pushed, and there is "
             "no switch for that one. What you commit yourself is not checked, unless you let "
             "setup add the check to git.") in readme
+    # Added 0.337.3 on the maintainer's choice of 2026-11-25: the limit of the sentence above.
+    assert ("A commit the agent makes from inside another command, a release script say, is "
+            "checked right after and you are told. A push made that way gets through.") in readme
     assert "going into a file is refused outright" not in readme
 
 
