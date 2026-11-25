@@ -1091,6 +1091,24 @@ reviewed:
     therefore skipped. It is a second look, not the gate: the scan before `git push` reads every
     commit that is on no remote for itself, and a scan there that cannot run refuses. Reviewed
     2026-10-12, v0.323.0.
+- id: commit_scan.py@e786db1232
+  verdict: accepted
+  reason: >-
+    `_lead` returns None when a step's words cannot be split (an unbalanced quote inside one step).
+    `step_kind` then answers "unknown", which is the answer that refuses: a commit or push after
+    that step in the same command is refused, and `_git_verb_in` reads the same step's words
+    another way and refuses it if it runs `git commit` or `git push` itself. The default errs
+    toward refusing, and the refusal is said to the agent. Asserted by
+    test_a_step_that_cannot_be_accounted_for_before_a_commit_or_push_refuses. Reviewed 2026-11-25,
+    v0.337.4.
+- id: commit_scan.py@67079f6005
+  verdict: accepted
+  reason: >-
+    `_names` returns an empty list when git cannot be run or answers with an error. Its one caller
+    asks whether the source of a `git pull` or `git fetch` is a remote the repository lists; with
+    no names, a named source is not accounted for, and a commit or push after it in the same
+    command is refused. The default errs toward refusing. Asserted by test_what_one_step_is
+    (`git pull ../other main`). Reviewed 2026-11-25, v0.337.4.
 - id: install_git_secret_hook.py@678da7808b
   verdict: accepted
   reason: >-

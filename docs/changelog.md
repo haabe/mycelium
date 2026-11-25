@@ -4,6 +4,70 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-11-25.
 
+## v0.337.4 - The scan vouches for what a commit or push takes, or refuses the command
+
+**2026-11-25.** One thing found wrong by a third blind read today, of 0.337.3 (three new readers; one named
+it), replayed on the released code before it was changed. The fix changes how the command is read, because
+this was the third way past the same sentence in one day and each had been a form a list had missed.
+
+- **A key the command stages itself is now seen before the commit.** The scan before a commit looked at the
+  index as it stood before the command ran. The replay: with a key in a file that was not staged,
+  `git add -A && git commit -m work` got no answer, and so did the same with `&& git push` on the end, so one
+  command committed and pushed the key with nothing having looked. The command's own `git add` is now replayed
+  into a scratch copy of the index and the copy is scanned. Your repository's index is not touched.
+- **A commit behind `if`, `{`, `!` or a bracket is read as a commit.** `if git commit ...; then git push; fi`,
+  `{ git commit ...; }` and `! git commit ...` got no answer. The command is now read step by step by a small
+  reader of shell text (quotes, here-documents, substitutions, brackets, `bash -c`, `eval`), not by one pattern.
+- **A step Mycelium cannot account for, before a commit or push in the same command, refuses the command.**
+  The scan sees the repository before the command runs. That says what a commit or push will take only when
+  nothing earlier in the command can change it. So each earlier step has to be one on a short list (`cd`,
+  `git add`, an earlier commit or push, git commands that stage nothing, a few shell words that write nothing;
+  `hooks/README.md` has the list). Anything else refuses, with nothing found, and says to run the earlier
+  steps first and the commit or push in a command of its own.
+- **A commit or push Mycelium cannot follow to a repository refuses too.** `git` run by another program
+  (`uv run git commit`, `xargs git push`, `find -exec git commit`), a commit in text handed to a shell or an
+  interpreter (`bash <<EOF`, `... | sh`, `python3 -c "..."`), another repository or index named or held in a
+  variable (`GIT_INDEX_FILE=`, `--git-dir`, `env -C`, `git -C "$DIR"`), a step running at the same time.
+- **The scan before a push reads more commits.** It read commits on local branches. It now also reads commits
+  under a tag, under the checked-out commit when that is on no branch, and under whatever the push names
+  (`git push origin <this>:<there>`, a stash included).
+- **A commit's words are read more carefully.** `git commit -m"first draft" -a` was read as taking the index
+  only, because the glued message ended in a letter that looked like an option; `--pathspec-from-file` and
+  long options cut short were not read as taking more.
+- **A command that neither commits nor pushes is no longer scanned for the words.** Until now
+  `sed -n '/git commit/p' README.md` set off a scan of the index, and a finding there refused it.
+- **What changes for you.** The agent spends one more command wherever it chained a build, a test, a script
+  or a file write with its commit or push: `npm test && git commit -m x` is refused and it runs the two
+  apart. A `git push` with a variable or a substitution among its words is refused; `git push -u origin HEAD`
+  is the form that passes. A `git add` after `git checkout <branch>` or `git pull` in one command is refused,
+  because that step can change which files are ignored. The refusal says what to do each time.
+- **How this was checked.** Before release an independent reader was given the changed file and asked to get
+  a key past it by running commands. Four passes found twenty-eight kinds of way past earlier drafts (git
+  behind `uv run`, `xargs` adding paths, a shell pattern git reads more narrowly than the shell, a script
+  piped to `sh`, a branch switch that changes `.gitignore` before the add, a stash pushed by name), and a
+  draft rule that refused commands which commit nothing. Each is held by a test, with controls for the
+  ordinary commands that must pass.
+- **Not shown.** A line added only in a merge commit's own conflict resolution is not read by the scan
+  before a push. A command with no `git commit` or `git push` in its text that commits or pushes inside
+  itself (a script, a make target, a git alias) is as in 0.337.3: its commit is scanned afterwards, its push
+  is not. `ssh host 'git push'` is refused although the push happens on another machine. The last of the four passes still found five kinds, each less ordinary than
+  the pass before; they are closed, and no pass has been run on the code as released. The reader of shell
+  text is new and written for this; forms it has not been tried on will exist. A program handed text that
+  only names a commit (`python3 -c "print('git commit -m x')"`) is refused although it commits nothing. It has been run on macOS, zsh
+  and bash, git 2.x, gitleaks 8.30.
+
+**Alternatives considered.** Add the three forms round 6 found to the pattern (`git add` before the commit,
+`if`, `{`, `!`): lost, because rounds 4, 5 and 6 had each found a form a list missed, and a first draft built
+that way was passed ten ways by the independent reader in one sitting. Scan the whole working tree whenever a
+command holds `git add`: lost, because it refuses a commit for a key in a file the command does not stage,
+and still misses a file the command writes before adding it. Let an unaccounted step through and rely on the
+scan after the command: lost, because with a push in the same command the key has gone by then. Rewrite the
+agent's command so the commit and push run apart: not taken up, because a hook that edits commands is harder
+to trust than one that refuses and says why. Point git at a Mycelium hooks folder for the agent's commands, so
+git itself scans at commit and push by any route: not taken up for this release, as in 0.337.3, because it
+would switch off the repository's own hooks; it is the only alternative here that would also close the script
+route.
+
 ## v0.337.3 - The scan reads a commit or a push however it is spelled
 
 **2026-11-25.** One thing found wrong by a second blind read, of 0.337.2 (three new readers; two of them named
