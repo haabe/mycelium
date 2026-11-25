@@ -2,7 +2,38 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-11-13.
+**Last updated**: 2026-11-25.
+
+## v0.337.2 - The commit scan has no switch
+
+**2026-11-25.** One thing found wrong by a blind read of 0.337.1 (three readers comparing what the plugin does
+with what its pages say), and replayed on the released code before it was changed.
+
+- **The scan before the agent's `git commit` always runs.** Since 0.323.0 it was skipped when the repository's
+  `hooks/pre-commit` or `.pre-commit-config.yaml` contained the word `gitleaks`, on the reasoning that the
+  repository's own hook would scan the commit. Neither file shows that a hook is installed or ran: a
+  `.pre-commit-config.yaml` does nothing until `pre-commit install` has been run in that clone, and a comment
+  line containing the word was enough. Neither is a file the agent must ask before writing. The README says of
+  this stop: "A key the agent has written into a file cannot be committed or pushed, and there is no switch for
+  that one." The replay: a staged token-shaped value was refused; with such a config present and no git hook, it
+  was not; with the config removed, it was refused again. The scan before `git push` was not affected.
+- **What changes for you.** In a repository whose own pre-commit hook runs gitleaks, a commit the agent makes is
+  now scanned twice, once here and once by your hook. Commits you make yourself are as before.
+- **Not shown.** How much time the second scan adds in a large repository; it scans what is staged, not the
+  history. Whether any installed project had a secret committed through this route is not known.
+
+- **One test helper, no product change.** `tests/python/test_gate_secret_scan.py` builds a folder of links to
+  every system tool except grep. It asked whether a link was already there with a test that says no for a link
+  whose target does not exist, then failed making it a second time. CI's runner image now has such a link in
+  both `/usr/bin` and `/bin`, so the suite went red on this release's first run for a reason unrelated to the
+  change. The helper now also asks whether the name is a link.
+
+**Alternatives considered.** Keep the exemption and require an installed, executable `hooks/pre-commit`: lost,
+because the agent can write that file too, and a hook that names the scanner need not run it. Make the two files
+ones the agent must ask about: lost, because it would put a question in front of ordinary work on a file most
+projects with pre-commit already have, to save one scan of the staged lines. Leave the code and change the README
+sentence to name the exemption: lost, because the maintainer's ruling of 2026-10-12 was "Don't let passwords into
+the repo", and a documented switch the agent can flip is still a switch.
 
 ## v0.337.1 - One corrections count in every hook
 

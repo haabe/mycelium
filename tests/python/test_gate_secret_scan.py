@@ -126,7 +126,10 @@ def _path_with(tmp_path, grep_script: str | None) -> str:
         return f"{fake}:{python_dir}:/usr/bin:/bin"
     for folder in ("/usr/bin", "/bin"):
         for tool in Path(folder).iterdir():
-            if tool.name not in ("grep", "egrep", "fgrep") and not (fake / tool.name).exists():
+            # `is_symlink` as well as `exists`: a link already made to a system link that points
+            # nowhere reads as not existing, and making it a second time fails (CI, 2026-11-25).
+            link = fake / tool.name
+            if tool.name not in ("grep", "egrep", "fgrep") and not (link.exists() or link.is_symlink()):
                 (fake / tool.name).symlink_to(tool)
     (fake / "python3").unlink(missing_ok=True)
     (fake / "python3").write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')

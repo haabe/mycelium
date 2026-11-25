@@ -8,7 +8,9 @@ treated like source code, and nothing ever looked at what was staged. The mainta
 
 WHAT IT DOES. Three moments, one scanner (gitleaks when it is installed):
   1. Before the agent's `git commit`: what is staged is scanned (and what `-a` or a named path
-     would add). A finding refuses the commit.
+     would add). A finding refuses the commit. Since 0.337.2 this holds whatever hooks the
+     repository has of its own: a hook or a pre-commit config that names a scanner does not
+     stand in for this scan.
   2. After any shell command of the agent's: commits the command itself made, by any route, are
      scanned (`bash_state_guard.py` calls `made_commits` and `scan_commits`). Mycelium does not
      rewrite a commit; it says what it found, and the push is where it is stopped.
@@ -276,20 +278,6 @@ def made_commits(repo: str, before_head: str, before_reflog: int | None) -> list
 
 # ---------------------------------------------------------------- the hook's answer
 
-def _own_hook_scans(repo: str) -> bool:
-    """The repository's own pre-commit hook already runs a scanner, so a commit that honours
-    hooks is scanned by it and need not be scanned twice."""
-    done = _git(repo, "rev-parse", "--git-path", "hooks/pre-commit")
-    hook = Path(repo, done.stdout.strip()) if done.returncode == 0 and done.stdout.strip() else None
-    for candidate in (hook, Path(repo, ".pre-commit-config.yaml")):
-        try:
-            if candidate and "gitleaks" in candidate.read_text(encoding="utf-8", errors="replace"):
-                return True
-        except OSError:
-            continue  # SPEAKS: no such file means no such hook, so Mycelium scans
-    return False
-
-
 def _deny(reason: str) -> None:
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse", "permissionDecision": "deny",
@@ -333,7 +321,12 @@ def _repos(command: str, cwd: str) -> list[str]:
 def _checks(does: dict, repos: list[str]) -> list[tuple[str, str, tuple[str, list[str]]]]:
     checks = []
     for repo in repos:
-        if does["commit"] and not (_own_hook_scans(repo) and not does["no_verify"]):
+        # EVERY COMMIT OF THE AGENT'S IS SCANNED HERE (since 0.337.2). From 0.323.0 the scan was
+        # skipped when the repository's `hooks/pre-commit` or `.pre-commit-config.yaml` held the
+        # word "gitleaks", on the reasoning that the repository's own hook would scan. Neither
+        # file showed that a hook was installed or ran, and the agent may write both unasked, so
+        # one line of text switched the scan off (blind read of 0.337.1, 2026-11-25, replayed).
+        if does["commit"]:
             checks.append(("commit", f"what this commit would take ({repo})",
                            scan_staged(repo, does["wider"])))
         if does["push"]:
