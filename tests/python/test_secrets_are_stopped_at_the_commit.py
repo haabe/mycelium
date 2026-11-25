@@ -278,17 +278,44 @@ def test_gitleaks_scans_an_env_file_only_when_it_is_staged(project):
     assert decision(commit(project, path=WITH_SCANNER)) == "deny"
 
 
-def test_the_repositorys_own_scanning_hook_is_not_doubled(project):
-    """Where the person has installed a pre-commit hook that runs the scanner, a commit that
-    honours hooks is theirs to scan; one that skips hooks is scanned here."""
-    hook = project / ".git" / "hooks" / "pre-commit"
-    hook.parent.mkdir(exist_ok=True)
-    hook.write_text("#!/bin/sh\nexec gitleaks git --pre-commit --staged\n")
+OWN_HOOK = "#!/bin/sh\nexec gitleaks git --pre-commit --staged\n"
+OWN_CONFIG = ("repos:\n  - repo: https://github.com/gitleaks/gitleaks\n    rev: v8.18.0\n"
+              "    hooks:\n      - id: gitleaks\n")
+
+
+def _own(project: Path, rel: str, text: str) -> None:
+    path = project / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+@pytest.mark.parametrize(("rel", "text"), [
+    (".git/hooks/pre-commit", OWN_HOOK),
+    (".pre-commit-config.yaml", OWN_CONFIG),
+    (".pre-commit-config.yaml", "# TODO: maybe add gitleaks later\n"),
+])
+def test_a_file_that_names_the_scanner_does_not_switch_the_scan_off(project, rel, text):
+    """CHANGED IN 0.337.2. From 0.323.0 a `hooks/pre-commit` or a `.pre-commit-config.yaml` that
+    held the scanner's name switched this scan off for a commit that honours hooks. Neither file
+    shows that a hook ran, and the agent may write both unasked (blind read of 0.337.1,
+    2026-11-25). The README says of this stop that there is no switch for it."""
+    _own(project, rel, text)
     (project / "config.py").write_text(LINE + "\n")
     git(project, "add", "config.py")
-    assert decision(commit(project)) == "allow"
+    assert decision(commit(project)) == "deny"
     assert decision(commit(project, "git commit --no-verify -m work")) == "deny"
     assert decision(commit(project, "git commit -nm work")) == "deny"
+
+
+@pytest.mark.parametrize(("rel", "text"), [
+    (".git/hooks/pre-commit", OWN_HOOK),
+    (".pre-commit-config.yaml", OWN_CONFIG),
+])
+def test_control_a_clean_commit_beside_such_a_file_is_not_refused(project, rel, text):
+    _own(project, rel, text)
+    (project / "notes.txt").write_text("nothing secret\n")
+    git(project, "add", "notes.txt")
+    assert decision(commit(project)) == "allow"
 
 
 # ---------------------------------------------------------------- commits a command made
