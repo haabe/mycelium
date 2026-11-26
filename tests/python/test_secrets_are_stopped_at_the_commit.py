@@ -493,15 +493,67 @@ def test_a_step_put_in_the_background_beside_a_commit_refuses(project):
 
 
 @pytest.mark.parametrize("command", [
-    "git add **/*.py && git commit -m work",
-    "git add *.py && git commit -m work",
-    "git add {config,app}.py && git commit -m work",
     "bash -c $'git add -A\\ngit commit -m work'",
     "git add -A && git commit -F <(echo work)",
 ])
-def test_an_add_the_shell_may_widen_is_replayed_as_everything(project, command):
+def test_an_add_of_everything_is_read_however_the_command_is_wrapped(project, command):
     (project / "config.py").write_text(LINE + "\n")
     assert decision(commit(project, command)) == "deny", command
+
+
+PATTERN_ADDS = [
+    "git add **/*.py && git commit -m work",
+    "git add *.py && git commit -m work",
+    "git add src/*.py && git commit -m work",
+    'git add "src/[ab].py" && git commit -m work',
+    "git add {config,app}.py && git commit -m work",
+]
+
+
+@pytest.mark.parametrize("command", PATTERN_ADDS)
+@pytest.mark.parametrize("key", [True, False], ids=["a key on disk", "no key anywhere"])
+def test_an_add_with_a_shell_pattern_is_a_step_not_accounted_for(project, command, key):
+    """CHANGED IN 0.337.5. The shell decides what a pattern names, so Mycelium cannot say what
+    such an add stages. 0.337.4 replayed it as `git add -A`: a commit of clean files was refused
+    for a key in a file the commit did not take, and that file's contents were written into
+    git's store (blind read of 0.337.4, 2026-11-26, all three readers, replayed). Now the
+    command is refused with nothing found, like any other step that is not accounted for, and
+    nothing is staged or scanned."""
+    (project / "src").mkdir()
+    (project / "src" / "a.py").write_text("y = 2\n")
+    (project / "config.py").write_text("y = 3\n")
+    if key:
+        (project / "scratch-notes.txt").write_text(LINE + "\n")
+    before = git(project, "count-objects")
+    out = commit(project, command)
+    assert decision(out) == "deny", command
+    assert "before its `git commit`" in reason(out) and "Nothing was found" in reason(out)
+    assert "scratch-notes" not in reason(out)
+    assert git(project, "count-objects") == before, "a file was written into git's store"
+
+
+def test_control_a_key_in_a_file_the_add_does_not_name_stops_nothing(project):
+    """RED ON 0.337.4 for the last line: an add git would not run fell back to everything."""
+    (project / "src").mkdir()
+    (project / "src" / "a.py").write_text("y = 2\n")
+    (project / "scratch-notes.txt").write_text(LINE + "\n")
+    assert decision(commit(project, "git add src/a.py && git commit -m work")) == "allow"
+    assert decision(commit(project, "git add src && git commit -m work")) == "allow"
+    out = commit(project, "git add src/a.py src/missing.py && git commit -m work")
+    assert decision(out) == "deny"
+    assert "could not work out what its `git add` stages" in reason(out)
+    assert "missing.py" in reason(out) and "scratch-notes" not in reason(out)
+    assert "Nothing was found" in reason(out)
+
+
+def test_an_add_git_would_not_run_still_lets_a_staged_key_be_found_alone(project):
+    """The refusal for an add that cannot be replayed finds nothing and says so; run on its
+    own afterwards, the commit is scanned as it is."""
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    out = commit(project, "git add missing.py && git commit -m work")
+    assert decision(out) == "deny" and "Nothing was found" in reason(out)
+    assert decision(commit(project, "git commit -m work")) == "deny"
 
 
 @pytest.mark.parametrize("command", [
@@ -620,7 +672,7 @@ def test_a_command_that_cannot_be_followed_says_so(command):
     ("xargs git add", ("unknown",)),
     ("GIT_EDITOR=true git commit --amend", ("commit", "/w", False)),
     ("GIT_DIR=x git commit", ("unknown",)),
-    ("git add *.py", ("add", "/w", None)),
+    ("git add *.py", ("unknown",)),
     ("git pull", ("moves",)),
     ("git mv a b", ("moves",)),
     ("sudo git add -A", ("unknown",)),

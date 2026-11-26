@@ -2,7 +2,43 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-11-25.
+**Last updated**: 2026-11-26.
+
+## v0.337.5 - A `git add` Mycelium cannot replay exactly refuses the command
+
+**2026-11-26.** One thing found wrong by a blind read of 0.337.4 (three new readers; all three named it),
+replayed on the released code before it was changed. It was in the 0.337.4 fix itself.
+
+- **A commit of clean files is no longer refused for a key in a file it does not take.** 0.337.4 replays the
+  command's own `git add` into a scratch index. When the add had a shell pattern in its words
+  (`git add src/*.py`), or git would not run it as written (it named a file that is not there), 0.337.4
+  replayed it as `git add -A`. The replay: two clean files under `src/` and a key-shaped value in an untracked
+  notes file beside them; `git add src/*.py && git commit -m work` was refused, the refusal named the notes
+  file, and that file's contents were written into git's object store. `PRIVACY.md` and the system card said
+  the scan covers what the commit would take and the files being added; only `hooks/README.md` said otherwise.
+- **Such an add is now a step Mycelium cannot account for.** A `git add` with a shell pattern in its words
+  refuses the command when a commit follows, with nothing found, like any other step that is not on the list:
+  the shell decides what a pattern names, so Mycelium cannot say what it stages. An add git would not run as
+  written refuses the same way and repeats git's own first line. Nothing is staged in the scratch index,
+  nothing is scanned and nothing is written to git's store for either.
+- **What changes for you.** `git add src/*.py && git commit -m x` is refused and the agent runs the add on its
+  own, then the commit, which is scanned from the index as it then is. `git add -A`, `git add .`, a folder or
+  named files before a commit pass as in 0.337.4.
+- **Two limits that were in the code and on no page are now on the system card.** The scan after a command
+  reads at most 50 of the commits that one command made. Without gitleaks, Mycelium's own short list reads
+  the first 2,000,000 characters of the lines added. Neither is changed.
+- **Not shown.** No independent pass has been run on this change or on 0.337.4 as released. A pattern that is
+  quoted, so that git and not the shell reads it (`git add '*.py'`), is refused too, although git's reading of
+  it could be replayed; the reader of shell text does not keep whether a word was quoted.
+
+**Alternatives considered.** Keep the fallback and describe it on the system card and in `PRIVACY.md`: lost,
+because the 0.337.4 notes had already turned down scanning the whole working tree for this reason (it refuses
+a commit for a key in a file the command does not stage), and the fallback did it anyway. Hand the pattern to
+git as a pathspec: lost, because git reads some patterns more narrowly than the shell, which the pre-release
+reader of 0.337.4 used to get a key past. Expand the pattern in Python as the shell would: lost, because
+what a pattern names depends on which shell runs it and on its options (`**`, hidden files, an unmatched
+pattern), and a wrong guess in either direction is this finding or the one before it. Scan the folder the
+pattern starts in: lost, because it is a smaller case of the same refusal.
 
 ## v0.337.4 - The scan vouches for what a commit or push takes, or refuses the command
 
