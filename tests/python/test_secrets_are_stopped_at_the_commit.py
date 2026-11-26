@@ -8,7 +8,10 @@ passwords into the repo", at the commit, with an established scanner.
 WHAT HOLDS NOW.
 - A write is not scanned: the agent may put a key in a file. It may not commit or push one.
 - The agent's `git commit` is scanned first (the index; with `-a` or a named path, the tracked
-  files as on disk). A finding refuses it.
+  files as on disk; since 0.337.4 with what a `git add` in the same command would stage). A
+  finding refuses it.
+- Since 0.337.4 a step Mycelium cannot account for, before a commit or push in the same command,
+  refuses the command with nothing found.
 - Commits a shell command made by any other route are scanned afterwards and reported.
 - The agent's `git push` is scanned first (every commit on no remote). A finding refuses it.
 - gitleaks does the scanning where it is installed; where it is not, Mycelium's own short list
@@ -161,9 +164,9 @@ def test_the_commit_is_found_in_the_forms_it_is_typed(project, command):
     assert decision(commit(project, command)) == "deny"
 
 
-SPELLINGS = ["/usr/bin/git {verb}", "env git {verb}", "env LANG=C git {verb}",
+SPELLINGS = ["/usr/bin/git {verb}", "env git {verb}", "/usr/bin/env git {verb}", "env LANG=C git {verb}",
              "timeout 60 git {verb}", "timeout -k 5 60 git {verb}", "nice -n 10 git {verb}",
-             "sudo -u me git {verb}", "xargs git {verb}", "bash -c 'git {verb}'",
+             "sudo -u me git {verb}", "bash -c 'git {verb}'",
              "command /usr/bin/git {verb}"]
 
 
@@ -205,8 +208,471 @@ def test_a_command_that_commits_or_pushes_inside_itself_is_not_seen_beforehand(p
     (project / "config.py").write_text(LINE + "\n")
     git(project, "add", "config.py")
     assert decision(commit(project, command)) == "allow"
-    assert cs.what_it_runs(command) == {"commit": False, "wider": False, "no_verify": False,
-                                        "push": False}
+    assert cs.read_command(command, str(project)) == {"commits": [], "pushes": [], "blocked": None}
+
+
+# ---------------------------------------------------------------- vouch or refuse (0.337.4)
+#
+# WHAT WAS WRONG. The scan before a commit looked at the index as it was before the command ran.
+# `git add -A && git commit -m work && git push` stages its key AFTER that look, so the key was
+# committed and pushed with nothing having looked (blind read of 0.337.3, 2026-11-25, replayed).
+# WHAT HOLDS NOW. The command is read step by step. A `git add` before the commit is replayed
+# into a scratch index and that is scanned. A step Mycelium cannot account for, before a commit
+# or a push in the same command, refuses the command with nothing found.
+
+HEREDOC = "git add -A && git commit -m \"$(cat <<'EOF'\nwork; and && more\n\nEOF\n)\""
+STAGED_BY_THE_COMMAND = [
+    "git add -A && git commit -m work",
+    "git add config.py && git commit -m work",
+    "git add . && git commit -m work && git push",
+    "git add -A; git commit -m work",
+    "git stage -A && git commit -m work",
+    "git status && git add -A && git commit -m work",
+    "cd . && git add -- config.py && git commit -m work",
+    "bash -c 'git add -A && git commit -m work && git push'",
+    "git checkout -b topic && git add -A && git commit -m work",
+    "if git add -A; then git commit -m work; fi",
+    HEREDOC,
+]
+
+
+@pytest.mark.parametrize("command", STAGED_BY_THE_COMMAND)
+@pytest.mark.parametrize("tracked", [False, True], ids=["a new file", "a tracked file"])
+def test_a_key_the_same_command_stages_is_seen_before_the_commit(project, command, tracked):
+    if tracked:
+        (project / "config.py").write_text("x = 1\n")
+        git(project, "add", "config.py")
+        git(project, "commit", "-q", "-m", "config")
+    (project / "config.py").write_text(LINE + "\n")
+    out = commit(project, command)
+    assert decision(out) == "deny", command
+    assert "what its `git add` stages" in reason(out)
+    assert git(project, "diff", "--cached", "--name-only") == "", "the real index was touched"
+
+
+@pytest.mark.parametrize("command", STAGED_BY_THE_COMMAND)
+def test_control_a_clean_add_and_commit_is_not_refused(project, command):
+    (project / "config.py").write_text("y = 2\n")
+    assert decision(commit(project, command)) == "allow", command
+    assert git(project, "diff", "--cached", "--name-only") == "", "the real index was touched"
+    assert not list(project.parent.glob("mycelium-index-*")), "a scratch index was left behind"
+
+
+def test_control_only_what_the_add_names_is_scanned(project):
+    """A key in a file the command does not stage does not stop a commit of another file."""
+    (project / "local-notes.py").write_text(LINE + "\n")
+    (project / "notes.txt").write_text("nothing secret\n")
+    assert decision(commit(project, "git add notes.txt && git commit -m work")) == "allow"
+    assert decision(commit(project, "git add -A && git commit -m work")) == "deny"
+
+
+@needs_gitleaks
+def test_gitleaks_reads_what_the_add_would_stage(project):
+    token = "gh" + "p_" + "R4nd0mT0k3nV4lu3" + "F0rT3st1ngPurp0s3s00"
+    (project / "config.py").write_text(f'TOKEN = "{token}"\n')
+    out = commit(project, "git add -A && git commit -m work && git push", path=WITH_SCANNER)
+    assert decision(out) == "deny" and "config.py:1" in reason(out)
+    assert token not in json.dumps(out)
+    (project / "config.py").write_text("y = 2\n")
+    assert decision(commit(project, "git add -A && git commit -m work",
+                           path=WITH_SCANNER)) == "allow"
+
+
+@pytest.mark.parametrize("command", [
+    "if git commit -m work; then git push; fi",
+    "{ git commit -m work; }",
+    "! git commit -m work",
+    "until git commit -m work; do sleep 1; done",
+    "(git commit -m work)",
+    "true && { git commit -m work; }",
+])
+def test_a_commit_behind_a_shell_keyword_or_a_bracket_is_scanned(project, command):
+    """Until 0.337.4 none of these was read as a commit at all."""
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    assert decision(commit(project, command)) == "deny", command
+    git(project, "reset", "-q")
+    (project / "config.py").write_text("y = 2\n")
+    git(project, "add", "config.py")
+    assert decision(commit(project, command)) == "allow", command
+
+
+@pytest.mark.parametrize(("command", "verb"), [
+    ("make build && git commit -m work", "commit"),
+    ("./scripts/release.sh; git push", "push"),
+    ("echo k > config.py && git add config.py && git commit -m work", "commit"),
+    ("python3 gen.py && git add -A && git commit -m work && git push", "commit"),
+    ("git add -f secrets/ && git commit -m work", "commit"),
+    ("sudo git add -A && sudo git commit -m work", "commit"),
+    ("HOME=/tmp/elsewhere git add -A && git commit -m work", "commit"),
+    ("git switch main && git add . && git commit -m work && git push", "commit"),
+    ("git pull -q && git add -A && git commit -m work", "commit"),
+    ("git rm -q .gitignore && git add -A && git commit -m work", "commit"),
+    ("XDG_CONFIG_HOME=/nonexistent; git add -A; git commit -m work", "commit"),
+    ("git add $FILES && git commit -m work", "commit"),
+    ("git add $(echo -f .env) && git commit -m work", "commit"),
+    ("git add --forc .env && git commit -m work", "commit"),
+    ("git pull -q sibling main && git push", "push"),
+    ("cat .env >&2notes; git add 2notes; git commit -m work", "commit"),
+    ("git init && git add -A && git commit -m first", "commit"),
+    ("git commit -m work && npm test && git push", "push"),
+    ("git stash pop && git commit -am work", "commit"),
+    ("git checkout stash@{0} -- config.py && git commit -m work", "commit"),
+    ('cd "$WHERE" && git commit -m work', "commit"),
+    ("for f in a b; do git add $f; done; git commit -m work", "commit"),
+    ("tee notes.txt < /dev/null | git commit -m work", "commit"),
+    ("git status > status.txt; git commit -m work", "commit"),
+])
+def test_a_step_that_cannot_be_accounted_for_before_a_commit_or_push_refuses(project, command,
+                                                                              verb):
+    """Nothing is staged and nothing is wrong: the refusal is that Mycelium cannot say what the
+    commit or push would take once the earlier step has run. It says so, and what to do."""
+    out = commit(project, command)
+    assert decision(out) == "deny", command
+    assert f"before its `git {verb}`" in reason(out), reason(out)
+    assert "Nothing was found" in reason(out) and "a command of its own" in reason(out)
+
+
+@pytest.mark.parametrize("command", [
+    "GIT_INDEX_FILE=/tmp/other-index git commit -m work",
+    "GIT_DIR=/tmp/elsewhere/.git git push",
+    "git --git-dir=/tmp/elsewhere/.git commit -m work",
+    'git -C "$WHERE" commit -m work',
+])
+def test_a_commit_or_push_that_names_another_index_or_repository_refuses(project, command):
+    out = commit(project, command)
+    assert decision(out) == "deny", command
+    assert "cannot follow how" in reason(out) and "another repository or index" in reason(out)
+
+
+def test_a_command_whose_text_cannot_be_followed_refuses_when_it_commits(project):
+    out = commit(project, 'git commit -m "work')
+    assert decision(out) == "deny" and "could not follow its text" in reason(out)
+    out = commit(project, r"bash -c $'git add -f .env\x3b git commit -m work'")
+    assert decision(out) == "deny" and "could not follow its text" in reason(out)
+    assert decision(commit(project, 'echo "work')) == "allow", "no commit, so nothing to refuse"
+
+
+@pytest.mark.parametrize("command", [
+    "git commit -m work && npm test",
+    "git commit -m work; ./deploy.sh",
+    "git commit -m 'fix; make build && ship' && git push",
+    "git commit -m \"$(cat <<'EOF'\nfix: make build; ./run.sh && more\nEOF\n)\"",
+    "git diff --stat | cat; git commit -m work",
+    "echo committing 2>&1 && git commit -m work 2>&1 | tail -3",
+    "git checkout -b topic && git commit -m work",
+    "git switch main && git pull && git push",
+    "git config user.name t && git commit -m work  # make build",
+    "cd . && git log --oneline | head -3 && git push > /dev/null",
+])
+def test_control_steps_that_are_accounted_for_do_not_refuse(project, command):
+    (project / "app.py").write_text("x = 2\n")
+    git(project, "add", "app.py")
+    assert decision(commit(project, command)) == "allow", command
+
+
+def test_a_folder_changed_inside_brackets_does_not_move_the_scan(project, tmp_path):
+    """`(cd other)` changes folder for the bracket only. The commit after it is the project's."""
+    other = tmp_path / "other"
+    other.mkdir()
+    _scratch_git.init(other, "-b", "main")
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    out = commit(project, f"(cd {other} && git status); git commit -m work")
+    assert decision(out) == "deny" and str(project.resolve()) in reason(out)
+    assert decision(commit(project, f"(cd {other} && git commit -m work)")) == "allow"
+
+
+@pytest.mark.parametrize("command", [
+    "uv run git commit -am work",
+    "gtimeout 60 git push",
+    "direnv exec . git commit -m work",
+    r"find . -name app.py -exec git commit -m work {} \;",
+    "git diff --name-only | xargs git commit -m work",
+    "xargs git push",
+    "git --git-dir .git --work-tree . commit -am work",
+    "env GIT_INDEX_FILE=.git/alt git commit -m work",
+    "bash <<'EOF'\ngit add -A\ngit commit -m work\nEOF",
+    "cat <<'EOF' | bash\ngit add -A\ngit commit -m work\ngit push\nEOF",
+    'echo "git add -A && git commit -m work" | sh',
+    "python3 -c \"import os; os.system('git commit -am work')\"",
+])
+def test_git_run_by_another_program_or_from_handed_text_refuses(project, command):
+    """Found by an independent read of this change before it was released (2026-11-25), each
+    proven by running it: none of these was scanned and none was refused."""
+    out = commit(project, command)
+    assert decision(out) == "deny", command
+    assert "cannot follow how" in reason(out) and "Nothing was found" in reason(out)
+
+
+@pytest.mark.parametrize("command", [
+    "git diff --name-only | xargs git add && git commit -m work",
+    "cd nowhere-at-all; git add -A; git commit -m work",
+    "cd pro* && git add -A && git commit -m work",
+    "cat .env >& notes.txt; git commit -am work",
+    "sort -o notes.txt .env && git commit -am work",
+    "uniq .env notes.txt && git commit -am work",
+    "git diff --no-index --output=notes.txt /dev/null .env; git commit -am work",
+    "git pull -q ../sibling main && git push",
+    "git fetch -q ../sibling main:feature && git push origin feature",
+    "git branch wip 'stash@{0}' && git push origin wip",
+    "git checkout 'stash@{0}' && git push origin HEAD:refs/heads/wip",
+    "git config core.worktree ../elsewhere && git add -A && git commit -m work",
+    "echo \\ # ; cp .env notes.txt; git commit -am work",
+])
+def test_more_steps_that_are_not_accounted_for_refuse(project, command):
+    out = commit(project, command)
+    assert decision(out) == "deny", command
+    assert "before its `git" in reason(out), reason(out)
+
+
+@pytest.mark.parametrize("command", [
+    "git stash push -m wip", "git revert --no-commit HEAD", "git config push.default current",
+    "git help commit", "git reset --soft HEAD~1  # undo the last commit",
+    "git show --stat HEAD > /tmp/commit.txt", "chmod +x .git/hooks/pre-commit",
+    "rg -n 'git push' docs/", "sed -n '/git commit/p' README.md",
+    "gh pr create --title 'Fix git push scan' --body 'git commit now refuses'",
+    "cat > CONTRIBUTING.md <<'EOF'\nRun git commit, then git push.\nEOF",
+    "echo 'run git push when done' >> notes.txt",
+    "git log --oneline | awk '{print $1}'  # then git commit",
+    "bash build.sh", "npm test",
+    "awk '/git commit -m/' README.md", "python3 scripts/check.py --pattern 'git commit -m'",
+    "find . -name '*.md' -exec grep -l 'git push' {} +", "git notes add -m 'git push pending'",
+    "git stash push -m 'git commit wip'", "git log --grep 'git push' > out.txt",
+])
+def test_control_a_command_that_neither_commits_nor_pushes_is_never_refused(project, command):
+    """A second independent read (2026-11-25) found a draft of this change refusing each of
+    these, because the words stood somewhere in the text."""
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    assert decision(commit(project, command)) == "allow", command
+
+
+@pytest.mark.parametrize("command", [
+    "git -C pro* commit -am work",
+    "/bin/bash <<'EOF'\ngit add -A\ngit commit -m work\nEOF",
+    "cat <<'EOF' | /bin/sh\ngit add -A\ngit commit -m work\ngit push\nEOF",
+    "bash -c \"$(cat <<'EOF'\ngit add -A\ngit commit -m work\nEOF\n)\"",
+    "CMD='git add -A && git commit -m work'; eval \"$CMD\"",
+    "bash /dev/stdin <<'EOF'\ngit add -A\ngit commit -m work\nEOF",
+    "bash -s -- x <<'EOF'\ngit add -A\ngit commit -m work\nEOF",
+    "source /dev/stdin <<'EOF'\ngit add -A\ngit commit -m work\nEOF",
+    "python3 - <<'EOF'\nimport os\nos.system('git add -A && git commit -m work')\nEOF",
+    "ssh host 'cd repo && git push'",
+    "bash 2>&1 <<'EOF'\ngit add -A\ngit commit -m work\nEOF",
+    'echo "git add -A && git commit -m work" | sh >/dev/null 2>&1',
+    "python3 2>&1 <<'EOF'\nimport os\nos.system('git add -A && git commit -m work')\nEOF",
+    "uv run sh -c 'if true; then git commit -am work; fi'",
+    "direnv exec . sh -c '/usr/bin/git commit -am work'",
+    'source <(echo "git add -A && git commit -m work")',
+    "git -c alias.ship='!git add -A && git commit -m work' ship",
+    "env -C ../other git commit -am work",
+    "git push origin $(git rev-parse 'stash@{0}'):refs/heads/wip",
+    "git -c core.worktree=../other commit -am work",
+    "git -c user.name=\"A & B\" commit -m one; bash <<'EOF'\ngit add -f .env\ngit commit -m two\nEOF",
+])
+def test_more_forms_mycelium_cannot_follow_refuse(project, command):
+    out = commit(project, command)
+    assert decision(out) == "deny" and "cannot follow how" in reason(out), command
+
+
+def test_a_commit_option_cut_short_is_read_as_wider(project):
+    (project / "app.py").write_text(LINE + "\n")
+    (project / "list.txt").write_text("app.py\n")
+    assert decision(commit(project, "git commit --pathspec-from=list.txt -m work")) == "deny"
+
+
+def test_a_step_put_in_the_background_beside_a_commit_refuses(project):
+    out = commit(project, "sleep 1 && git commit -am work & cp .env notes.txt; wait")
+    assert decision(out) == "deny" and "at the same time" in reason(out)
+    out = commit(project, "{ sleep 1; git commit -am work; } | cp .env notes.txt")
+    assert decision(out) == "deny" and "at the same time" in reason(out)
+    assert decision(commit(project, "git push |& tail -3")) == "allow"
+    assert decision(commit(project, "git push --dry-run 2>&1 | tee push.log")) == "allow"
+    assert decision(commit(project, "sleep 1 & echo started")) == "allow"
+
+
+@pytest.mark.parametrize("command", [
+    "git add **/*.py && git commit -m work",
+    "git add *.py && git commit -m work",
+    "git add {config,app}.py && git commit -m work",
+    "bash -c $'git add -A\\ngit commit -m work'",
+    "git add -A && git commit -F <(echo work)",
+])
+def test_an_add_the_shell_may_widen_is_replayed_as_everything(project, command):
+    (project / "config.py").write_text(LINE + "\n")
+    assert decision(commit(project, command)) == "deny", command
+
+
+@pytest.mark.parametrize("command", [
+    'git commit -m"first draft" -a',
+    "git commit -mwork -a",
+    "git commit --pathspec-from-file=list.txt -m work",
+    "git commit -m work --pathspec-from-file list.txt",
+    "git commit -F <(echo work) -a",
+    "git commit -qam work",
+])
+def test_a_commit_that_takes_tracked_files_is_read_as_wider_however_written(project, command):
+    (project / "app.py").write_text(LINE + "\n")
+    (project / "list.txt").write_text("app.py\n")
+    assert decision(commit(project, command)) == "deny", command
+
+
+@pytest.mark.parametrize(("words", "wider"), [
+    (["-m", "x"], False), (["-mfirst draft", "-a"], True), (["-am", "x"], True),
+    (["-m", "-a"], False), (["--amend", "--no-edit"], False), (["-C", "HEAD", "f.py"], True),
+    (["--pathspec-from-file=l"], True), (["-qm", "x", "--", "."], True), (["-F", "-"], False),
+])
+def test_what_a_commit_takes(words, wider):
+    assert cs._takes_more(words) is wider
+
+
+def _unpushed_key_off_any_branch(project: Path, tmp_path: Path) -> None:
+    remote = tmp_path / "remote.git"
+    git(project, "clone", "-q", "--bare", str(project), str(remote))
+    git(project, "remote", "add", "origin", str(remote))
+    git(project, "push", "-q", "-u", "origin", "main")
+    git(project, "checkout", "-q", "--detach")
+    (project / "config.py").write_text(LINE + "\n")
+    git(project, "add", "config.py")
+    git(project, "commit", "-q", "-m", "by hand")
+
+
+@pytest.mark.parametrize("command", [
+    "git push origin HEAD:refs/heads/wip",
+    "git switch -c wip && git push -u origin wip",
+    "git tag v1 && git push origin v1",
+])
+def test_a_push_of_a_commit_that_is_on_no_branch_is_scanned(project, tmp_path, command):
+    """Until 0.337.4 the scan before a push read local branches only."""
+    _unpushed_key_off_any_branch(project, tmp_path)
+    out = commit(project, command)
+    assert decision(out) == "deny" and "on no remote yet" in reason(out), command
+
+
+def test_a_push_that_names_a_stash_is_scanned_and_a_stash_alone_stops_nothing(project, tmp_path):
+    remote = tmp_path / "remote.git"
+    git(project, "clone", "-q", "--bare", str(project), str(remote))
+    git(project, "remote", "add", "origin", str(remote))
+    git(project, "push", "-q", "-u", "origin", "main")
+    (project / "app.py").write_text(LINE + "\n")
+    git(project, "stash")
+    assert decision(commit(project, "git push")) == "allow", "a stash is not what a push sends"
+    assert decision(commit(project, "git push origin 'stash@{0}:refs/heads/wip'")) == "deny"
+
+
+@pytest.mark.parametrize("command", [
+    "GIT_EDITOR=true git commit --amend",
+    "GIT_AUTHOR_DATE=2020-01-01T00:00:00 git commit -m work",
+    "GIT_SSH_COMMAND='ssh -i key' git push",
+    "git commit -F - <<< 'work'",
+    "git rm -q --cached app.py && git commit -m work",
+    "git switch main && git pull && git push",
+    "git pull --rebase origin main && git push",
+    "git tag v2 && git push origin v2",
+    "git switch -c topic && git commit -m work && git push -u origin topic",
+    "git pull origin feature/x && git push",
+    "git tag -a v1.0 -m 'Release 1.0' && git push origin v1.0",
+    "git fetch origin && git rebase main && git push --force-with-lease",
+    "git restore --staged app.py && git commit -m work",
+    "git branch -d old && git push origin --delete old",
+    "git ls-files -o --exclude-standard && git add -A && git commit -m work",
+    "GIT_LFS_SKIP_SMUDGE=1 git push",
+    "git commit -m 'docs: explain git push flow' && gh pr create --fill",
+    "git commit -m 'fix git commit hook' && npm test",
+    "git mv app.py main.py && git commit -m work",
+    "mkdir -p docs && git commit -am work",
+    "git merge --no-edit main && git push",
+])
+def test_control_ordinary_forms_the_first_draft_refused_are_let_through(project, command):
+    git(project, "remote", "add", "origin", str(project))
+    assert decision(commit(project, command)) == "allow", command
+
+
+@pytest.mark.parametrize(("command", "expect"), [
+    ("git add -A && git commit -m x", ["git add -A", "git commit -m x"]),
+    ("a; b | c\nd & e && f", ["a", "b", cs._PIPE, "c", "d", cs._BACKGROUND, "e", "f"]),
+    ("echo 'a; b' \"c && d\"", ["echo 'a; b' \"c && d\""]),
+    ("x 2>&1 && y &> out", ["x 2>&1", "y &> out"]),
+    ('git commit -m "$(date)"', [cs._OPEN, "date", cs._CLOSE, 'git commit -m "$SUB"']),
+    ("(cd a; b)", [cs._OPEN, "cd a", "b", cs._CLOSE]),
+    ("cat <<'EOF' > f\n$(rm -rf x); y\nEOF\nz", ["cat   > f", "z"]),
+    ("a # b; c\nd", ["a", "d"]),
+    ("a \\\n b", ["a  b"]),
+])
+def test_a_command_is_read_into_its_steps(command, expect):
+    assert cs.steps(command) == expect
+
+
+@pytest.mark.parametrize("command", ["echo 'open", 'echo "open', "echo $(open", "cat <<EOF\nopen",
+                                     "cat <<EOF\n$(date)\nEOF", "echo ${x:-$(date)}"])
+def test_a_command_that_cannot_be_followed_says_so(command):
+    with pytest.raises(cs.UnreadableError):
+        cs.steps(command)
+
+
+@pytest.mark.parametrize(("part", "expect"), [
+    ("git commit -m x", ("commit", "/w", False)),
+    ("git commit -am x", ("commit", "/w", True)),
+    ("then /usr/bin/git -C sub push -u origin x", ("push", "/w/sub", ["-u", "origin", "x"])),
+    ("/usr/bin/env git commit -m x", ("commit", "/w", False)),
+    ("uv run git commit -m x", ("unknown",)),
+    ("xargs git add", ("unknown",)),
+    ("GIT_EDITOR=true git commit --amend", ("commit", "/w", False)),
+    ("GIT_DIR=x git commit", ("unknown",)),
+    ("git add *.py", ("add", "/w", None)),
+    ("git pull", ("moves",)),
+    ("git mv a b", ("moves",)),
+    ("sudo git add -A", ("unknown",)),
+    ("HOME=/tmp git add -A", ("unknown",)),
+    ("/bin/bash", ("fed",)),
+    ("bash -s -- x", ("fed",)),
+    ("source /dev/stdin", ("fed",)),
+    ("python3 -", ("fed",)),
+    ("python3 -c 'print(1)'", ("unknown",)),
+    ('bash -c "$SUB"', ("fed",)),
+    ('eval "$CMD"', ("fed",)),
+    ("git pull ../other main", ("unknown",)),
+    ("git switch -c topic", ("quiet",)),
+    ("git switch -c topic stash@{0}", ("unknown",)),
+    ("git checkout main", ("unknown",)),
+    ("git config user.name t", ("quiet",)),
+    ("git config core.worktree /x", ("unknown",)),
+    ("sort -o f g", ("unknown",)),
+    ("cat a >& b", ("unknown",)),
+    ("cat a 2>&1", ("quiet",)),
+    ("LANG=C env git add -A", ("unknown",)),
+    ("command git add -A", ("add", "/w", ["-A"])),
+    ("git add $F", ("unknown",)),
+    ("git push origin $B", ("unknown",)),
+    ("env -C ../other git commit -m x", ("unknown",)),
+    ("git -C pro* commit -m x", ("unknown",)),
+    ("git -c core.worktree=/x commit -m x", ("unknown",)),
+    ("git -c user.name=t commit -m x", ("commit", "/w", False)),
+    ("git stash push -m wip", ("unknown",)),
+    ("bash", ("fed",)),
+    ("bash build.sh", ("unknown",)),
+    ("source ./env.sh", ("unknown",)),
+    ("python3 scripts/check.py", ("unknown",)),
+    ("git add -Af", ("unknown",)),
+    ("git add --patch", ("unknown",)),
+    ("cd sub", ("cd", "/w/sub")),
+    ("cd -", ("unknown",)),
+    ("bash -lc 'git push'", ("run", "git push")),
+    ("eval git push", ("run", "git push")),
+    ("echo hi", ("quiet",)),
+    ("echo hi > f", ("unknown",)),
+    ("echo hi > /dev/null", ("quiet",)),
+    ("git status", ("quiet",)),
+    ("git checkout -b topic", ("quiet",)),
+    ("git checkout main -- f", ("unknown",)),
+    ("git reset --hard", ("unknown",)),
+    ("git ci -m x", ("unknown",)),
+    ("timeout 60 make release", ("unknown",)),
+    ("fi", ("quiet",)),
+])
+def test_what_one_step_is(part, expect):
+    assert cs.step_kind(part, "/w") == expect
 
 
 def test_control_a_command_that_only_mentions_the_words_is_not_scanned(project):
@@ -458,30 +924,6 @@ def test_control_an_ordinary_edit_is_not_asked_about(project):
 # ---------------------------------------------------------------- the reading of a command
 
 
-@pytest.mark.parametrize(("command", "expect"), [
-    ("git commit -m x", {"commit": True, "wider": False, "no_verify": False, "push": False}),
-    ("git commit -am x", {"commit": True, "wider": True, "no_verify": False, "push": False}),
-    ("git commit -m 'take -a look' ", {"commit": True, "wider": False, "no_verify": False, "push": False}),
-    ("git commit --amend --no-edit", {"commit": True, "wider": False, "no_verify": False, "push": False}),
-    ("git commit -n -m x", {"commit": True, "wider": False, "no_verify": True, "push": False}),
-    ("git commit -F msg.txt", {"commit": True, "wider": False, "no_verify": False, "push": False}),
-    ("git commit -m x src/", {"commit": True, "wider": True, "no_verify": False, "push": False}),
-    ("git commit -m 'unbalanced", {"commit": True, "wider": True, "no_verify": False, "push": False}),
-    ("git push --force-with-lease", {"commit": False, "wider": False, "no_verify": False, "push": True}),
-    ("git commit -m x && git push", {"commit": True, "wider": False, "no_verify": False, "push": True}),
-    ("git status", {"commit": False, "wider": False, "no_verify": False, "push": False}),
-    ("legit commit", {"commit": False, "wider": False, "no_verify": False, "push": False}),
-    ("mygit push", {"commit": False, "wider": False, "no_verify": False, "push": False}),
-    ("gitk push", {"commit": False, "wider": False, "no_verify": False, "push": False}),
-    ("git status; echo git push", {"commit": False, "wider": False, "no_verify": False, "push": False}),
-    ("/opt/homebrew/bin/git push", {"commit": False, "wider": False, "no_verify": False, "push": True}),
-    ("timeout 60 git commit -am x", {"commit": True, "wider": True, "no_verify": False, "push": False}),
-    ("sudo echo git push", {"commit": False, "wider": False, "no_verify": False, "push": True}),
-])
-def test_what_a_command_does_with_git(command, expect):
-    assert cs.what_it_runs(command) == expect
-
-
 # ---------------------------------------------------------------- the wrapper, in this process
 
 
@@ -542,20 +984,6 @@ def test_the_hooks_answer_with_a_scanner(project, stand_in, capsys):
     stand_in("broken")
     cs.pre({**payload, "tool_input": {"command": "git push"}}, str(project))
     assert "push is refused" in capsys.readouterr().out
-
-
-@pytest.mark.parametrize(("command", "expect"), [
-    ("git commit -m x", ["/w"]),
-    ("cd sub && git commit -m x", ["/w/sub"]),
-    ("cd /abs/one; git push", ["/abs/one"]),
-    ("git -C ../two commit -m x", ["/two"]),
-    ("cd /abs && cd deeper && git commit -m x", ["/abs/deeper"]),
-    ("cd a && git commit -m x && cd /b && git push", ["/w/a", "/b"]),
-    ("cd 'with space' && git push", ["/w/with space"]),
-    ("ls", []),
-])
-def test_where_a_command_commits_and_pushes(command, expect):
-    assert cs.where_it_runs(command, "/w") == expect
 
 
 def test_the_hook_says_nothing_outside_a_repository_or_for_other_commands(tmp_path, capsys):
