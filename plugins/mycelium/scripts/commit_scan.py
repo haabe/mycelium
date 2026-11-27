@@ -450,7 +450,13 @@ def step_kind(part: str, folder: str) -> tuple:  # noqa: C901, PLR0911, PLR0912
                 f in _ADD_FLAGS or re.fullmatch(r"-[AuNv]+", f) for f in flags):
             return ("unknown",)  # --force and ignored files, a choice made while it runs, words
             #                      that are not in the text, or other ignore rules (`HOME=`, `env`)
-        return ("add", folder, None if any(_GLOB.search(a) for a in args) else args)
+        if any(_GLOB.search(a) for a in args):
+            # A SHELL PATTERN IS NOT ACCOUNTED FOR (since 0.337.5). The shell, not git, decides
+            # what `*.py` names, and it can name more than git's own reading of the word. 0.337.4
+            # replayed such an add as `git add -A`, so a commit of clean files was refused for a
+            # key in a file it did not take (blind read of 0.337.4, 2026-11-26, replayed).
+            return ("unknown",)
+        return ("add", folder, args)
     if to_a_file or any(a.startswith("--output") for a in args):
         return ("unknown",)
     if sub == "" or _quiet_git(sub, args, folder):
@@ -732,13 +738,15 @@ def _own_list(repo: str, git_args: list[str], index: str | None = None) -> tuple
     return "error", [f"Mycelium's own list could not run: {ran.stdout.strip()[:200]}"]
 
 
-def scan_staged(repo: str, wider: bool,  # noqa: C901 - each way the replay can fail is named
+def scan_staged(repo: str, wider: bool,
                 adds: list | None = None) -> tuple[str, list[str]]:
     """What the commit would take: the index, and with `wider` the tracked files as on disk.
     `adds` are the `git add` steps the same command runs before the commit, as
-    (folder, words or None). They are replayed into a scratch copy of the index, which is then
+    (folder, words). They are replayed into a scratch copy of the index, which is then
     what is scanned; the repository's own index is not touched. (Replaying writes the same
-    file contents into git's store that the command's own `git add` is about to write.)"""
+    file contents into git's store that the command's own `git add` is about to write.)
+    An add that cannot be replayed exactly as written answers "unfollowed": until 0.337.5 it
+    was replayed as `git add -A`, which scanned files the commit would not take."""
     passes = [(["--pre-commit", "--staged"], ["diff", "--cached", "-U0", "--no-color"])]
     if wider:
         passes.append((["--pre-commit"], ["diff", "-U0", "--no-color"]))
@@ -754,16 +762,11 @@ def scan_staged(repo: str, wider: bool,  # noqa: C901 - each way the replay can 
         else:
             os.unlink(scratch)  # no index yet: git makes the scratch one
         for folder, words in adds:
-            done = None
-            if words is not None and repo_of(folder) == repo:
-                done = _git(folder, "add", *words, timeout=TIMEOUT, index=scratch)
-            if done is None or done.returncode != 0:
-                # not replayable as written: take everything that is not ignored, which is
-                # at least what any `git add` without --force can stage
-                done = _git(repo, "add", "-A", timeout=TIMEOUT, index=scratch)
+            done = _git(folder, "add", *words, timeout=TIMEOUT, index=scratch)
             if done.returncode != 0:
-                return "error", ["what `git add` would stage could not be worked out: "
-                                 + _plain(done.stderr.strip())[:200]]
+                said = _plain(done.stderr.strip()).splitlines()
+                return "unfollowed", ["git would not run its `git add` as written"
+                                      + (f" ({said[0][:160]})" if said else "")]
         return _run(repo, passes, scratch)
     except subprocess.TimeoutExpired:
         return "error", [f"working out what `git add` would stage took over {TIMEOUT} seconds"]
@@ -917,7 +920,7 @@ def _read_checks(reading: dict):
                    scan_unpushed(repo, words))
 
 
-def pre(payload: dict, project_dir: str) -> int:  # noqa: PLR0911 - one return per answer
+def pre(payload: dict, project_dir: str) -> int:  # noqa: PLR0911, C901 - one return per answer
     """PreToolUse on a shell command. Prints a deny, a once-a-session note, or nothing."""
     ti = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
     command = ti.get("command") if isinstance(ti.get("command"), str) else ""
@@ -968,6 +971,12 @@ def pre(payload: dict, project_dir: str) -> int:  # noqa: PLR0911 - one return p
                   f"refused. Nothing was found; the scan itself failed: {'; '.join(lines)}. A scan "
                   "that cannot look cannot say there is no secret. Tell the person: they can "
                   f"{verb} from their own terminal, or fix what stopped the scan.")
+            return 0
+        if status == "unfollowed":
+            _deny(f"Mycelium commit scan: this command would {verb}, and Mycelium could not "
+                  f"work out what its `git add` stages: {'; '.join(lines)}. So it cannot say "
+                  "what would be taken. Nothing was found; the command is refused. Run the "
+                  f"`git add` in a command of its own, then the {verb}, where it is scanned.")
             return 0
         if status == "found":
             _deny(f"Mycelium commit scan: {which} found something that looks like a secret in "
